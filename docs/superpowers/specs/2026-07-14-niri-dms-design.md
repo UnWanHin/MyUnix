@@ -4,11 +4,11 @@
 
 ## Goal
 
-Add Niri + DankMaterialShell (DMS) as a second Fedora desktop session without replacing or modifying the existing GNOME session. Include Kitty, a Nerd Font, Oh My Zsh/Powerlevel10k configuration, and a shared DMS-driven color palette.
+Add Niri + DankMaterialShell (DMS) as a second Fedora desktop session without replacing or modifying the existing GNOME session. Replace GDM with DankGreeter/greetd only through an explicit opt-in module. Include Kitty, a Nerd Font, Oh My Zsh/Powerlevel10k configuration, and a shared DMS-driven color palette.
 
 ## Boundaries
 
-- GNOME remains installed and selectable in GDM. The installer never changes the user's default desktop session.
+- GNOME remains installed and selectable from DankGreeter after migration. The installer never changes the user's default desktop session.
 - Niri/DMS configuration is isolated below `modules/niri-dms/`; it does not reuse GNOME dconf exports.
 - DMS is installed through its documented Fedora package path, never through `curl | sh`.
 - DMS's documented Fedora package support is limited to Fedora 43/44 at the time of writing. The module must stop before making changes on other releases.
@@ -37,6 +37,20 @@ docs/modules/niri-dms.md
 4. Install only reviewed configuration files. Existing Niri, DMS, Kitty, `.zshrc` and `.p10k.zsh` files are backed up under `~/.local/state/myunix/backups/niri-dms/`.
 5. Present the required post-install steps: select Niri at the GDM session chooser, start DMS through the Niri session configuration, open Kitty and run `p10k configure` once if no tracked P10k configuration exists.
 
+## Login UI: DankGreeter
+
+DankGreeter is DMS's greeter and runs under `greetd`. The `niri-dms-greeter` module is deliberately separate from the desktop module and is excluded from `install --all`.
+
+When explicitly selected, it must:
+
+1. Verify `dms-greeter`, `greetd`, Niri and at least one valid GNOME desktop-session file are installed.
+2. Record active/enabled state for `gdm.service`, `greetd.service`, plus a copy of `/etc/greetd/config.toml` (if it exists) below `/var/lib/myunix/backups/`.
+3. Display an exact confirmation that the active graphical session will be replaced and that GDM can be restored.
+4. Use the documented DMS greeter setup command, then verify `dms greeter status` before stopping GDM.
+5. Enable `greetd` and disable GDM only after the status check succeeds.
+
+The module must provide `./scripts/myunix rollback niri-dms-greeter`, which stops/disables greetd, restores the backed-up configuration and service state, then re-enables GDM. It does not run a rollback automatically.
+
 ## Theme synchronization
 
 DMS/Matugen is the palette authority. The Niri+DMS module stores a Kitty palette include generated or exported by DMS/Matugen; `kitty.conf` includes that file. Powerlevel10k is configured with compatible foreground, background and accent colors, but remains independent of runtime DMS processes so the shell still works in GNOME or a TTY.
@@ -57,7 +71,7 @@ It excludes shell history, SSH keys, tokens, browser profiles, private applicati
 ## Verification
 
 - Shell tests cover Fedora release gating, no-GNOME-mutation guarantees, backup creation, package source selection and allowlisted shell export.
-- A Fedora 43/44 VM smoke test verifies both GNOME and Niri appear in GDM, DMS starts only in Niri, Kitty renders Nerd Font glyphs, and P10k works in Kitty.
+- A Fedora 43/44 VM smoke test verifies both GNOME and Niri appear in DankGreeter, DMS starts only in Niri, Kitty renders Nerd Font glyphs, P10k works in Kitty, and the rollback returns to GDM.
 - The module must document current package/source URLs and update rules.
 
 ## Sources
@@ -65,3 +79,4 @@ It excludes shell history, SSH keys, tokens, browser profiles, private applicati
 - DMS Fedora installation: <https://danklinux.com/docs/dankmaterialshell/installation>
 - DMS project: <https://github.com/AvengeMedia/DankMaterialShell>
 - Niri project: <https://github.com/YaLTeR/niri>
+- DankGreeter installation: <https://danklinux.com/docs/dankgreeter/installation>
