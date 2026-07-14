@@ -1,0 +1,3 @@
+# Selected only during guided installation.
+ffmpeg
+vlc

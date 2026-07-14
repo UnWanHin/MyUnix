@@ -1,0 +1,7 @@
+# Packages installed by ./scripts/myunix install --all.
+git
+wget
+curl
+jq
+gnome-tweaks
+dconf-editor
