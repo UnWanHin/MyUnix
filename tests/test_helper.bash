@@ -23,3 +23,10 @@ assert_output_contains() {
     exit 1
   }
 }
+
+assert_equals() {
+  [[ "$2" == "$1" ]] || {
+    printf 'Expected %q, got %q\n' "$1" "$2" >&2
+    exit 1
+  }
+}
