@@ -2,6 +2,12 @@
 
 This repository is the reproducible Fedora GNOME migration source of truth.
 
+This is repository-local guidance: it governs work performed from this
+repository. Put personal defaults shared across repositories in
+`~/.codex/AGENTS.md`. Neither location monitors the operating system or runs
+exports automatically; use a separately configured systemd timer, cron job, or
+Codex automation when scheduled collection is needed.
+
 ## Maintenance rules
 
 - Keep the repository current whenever a managed package, RPM source, GNOME shortcut, or input-method setting changes. Update the owning manifest or exported configuration and its documentation in the same change.
