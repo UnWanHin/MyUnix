@@ -1,0 +1,9 @@
+# IBus and Fcitx5 engines supported by this migration repository.
+ibus
+ibus-chewing
+fcitx5
+fcitx5-configtool
+fcitx5-chinese-addons
+fcitx5-rime
+fcitx5-mozc
+rime
