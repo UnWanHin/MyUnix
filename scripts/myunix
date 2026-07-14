@@ -3,13 +3,127 @@ set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$ROOT/scripts/lib/core.sh"
+source "$ROOT/scripts/lib/manifest.sh"
+source "$ROOT/scripts/lib/state.sh"
+source "$ROOT/modules/bootstrap/install.sh"
+source "$ROOT/modules/dnf/install.sh"
+source "$ROOT/modules/rpm/install.sh"
+source "$ROOT/modules/gnome/install.sh"
+source "$ROOT/modules/gnome/export.sh"
+source "$ROOT/modules/input-method/install.sh"
+source "$ROOT/modules/input-method/export.sh"
 
 run_doctor() {
   is_fedora || die 'Fedora is required'
-  info 'Fedora environment verified'
+  require_command dnf
+  require_command dconf
+  info 'Fedora GNOME prerequisites verified'
+}
+
+install_rpm_manifest() {
+  local mode=$1 manifest="$ROOT/modules/rpm/apps.tsv"
+  local id name url sha selection verify_command verify_argument
+  validate_rpm_manifest "$manifest" || die "Invalid RPM manifest: $manifest"
+  while IFS='|' read -r id name url sha selection verify_command verify_argument; do
+    is_comment_or_blank "$id" && continue
+    [[ "$selection" == default || "$mode" == guided ]] || continue
+    [[ "$selection" == default ]] || prompt_optional_app "$id" "$name" || { info "Skip $name"; continue; }
+    install_rpm_record "$id" "$name" "$url" "$sha" "$selection" "$verify_command" "$verify_argument"
+  done < "$manifest"
+}
+
+run_module() {
+  local module=$1 status=0
+  case "$module" in
+    bootstrap) install_bootstrap || status=1 ;;
+    dnf) install_dnf_manifest "$ROOT/modules/dnf/core.txt" || status=1 ;;
+    rpm) install_rpm_manifest "${MYUNIX_INSTALL_MODE:-all}" || status=1 ;;
+    gnome) import_gnome || status=1 ;;
+    input-method) install_input_methods || status=1 ;;
+    *) die "Unknown module: $module" ;;
+  esac
+  if ((status == 0)); then
+    state_mark "module:$module" succeeded
+  else
+    state_mark "module:$module" failed
+    status=1
+  fi
+  return "$status"
+}
+
+run_selected_modules() {
+  local module result=0
+  for module in "$@"; do
+    run_module "$module" || result=1
+  done
+  return "$result"
+}
+
+run_guided_install() {
+  local module reply
+  export MYUNIX_INSTALL_MODE=guided
+  for module in bootstrap dnf rpm gnome input-method; do
+    read -r -p "Install ${module}? [y/N] " reply
+    [[ "$reply" =~ ^[Yy]([Ee][Ss])?$ ]] && run_module "$module" || true
+  done
+}
+
+run_all_install() {
+  export MYUNIX_INSTALL_MODE=all
+  run_selected_modules bootstrap dnf rpm gnome input-method
+}
+
+run_export() {
+  is_fedora || die 'Fedora is required'
+  export_gnome
+  export_input_methods
+  require_command dnf
+  dnf repoquery --userinstalled --qf '%{name}' | sort -u > "$ROOT/modules/dnf/exported-userinstalled.txt"
+  info 'DNF user-installed package candidates exported for review'
+}
+
+run_retry() {
+  local item module result=0
+  while IFS= read -r item; do
+    module="${item#module:}"
+    [[ "$module" == "$item" ]] && continue
+    run_module "$module" || result=1
+  done < <(state_failed_items)
+  return "$result"
+}
+
+run_interactive_install() {
+  local choice
+  cat <<'MENU'
+1) Install everything
+2) Custom installation
+3) Retry last failures
+4) Run everything again
+MENU
+  read -r -p 'Choose an action [1-4]: ' choice
+  case "$choice" in
+    1|4) run_all_install ;;
+    2) run_guided_install ;;
+    3) run_retry ;;
+    *) die 'Choose a number from 1 to 4' ;;
+  esac
+}
+
+run_install() {
+  is_fedora || die 'Fedora is required'
+  case "${1:-}" in
+    --all) run_all_install ;;
+    --guided) run_guided_install ;;
+    --module) [[ -n "${2:-}" ]] || die '--module requires a module name'; run_module "$2" ;;
+    '') [[ -t 0 ]] || die 'Use --all, --guided, or --module outside an interactive terminal'; run_interactive_install ;;
+    *) die "Unknown install option: $1" ;;
+  esac
 }
 
 case "${1:-}" in
   doctor) run_doctor ;;
+  install) shift; run_install "$@" ;;
+  export) run_export ;;
+  retry) run_retry ;;
   *) die 'Usage: myunix {doctor|install|export|retry}' ;;
 esac

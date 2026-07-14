@@ -9,4 +9,4 @@ assert_output_contains 'Fedora is required'
 
 run env MYUNIX_TEST_MODE=fedora "$PROJECT_ROOT/scripts/myunix" doctor
 assert_status 0
-assert_output_contains 'Fedora environment verified'
+assert_output_contains 'Fedora GNOME prerequisites verified'
