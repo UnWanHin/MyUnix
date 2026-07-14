@@ -26,7 +26,7 @@ validate_rpm_manifest() {
     [[ "$url" =~ ^https:// ]] || return 1
     [[ "$checksum" =~ ^[[:xdigit:]]{64}$ ]] || return 1
     [[ "$selection" == default || "$selection" == optional ]] || return 1
-    [[ "$verify_command" =~ ^[[:alnum:]_.+-]+$ ]] || return 1
+    [[ "$verify_command" == rpm ]] || return 1
     [[ "$verify_argument" =~ ^[[:alnum:]@._+:-]+$ ]] || return 1
   done < "$file"
 }

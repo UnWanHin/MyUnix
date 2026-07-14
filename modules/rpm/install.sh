@@ -6,6 +6,7 @@ install_rpm_record() {
   local tmp actual_sha package
   [[ "$url" =~ ^https:// ]] || die "RPM URL for $name must use HTTPS"
   [[ "$expected_sha" =~ ^[[:xdigit:]]{64}$ ]] || die "RPM checksum for $name is invalid"
+  [[ "$verify_command" == rpm ]] || die "Unsupported RPM verifier for $name"
 
   tmp="$(mktemp -d)"
   package="$tmp/$id.rpm"
