@@ -12,6 +12,9 @@ source "$ROOT/modules/gnome/install.sh"
 source "$ROOT/modules/gnome/export.sh"
 source "$ROOT/modules/input-method/install.sh"
 source "$ROOT/modules/input-method/export.sh"
+source "$ROOT/modules/niri-dms/install.sh"
+source "$ROOT/modules/niri-dms-greeter/install.sh"
+source "$ROOT/modules/niri-dms-greeter/rollback.sh"
 
 run_doctor() {
   is_fedora || die 'Fedora is required'
@@ -45,6 +48,8 @@ run_module() {
     rpm) install_rpm_manifest "${MYUNIX_INSTALL_MODE:-all}" || status=1 ;;
     gnome) import_gnome || status=1 ;;
     input-method) install_input_methods || status=1 ;;
+    niri-dms) install_niri_dms || status=1 ;;
+    niri-dms-greeter) install_niri_dms_greeter || status=1 ;;
     *) die "Unknown module: $module" ;;
   esac
   if ((status == 0)); then
@@ -130,5 +135,6 @@ case "${1:-}" in
   install) shift; run_install "$@" ;;
   export) run_export ;;
   retry) run_retry ;;
-  *) die 'Usage: myunix {doctor|install|export|retry}' ;;
+  rollback) [[ "${2:-}" == niri-dms-greeter && -n "${3:-}" ]] || die 'Usage: myunix rollback niri-dms-greeter <backup-path>'; rollback_niri_dms_greeter "$3" ;;
+  *) die 'Usage: myunix {doctor|install|export|retry|rollback}' ;;
 esac
