@@ -36,7 +36,12 @@ run_module() {
   local module=$1 status=0
   case "$module" in
     bootstrap) install_bootstrap || status=1 ;;
-    dnf) install_dnf_manifest "$ROOT/modules/dnf/core.txt" || status=1 ;;
+    dnf)
+      install_dnf_manifest "$ROOT/modules/dnf/core.txt" || status=1
+      if ((status == 0)) && [[ "${MYUNIX_INSTALL_MODE:-all}" == guided ]]; then
+        install_optional_dnf_manifest "$ROOT/modules/dnf/optional.txt" || status=1
+      fi
+      ;;
     rpm) install_rpm_manifest "${MYUNIX_INSTALL_MODE:-all}" || status=1 ;;
     gnome) import_gnome || status=1 ;;
     input-method) install_input_methods || status=1 ;;

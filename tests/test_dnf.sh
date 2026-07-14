@@ -14,3 +14,12 @@ sudo() { printf '%s\n' "$*"; }
 run install_dnf_manifest "$tmp/packages.txt"
 assert_status 0
 assert_output_contains 'dnf install -y git wget'
+
+printf 'vlc\nffmpeg\n' > "$tmp/optional.txt"
+set +e
+OUTPUT="$(printf 'y\nn\n' | install_optional_dnf_manifest "$tmp/optional.txt" 2>&1)"
+STATUS=$?
+set -e
+assert_status 0
+assert_output_contains 'dnf install -y vlc'
+assert_output_contains 'Skip ffmpeg'
