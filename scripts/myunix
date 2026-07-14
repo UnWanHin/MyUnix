@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+source "$ROOT/scripts/lib/core.sh"
+
+run_doctor() {
+  is_fedora || die 'Fedora is required'
+  info 'Fedora environment verified'
+}
+
+case "${1:-}" in
+  doctor) run_doctor ;;
+  *) die 'Usage: myunix {doctor|install|export|retry}' ;;
+esac
