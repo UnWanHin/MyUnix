@@ -17,6 +17,7 @@ Codex automation when scheduled collection is needed.
 - Keep privileged work explicit. Only repository setup and package installation may use `sudo`; GNOME and input-method user settings must run as the target desktop user.
 - Preserve idempotence: a module may be re-run without corrupting configuration. Record run state only below `~/.local/state/myunix/`, never in Git.
 - For every new optional application, add its prompt metadata, installation source, verification command, and user-facing documentation.
+- Treat the direct-RPM application registry as a maintained category: when asked to update any desktop application, inspect all managed RPM entries for upstream release or checksum changes and update the manifest, tests, and module documentation together.
 - Before committing shell changes, run the project test suite, `bash -n` for every script, and ShellCheck when available. Keep README command examples aligned with the CLI.
 
 ## Change discipline
