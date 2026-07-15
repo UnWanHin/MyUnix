@@ -15,6 +15,9 @@ curl
 wget
 tar
 gzip
+java-latest-openjdk-headless
+java-latest-openjdk-devel
+cmake
 ninja-build
 rust
 cargo

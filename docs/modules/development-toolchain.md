@@ -14,17 +14,17 @@ Node.js, Go, GCC and Clang.
 
 ## Scope
 
-**System** mirrors the reference installation: Fedora packages use DNF; JDK
-26.0.1, CMake 4.4.0 and Anaconda 2025.12-2 live under `/opt`. JDK uses Fedora
-`alternatives`; CMake and Conda receive `/usr/local/bin` links and
-`/etc/profile.d` integration.
+**System** uses Fedora DNF for the current OpenJDK and CMake. Anaconda 2025.12-2 lives
+under `/opt/anaconda3`, with `/usr/local/bin/conda` and `/etc/profile.d`
+integration.
 
-**User** places only JDK, CMake and Anaconda under `~/.local/opt`, with command
-links in `~/.local/bin`. It installs a reviewed
+**User** still uses Fedora DNF for the current OpenJDK and CMake, because Fedora owns
+their alternatives and system integration. Only Anaconda is placed under
+`~/.local/opt`, with a command link in `~/.local/bin`. It installs a reviewed
 `~/.config/sysrc.d/development-toolchain.rc` file so Bash and Zsh expose those
 tools after the existing shared shell configuration is installed. Ninja,
 Rust/Cargo, Python development packages, Node.js, Go, GCC, Clang and Build
-tools remain Fedora DNF system packages in both modes.
+tools are also Fedora DNF system packages in both modes.
 
 For a deterministic module invocation:
 
@@ -45,8 +45,8 @@ modules/development-toolchain/verify.sh
 
 | Tool | Recorded version | Installation source |
 | --- | --- | --- |
-| OpenJDK / Javac | 26.0.1 | Official OpenJDK GA archive |
-| CMake | 4.4.0 | Official Kitware GitHub release installer |
+| OpenJDK / Javac | 25.0.3 (recorded snapshot) | Fedora DNF: `java-latest-openjdk-headless`, `java-latest-openjdk-devel` |
+| CMake | 4.3.0 | Fedora DNF: `cmake` |
 | Ninja | 1.13.2 | Fedora DNF |
 | Rust / Cargo | 1.96.1 | Fedora DNF |
 | Python | 3.14.6 | Fedora DNF |
@@ -56,13 +56,18 @@ modules/development-toolchain/verify.sh
 | GCC | 16.1.1 | Fedora DNF |
 | Clang | 22.1.8 | Fedora DNF |
 
-Official references: <https://jdk.java.net/26/>,
-<https://cmake.org/download/>, and <https://repo.anaconda.com/archive/>.
+The recorded versions are a Fedora 44 snapshot, not immutable locks. The Java
+manifest deliberately uses Fedora's `java-latest-openjdk*` packages, so a
+future rerun follows the current official Fedora OpenJDK. CMake likewise stays
+on Fedora's unpinned `cmake` package. Java alternatives are owned by Fedora
+RPM packages: never manually add `javac` as a slave to the `java` alternatives
+entry. If a prior custom JDK left alternatives broken, use the documented
+Fedora repair path:
 
-The DNF versions are a verified Fedora 44 snapshot, not immutable locks; a
-future Fedora repository can provide newer versions. OpenJDK and CMake use
-pinned official SHA-256 values before installation. Anaconda's official archive
-listing for this release does not publish an adjacent SHA-256 file, so the
-module fetches it only from `repo.anaconda.com` over HTTPS; this limitation is
-intentional and documented rather than hidden. All archives use a temporary
-directory and are never retained in Git. The module never touches `~/temp`.
+```bash
+sudo dnf reinstall java-latest-openjdk-headless java-latest-openjdk-devel
+```
+
+Anaconda is the only upstream archive left in this module. It is fetched over
+HTTPS into a temporary directory and never retained in Git. The module never
+touches `~/temp`.

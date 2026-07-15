@@ -12,7 +12,7 @@
 
 - Do not touch, move or commit `~/temp` files.
 - One-click installation excludes the development toolchain.
-- User scope applies only to JDK, CMake and Anaconda; Fedora compiler/runtime packages remain DNF system packages.
+- User scope applies only to Anaconda; OpenJDK, CMake and Fedora compiler/runtime packages remain DNF system packages.
 - Fixed upstream downloads use HTTPS and a temporary directory; never retain binaries in Git.
 - The existing portal-login module remains independent and included in this synchronization.
 
@@ -42,8 +42,8 @@
 - Modify: `tests/test_shell_config.sh`
 
 - [ ] Test user-path rendering and backup behaviour.
-- [ ] Implement system `/opt` and user `~/.local/opt` paths for JDK, CMake
-  and Anaconda, retaining DNF for the remaining components.
+- [ ] Implement system `/opt` and user `~/.local/opt` paths for Anaconda,
+  retaining DNF for OpenJDK, CMake and the remaining components.
 - [ ] Change `.sysrc` to source sorted `sysrc.d/*.rc` fragments and preserve
   managed-fragment export/import behaviour.
 - [ ] Run focused tests and syntax checks.

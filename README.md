@@ -26,6 +26,7 @@ Review the generated DNF candidate list and GNOME/input-method exports before co
 ./scripts/myunix install --module phone-connect
 ./scripts/myunix install --module portal-login
 ./scripts/myunix install --module development-toolchain
+./scripts/myunix install --module distrobox
 ./scripts/myunix retry
 ```
 
@@ -64,6 +65,10 @@ The optional [Portal Login](docs/modules/portal-login.md) module adds the
 NetworkManager tray applet to Niri/DMS and a generic **Wi-Fi Login** entry in
 DMS Spotlight. It opens the current network's captive-portal page only after
 you select it; it stores no Wi-Fi credentials or per-network redirect URLs.
+
+The optional [Distrobox](docs/modules/distrobox.md) module installs only the
+Fedora Distrobox package. It does not create a distribution, pull an image or
+choose a container mirror.
 
 After installing or importing input methods, log out and back in to let the active GNOME or Niri session reload its input-method services. The optional [shared shell configuration](docs/modules/shell-config.md) module manages portable Bash/Zsh settings through `~/.config/.sysrc` without mixing them into Niri's KDL configuration. [Phone Connect](docs/modules/phone-connect.md) recreates KDE Connect software and Niri startup without exporting paired-phone data.
 

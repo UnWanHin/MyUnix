@@ -15,8 +15,9 @@ build-tools|package|curl
 build-tools|package|wget
 build-tools|package|tar
 build-tools|package|gzip
-jdk|portable|jdk
-cmake|portable|cmake
+jdk|package|java-latest-openjdk-headless
+jdk|package|java-latest-openjdk-devel
+cmake|package|cmake
 ninja|package|ninja-build
 rust|package|rust
 rust|package|cargo

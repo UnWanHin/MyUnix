@@ -12,7 +12,7 @@ selection.
 
 ## Inventory
 
-The recorded environment is JDK/Javac 26.0.1, CMake 4.4.0, Ninja 1.13.2,
+The recorded environment is JDK/Javac 25.0.3, CMake 4.3.0, Ninja 1.13.2,
 Rust/Cargo 1.96.1, Python 3.14.6, Anaconda 25.11.1, Node.js 22.22.2, Go
 1.26.5, GCC 16.1.1 and Clang 22.1.8. DNF-managed package versions are Fedora
 repository snapshots, so future Fedora revisions can install newer compatible
@@ -24,8 +24,8 @@ Add `modules/development-toolchain/` with four responsibilities:
 
 - `packages.tsv` maps selectable DNF components to packages; `build-tools`
   also installs Fedora's `Development Tools` group.
-- `install.sh` resolves selected components, handles privileged system work,
-  and delegates only portable downloads to the user scope.
+- `install.sh` resolves selected components, handles privileged Fedora DNF
+  work, and delegates only Anaconda's portable download to the selected scope.
 - `config/` holds reviewed user-shell integration and `verify.sh`; it never
   contains downloaded binaries or user environments.
 - `docs/modules/development-toolchain.md` records exact sources, scope
@@ -40,20 +40,23 @@ desktop baseline and does not install the toolchain.
 
 ### System
 
-Fedora packages install through DNF. JDK 26.0.1, CMake 4.4.0 and Anaconda
-25.11.1 install under `/opt`; `alternatives`, `/usr/local/bin` and
-`/etc/profile.d` expose them to all users. This mirrors the verified source
-scripts.
+Fedora packages install through DNF, including the unpinned
+`java-latest-openjdk*` family and `cmake`, so future installations follow the
+current official Fedora versions. Anaconda 25.11.1 installs under `/opt`;
+Fedora RPM postinstall scripts own
+Java alternatives, while `/usr/local/bin` and `/etc/profile.d` expose Conda.
 
 ### User
 
-JDK, CMake and Anaconda install under `~/.local/opt`; command links are below
-`~/.local/bin`. A managed `~/.config/sysrc.d/development-toolchain.rc`
-exports the selected portable locations. The shared `.sysrc` becomes a
-sorted `sysrc.d/*.rc` loader so toolchain integration stays in its own file.
+OpenJDK and CMake remain DNF system packages. Anaconda installs under
+`~/.local/opt` with a command link below `~/.local/bin`. A managed
+`~/.config/sysrc.d/development-toolchain.rc` exports the selected portable
+location. The shared `.sysrc` becomes a sorted `sysrc.d/*.rc` loader so
+toolchain integration stays in its own file.
 
-Ninja, Rust/Cargo, Python development packages, Node.js, Go, GCC, Clang and
-the Fedora development group remain DNF system packages in both scope modes.
+Ninja, Rust/Cargo, Python development packages, Node.js, Go, GCC, Clang, the
+Fedora development group, OpenJDK and CMake remain DNF system packages in both
+scope modes.
 They need system libraries, compilers or package integration and are not
 silently replaced by unrelated user-level version managers.
 
