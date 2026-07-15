@@ -1,0 +1,9 @@
+# group|package
+base|ibus
+base|fcitx5
+base|fcitx5-configtool
+cangjie|ibus-table-chinese-cangjie
+cangjie|fcitx5-chinese-addons
+cangjie|fcitx5-table-extra
+pinyin|ibus-libpinyin
+pinyin|fcitx5-chinese-addons

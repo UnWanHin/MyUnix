@@ -7,11 +7,40 @@ source "$PROJECT_ROOT/modules/dnf/install.sh"
 source "$PROJECT_ROOT/modules/input-method/install.sh"
 
 temporary_install="$(mktemp -d)"
-run env HOME="$temporary_install/home" XDG_DATA_HOME="$temporary_install/home/.local/share" MYUNIX_SYSTEM_APPLICATIONS_DIR="$temporary_install/empty-applications" bash -c "sudo() { printf '%s\\n' \"\$*\"; }; source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/scripts/lib/manifest.sh'; source '$PROJECT_ROOT/modules/dnf/install.sh'; source '$PROJECT_ROOT/modules/input-method/install.sh'; install_input_methods"
+run env HOME="$temporary_install/home" XDG_DATA_HOME="$temporary_install/home/.local/share" MYUNIX_SYSTEM_APPLICATIONS_DIR="$temporary_install/empty-applications" bash -c "sudo() { printf '%s\\n' \"\$*\"; }; timeout() { shift 2; \"\$@\"; }; source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/scripts/lib/manifest.sh'; source '$PROJECT_ROOT/modules/dnf/install.sh'; source '$PROJECT_ROOT/modules/input-method/install.sh'; install_input_methods"
 assert_status 0
-assert_output_contains 'fcitx5-rime'
+assert_output_contains 'ibus-libpinyin'
 assert_output_contains 'fcitx5-table-extra'
 assert_output_contains 'Log out and back in'
+[[ "$OUTPUT" != *fcitx5-rime* ]] || {
+  printf '%s\n' 'Unexpected Rime package in the default input-method set' >&2
+  exit 1
+}
+
+run bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/input-method/install.sh'; input_method_resolve_packages 1 0"
+assert_status 0
+assert_output_contains 'ibus-table-chinese-cangjie'
+assert_output_contains 'fcitx5-table-extra'
+[[ "$OUTPUT" != *ibus-libpinyin* ]] || {
+  printf '%s\n' 'Cangjie-only selection unexpectedly included Pinyin' >&2
+  exit 1
+}
+
+run bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/input-method/install.sh'; input_method_resolve_packages 0 1"
+assert_status 0
+assert_output_contains 'ibus-libpinyin'
+assert_output_contains 'fcitx5-chinese-addons'
+[[ "$(printf '%s\n' "$OUTPUT" | rg -c '^fcitx5-chinese-addons$')" == 1 ]] || {
+  printf '%s\n' 'Shared Fcitx5 Chinese addons package was not deduplicated' >&2
+  exit 1
+}
+
+temporary_profile="$(mktemp -d)"
+run bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/input-method/install.sh'; input_method_render_fcitx_profile '$temporary_profile/profile' 1 1; cat '$temporary_profile/profile'"
+assert_status 0
+assert_output_contains 'Name=keyboard-us'
+assert_output_contains 'Name=cangjie5'
+assert_output_contains 'Name=pinyin'
 
 temporary="$(mktemp -d)"
 mkdir -p "$temporary/source" "$temporary/home/.config/fcitx5"

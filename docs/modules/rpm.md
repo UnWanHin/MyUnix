@@ -8,7 +8,7 @@ Each non-comment line has seven `|`-separated fields:
 id|display_name|https_url|sha256|default_or_optional|verification_command|verification_argument
 ```
 
-The installer downloads with `wget` to a temporary directory, verifies SHA-256, uses `dnf install`, then deletes the download. It rejects HTTP URLs, missing checksums, and shell expressions in verification fields. Do not add unverified third-party mirrors.
+The installer downloads with `wget` to a temporary directory, verifies SHA-256, uses `dnf install`, then deletes the download. It rejects HTTP URLs, missing checksums, and shell expressions in verification fields. Do not add unverified third-party mirrors. Downloads show an attempt counter, retry three times by default and have a 10-minute timeout; use `MYUNIX_DOWNLOAD_TIMEOUT_SECONDS` only for a one-run adjustment.
 
 For now the verifier is `rpm`; the installer runs it as `rpm -q <verification_argument>` after installation.
 

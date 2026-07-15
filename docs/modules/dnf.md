@@ -1,6 +1,15 @@
 # DNF packages
 
-`core.txt` contains the repeatable baseline installed by `--all`. `optional.txt` is offered one package at a time when you run `./scripts/myunix install --guided` and select the DNF module. It currently includes VLC and FFmpeg. Keep one DNF package name per line; comments begin with `#`.
+`core.txt` contains the repeatable baseline installed by `--all`. `optional.txt`
+records reviewed optional packages such as VLC and FFmpeg for a future
+package-selection screen; the current custom screen only selects input methods,
+so it does not automatically prompt for these packages. Keep one DNF package
+name per line; comments begin with `#`.
+
+DNF transactions are retried up to three times and receive a 30-minute timeout
+by default. The installer prints the transaction status and attempt number;
+set `MYUNIX_NETWORK_ATTEMPTS` or `MYUNIX_DNF_TIMEOUT_SECONDS` to override
+those values for one run.
 
 `./scripts/myunix doctor` verifies that every package in the core and optional
 DNF manifests, plus the input-method and Phone Connect manifests, resolves

@@ -16,9 +16,9 @@ Review the generated DNF candidate list and GNOME/input-method exports before co
 
 ```bash
 ./scripts/myunix doctor
-./scripts/myunix install          # menu: all, custom, retry, rerun
-./scripts/myunix install --all    # default modules, no prompts
-./scripts/myunix install --guided # choose modules and optional RPM apps
+./scripts/myunix install          # keyboard menu: one-click or custom
+./scripts/myunix install --all    # one-click baseline, no menu
+./scripts/myunix install --guided # custom input-method selector (TTY)
 ./scripts/myunix install --module gnome
 ./scripts/myunix install --module input-method
 ./scripts/myunix install --module niri-dms
@@ -27,10 +27,32 @@ Review the generated DNF candidate list and GNOME/input-method exports before co
 ./scripts/myunix retry
 ```
 
-`--guided` asks about the optional Niri + DMS, shared shell configuration and
-Phone Connect modules after the GNOME baseline. `--all` deliberately keeps the
-conservative GNOME-safe baseline and does not install Niri/DMS or replace the
-login manager. The greeter replacement is always a separate guarded command.
+The first menu uses `↑`/`↓` to move, `Space` to toggle a choice and `Enter` to
+confirm. One-click installs the conservative GNOME-safe baseline with the
+English keyboard, Cangjie 5 and Pinyin. Custom installation currently
+customizes only input methods: English stays selected, while Cangjie 5 and
+Pinyin can be selected independently. `--all` is the noninteractive
+equivalent of one-click. Neither path installs Niri/DMS or replaces the login
+manager; the greeter replacement is always a separate guarded command.
+
+For a scripted input-method choice, pass the selected capabilities explicitly:
+
+```bash
+MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=0 ./scripts/myunix install --module input-method
+```
+
+Each module prints `[current/total]` progress; network operations print their
+attempt number and retain native DNF/wget progress. In a terminal, a failed
+module offers retry, skip/defer or stop. Deferred and failed modules can later
+be rerun with `./scripts/myunix retry`. Noninteractive installation continues
+independent modules but exits nonzero if one failed. The defaults are three
+attempts, a 30-minute DNF/COPR/plugin timeout and a 10-minute direct-RPM
+download timeout. Override them only when necessary:
+
+```bash
+MYUNIX_NETWORK_ATTEMPTS=5 MYUNIX_DNF_TIMEOUT_SECONDS=2400 ./scripts/myunix install --all
+MYUNIX_DOWNLOAD_TIMEOUT_SECONDS=900 ./scripts/myunix install --module rpm
+```
 
 Direct RPM applications are declared in `modules/rpm/apps.tsv`. Add only official HTTPS sources with a pinned SHA-256; packages are downloaded to a temporary directory with `wget`, verified, installed through DNF, and removed. See [module documentation](docs/modules/) for details.
 

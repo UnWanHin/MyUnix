@@ -5,6 +5,81 @@ input_method_dir() {
   cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
 }
 
+input_method_packages_path() {
+  printf '%s\n' "${MYUNIX_INPUT_METHOD_PACKAGES:-$(input_method_dir)/packages.tsv}"
+}
+
+input_method_validate_selection() {
+  local selection=$1 label=$2
+  [[ "$selection" == 0 || "$selection" == 1 ]] || die "Invalid ${label} selection: ${selection}"
+}
+
+input_method_resolve_packages() {
+  local cangjie=$1 pinyin=$2 manifest group package
+  local -A enabled=([base]=1 [cangjie]="$cangjie" [pinyin]="$pinyin") seen=()
+  input_method_validate_selection "$cangjie" cangjie
+  input_method_validate_selection "$pinyin" pinyin
+  manifest="$(input_method_packages_path)"
+  [[ -f "$manifest" ]] || die "Missing input-method package registry: $manifest"
+
+  while IFS='|' read -r group package; do
+    [[ -z "$group" || "$group" == \#* ]] && continue
+    [[ -n "${enabled[$group]:-}" ]] || die "Unknown input-method package group: $group"
+    [[ "${enabled[$group]}" == 1 && -n "$package" ]] || continue
+    [[ -n "${seen[$package]:-}" ]] && continue
+    seen[$package]=1
+    printf '%s\n' "$package"
+  done < "$manifest"
+}
+
+input_method_render_fcitx_profile() {
+  local target=$1 cangjie=$2 pinyin=$3 item=1
+  input_method_validate_selection "$cangjie" cangjie
+  input_method_validate_selection "$pinyin" pinyin
+  mkdir -p "$(dirname "$target")"
+  cat > "$target" <<'EOF'
+[Groups/0]
+# Group Name
+Name=Default
+# Layout
+Default Layout=us
+# Default Input Method
+DefaultIM=keyboard-us
+
+[Groups/0/Items/0]
+# Name
+Name=keyboard-us
+# Layout
+Layout=
+EOF
+  if [[ "$cangjie" == 1 ]]; then
+    cat >> "$target" <<EOF
+
+[Groups/0/Items/${item}]
+# Name
+Name=cangjie5
+# Layout
+Layout=
+EOF
+    item=$((item + 1))
+  fi
+  if [[ "$pinyin" == 1 ]]; then
+    cat >> "$target" <<EOF
+
+[Groups/0/Items/${item}]
+# Name
+Name=pinyin
+# Layout
+Layout=
+EOF
+  fi
+  cat >> "$target" <<'EOF'
+
+[GroupOrder]
+0=Default
+EOF
+}
+
 input_method_app_profiles_path() {
   printf '%s\n' "${MYUNIX_INPUT_METHOD_APP_PROFILES:-$(input_method_dir)/app-profiles.tsv}"
 }
@@ -92,7 +167,7 @@ install_input_method_app_overrides() {
 }
 
 import_fcitx5_public_config() {
-  local source target backup_dir file
+  local cangjie=${1:-1} pinyin=${2:-1} source target backup_dir file
   source="${MYUNIX_FCITX_CONFIG_SOURCE:-$(input_method_dir)/config/fcitx5}"
   [[ -d "$source" ]] || return 0
 
@@ -100,18 +175,28 @@ import_fcitx5_public_config() {
   backup_dir="$HOME/.local/state/myunix/backups/input-method/$(date +%Y%m%d-%H%M%S)"
   mkdir -p "$target"
   for file in config profile; do
-    [[ -f "$source/$file" ]] || continue
+    [[ -f "$source/$file" || "$file" == profile ]] || continue
     if [[ -e "$target/$file" ]]; then
       mkdir -p "$backup_dir"
       cp -a "$target/$file" "$backup_dir/$file"
     fi
-    cp -a "$source/$file" "$target/$file"
+    if [[ "$file" == profile ]]; then
+      input_method_render_fcitx_profile "$target/$file" "$cangjie" "$pinyin"
+    else
+      cp -a "$source/$file" "$target/$file"
+    fi
   done
 }
 
 install_input_methods() {
-  install_dnf_manifest "$(input_method_dir)/packages.txt"
-  import_fcitx5_public_config
+  local cangjie=${1:-1} pinyin=${2:-1} manifest
+  manifest="$(mktemp)"
+  trap 'rm -f "$manifest"' RETURN
+  input_method_resolve_packages "$cangjie" "$pinyin" > "$manifest"
+  info 'Installing input-method packages'
+  install_dnf_manifest "$manifest"
+  info 'Writing public Fcitx5 configuration'
+  import_fcitx5_public_config "$cangjie" "$pinyin"
   install_input_method_app_overrides
-  info 'Input method packages installed. Log out and back in before configuring GNOME or Niri input sources.'
+  info 'Input method packages installed. Log out and back in before using GNOME or Niri input sources.'
 }

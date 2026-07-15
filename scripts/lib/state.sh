@@ -7,7 +7,7 @@ state_file() {
 
 state_mark() {
   local item=$1 status=$2 file tmp
-  case "$status" in succeeded|skipped|failed) ;; *) die "Invalid item status: $status" ;; esac
+  case "$status" in succeeded|skipped|failed|deferred) ;; *) die "Invalid item status: $status" ;; esac
   mkdir -p "$(state_dir)"
   file="$(state_file)"
   tmp="$(mktemp "$(state_dir)/runs.tsv.XXXXXX")"
@@ -20,7 +20,7 @@ state_failed_items() {
   local file
   file="$(state_file)"
   [[ -f "$file" ]] || return 0
-  awk -F'|' '$2 == "failed" { print $1 }' "$file" | sort
+  awk -F'|' '$2 == "failed" || $2 == "deferred" { print $1 }' "$file" | sort
 }
 
 state_reset() {

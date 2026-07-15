@@ -5,6 +5,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT/scripts/lib/core.sh"
 source "$ROOT/scripts/lib/manifest.sh"
 source "$ROOT/scripts/lib/state.sh"
+source "$ROOT/scripts/lib/ui.sh"
+source "$ROOT/scripts/lib/network.sh"
 source "$ROOT/modules/bootstrap/install.sh"
 source "$ROOT/modules/dnf/install.sh"
 source "$ROOT/modules/dnf/export.sh"
@@ -61,7 +63,7 @@ run_module() {
       ;;
     rpm) install_rpm_manifest "${MYUNIX_INSTALL_MODE:-all}" || status=1 ;;
     gnome) import_gnome || status=1 ;;
-    input-method) install_input_methods || status=1 ;;
+    input-method) install_input_methods "${MYUNIX_INPUT_CANGJIE:-1}" "${MYUNIX_INPUT_PINYIN:-1}" || status=1 ;;
     niri-dms) install_niri_dms || status=1 ;;
     niri-dms-greeter) install_niri_dms_greeter || status=1 ;;
     shell-config) install_shell_config || status=1 ;;
@@ -77,25 +79,98 @@ run_module() {
   return "$status"
 }
 
-run_selected_modules() {
-  local module result=0
+print_module_summary() {
+  local outcomes_name=$1 module status
+  shift
+  local -n outcomes_ref="$outcomes_name"
+  local succeeded=0 skipped=0 failed=0 deferred=0
   for module in "$@"; do
-    run_module "$module" || result=1
+    status="${outcomes_ref[$module]:-skipped}"
+    case "$status" in
+      succeeded) succeeded=$((succeeded + 1)) ;;
+      skipped) skipped=$((skipped + 1)) ;;
+      failed) failed=$((failed + 1)) ;;
+      deferred) deferred=$((deferred + 1)) ;;
+    esac
+    printf '  %s: %s\n' "$module" "$status"
   done
-  return "$result"
+  printf 'Installation summary: succeeded=%s skipped=%s failed=%s deferred=%s\n' \
+    "$succeeded" "$skipped" "$failed" "$deferred"
 }
 
-run_guided_install() {
-  local module reply
-  export MYUNIX_INSTALL_MODE=guided
-  for module in bootstrap dnf rpm gnome input-method niri-dms shell-config phone-connect; do
-    read -r -p "Install ${module}? [y/N] " reply
-    [[ "$reply" =~ ^[Yy]([Ee][Ss])?$ ]] && run_module "$module" || true
+run_selected_modules() {
+  local module result=0 current=0 total=$# started elapsed action
+  local -A outcomes=()
+  for module in "$@"; do
+    current=$((current + 1))
+    started=$SECONDS
+    printf '[%s/%s] %s\n' "$current" "$total" "$module"
+    while :; do
+      if run_module "$module"; then
+        elapsed=$((SECONDS - started))
+        printf '[%s/%s] %s completed in %ss\n' "$current" "$total" "$module" "$elapsed"
+        outcomes[$module]=succeeded
+        break
+      fi
+
+      elapsed=$((SECONDS - started))
+      printf '[%s/%s] %s failed after %ss\n' "$current" "$total" "$module" "$elapsed" >&2
+      if ! ui_is_interactive; then
+        result=1
+        outcomes[$module]=failed
+        printf '[%s/%s] continuing after failure\n' "$current" "$total" >&2
+        break
+      fi
+
+      action="$(ui_choose_failure_action "$module")" || return 1
+      case "$action" in
+        retry) printf '[%s/%s] retrying %s\n' "$current" "$total" "$module" ;;
+        skip)
+          state_mark "module:$module" deferred
+          result=1
+          outcomes[$module]=deferred
+          printf '[%s/%s] deferred %s; continuing\n' "$current" "$total" "$module"
+          break
+          ;;
+        stop)
+          outcomes[$module]=failed
+          printf '[%s/%s] stopping at %s\n' "$current" "$total" "$module" >&2
+          print_module_summary outcomes "$@"
+          printf 'Installation stopped. Retry failed or deferred modules with: ./scripts/myunix retry\n' >&2
+          return 1
+          ;;
+        *) die "Invalid failure action: $action" ;;
+      esac
+    done
   done
+  print_module_summary outcomes "$@"
+  if ((result != 0)); then
+    printf 'Installation finished with failed or deferred modules. Retry them with: ./scripts/myunix retry\n' >&2
+  fi
+  return "$result"
 }
 
 run_all_install() {
   export MYUNIX_INSTALL_MODE=all
+  export MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=1
+  run_selected_modules bootstrap dnf rpm gnome input-method
+}
+
+choose_custom_input_methods() {
+  local selections index
+  selections="$(ui_choose_many 'Choose input methods' '0' 'English keyboard' 'Cangjie 5' 'Pinyin')" || return $?
+  export MYUNIX_INPUT_CANGJIE=0 MYUNIX_INPUT_PINYIN=0
+  while IFS= read -r index; do
+    case "$index" in
+      1) MYUNIX_INPUT_CANGJIE=1 ;;
+      2) MYUNIX_INPUT_PINYIN=1 ;;
+    esac
+  done <<< "$selections"
+}
+
+run_custom_install() {
+  export MYUNIX_INSTALL_MODE=custom
+  choose_custom_input_methods
   run_selected_modules bootstrap dnf rpm gnome input-method
 }
 
@@ -121,18 +196,11 @@ run_retry() {
 
 run_interactive_install() {
   local choice
-  cat <<'MENU'
-1) Install everything
-2) Custom installation
-3) Retry last failures
-4) Run everything again
-MENU
-  read -r -p 'Choose an action [1-4]: ' choice
+  choice="$(ui_choose_one 'MyUnix installation' 'One-click installation' 'Custom installation')" || return $?
   case "$choice" in
-    1|4) run_all_install ;;
-    2) run_guided_install ;;
-    3) run_retry ;;
-    *) die 'Choose a number from 1 to 4' ;;
+    0) run_all_install ;;
+    1) run_custom_install ;;
+    *) die 'Invalid installer selection' ;;
   esac
 }
 
@@ -140,7 +208,7 @@ run_install() {
   is_fedora || die 'Fedora is required'
   case "${1:-}" in
     --all) run_all_install ;;
-    --guided) run_guided_install ;;
+    --guided) ui_require_interactive && run_custom_install ;;
     --module) [[ -n "${2:-}" ]] || die '--module requires a module name'; run_module "$2" ;;
     '') [[ -t 0 ]] || die 'Use --all, --guided, or --module outside an interactive terminal'; run_interactive_install ;;
     *) die "Unknown install option: $1" ;;

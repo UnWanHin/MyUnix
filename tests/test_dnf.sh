@@ -10,6 +10,7 @@ tmp="$(mktemp -d)"
 trap 'rm -rf -- "$tmp"' EXIT
 printf 'git\nwget\n' > "$tmp/packages.txt"
 sudo() { printf '%s\n' "$*"; }
+timeout() { shift 2; "$@"; }
 
 run install_dnf_manifest "$tmp/packages.txt"
 assert_status 0

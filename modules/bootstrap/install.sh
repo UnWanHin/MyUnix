@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/../../scripts/lib/network.sh"
 
 install_bootstrap() {
   is_fedora || die 'Fedora is required'
@@ -8,8 +9,8 @@ install_bootstrap() {
 
   local version
   version="$(rpm -E %fedora)"
-  sudo dnf install -y \
+  network_run dnf 'Installing RPM Fusion repositories' sudo dnf install -y \
     "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${version}.noarch.rpm" \
     "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${version}.noarch.rpm"
-  sudo dnf makecache
+  network_run dnf 'Refreshing DNF metadata' sudo dnf makecache
 }

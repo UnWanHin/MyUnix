@@ -1,11 +1,8 @@
-# IBus and Fcitx5 engines supported by this migration repository.
+# One-click input-method package set: English, Cangjie 5 and Pinyin.
 ibus
-ibus-chewing
 ibus-table-chinese-cangjie
+ibus-libpinyin
 fcitx5
 fcitx5-configtool
 fcitx5-chinese-addons
 fcitx5-table-extra
-fcitx5-rime
-fcitx5-mozc
-rime

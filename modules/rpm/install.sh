@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/../../scripts/lib/network.sh"
 
 install_rpm_record() {
   local id=$1 name=$2 url=$3 expected_sha=$4 selection=$5 verify_command=$6 verify_argument=$7
@@ -10,7 +11,7 @@ install_rpm_record() {
 
   tmp="$(mktemp -d)"
   package="$tmp/$id.rpm"
-  if ! wget --https-only --quiet --show-progress -O "$package" "$url"; then
+  if ! network_run download "Downloading $name" wget --https-only --quiet --show-progress -O "$package" "$url"; then
     rm -rf -- "$tmp"
     return 1
   fi
@@ -20,7 +21,7 @@ install_rpm_record() {
     rm -rf -- "$tmp"
     return 1
   fi
-  if ! sudo dnf install -y "$package"; then
+  if ! network_run dnf "Installing $name RPM" sudo dnf install -y "$package"; then
     rm -rf -- "$tmp"
     return 1
   fi

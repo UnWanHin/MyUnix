@@ -74,26 +74,17 @@ assert_status 0
   exit 1
 }
 
-run env MYUNIX_SOURCE_ONLY=1 bash -c '
-  prompt_log="$(mktemp)"
-  read() {
-    local target="${!#}"
-    printf "%s\n" "$*" >> "$prompt_log"
-    printf -v "$target" %s n
-    return 0
-  }
+run env MYUNIX_SOURCE_ONLY=1 MYUNIX_UI_TEST_MODE=1 bash -c '
   source "'"$PROJECT_ROOT"'/scripts/myunix"
-  run_guided_install
-  cat "$prompt_log"
+  ui_choose_many() { printf "0\n"; }
+  run_module() { printf "%s\n" "$1"; }
+  run_custom_install
 '
 assert_status 0
-assert_output_contains 'Install bootstrap? [y/N]'
-assert_output_contains 'Install input-method? [y/N]'
-assert_output_contains 'Install niri-dms? [y/N]'
-assert_output_contains 'Install shell-config? [y/N]'
-assert_output_contains 'Install phone-connect? [y/N]'
+assert_output_contains 'bootstrap'
+assert_output_contains 'input-method'
 [[ "$OUTPUT" != *'niri-dms-greeter'* ]] || {
-  printf '%s\n' 'Greeter must not be offered by guided installation' >&2
+  printf '%s\n' 'Greeter must not be offered by custom installation' >&2
   exit 1
 }
 
@@ -101,6 +92,7 @@ temporary_plugins="$(mktemp -d)"
 mkdir -p "$temporary_plugins/plugins"
 run env DMS_PLUGIN_LOG="$temporary_plugins/plugins.log" MYUNIX_DMS_PLUGIN_METADATA_DIR="$temporary_plugins/plugins" bash -c '
   dms() { printf "%s\n" "$*" >> "$DMS_PLUGIN_LOG"; }
+  timeout() { shift 2; "$@"; }
   source "'"$PROJECT_ROOT"'/scripts/lib/core.sh"
   source "'"$PROJECT_ROOT"'/scripts/lib/manifest.sh"
   source "'"$PROJECT_ROOT"'/modules/dnf/install.sh"
@@ -118,6 +110,7 @@ mkdir -p "$temporary_existing_plugin/plugins"
 touch "$temporary_existing_plugin/plugins/dankActions.meta"
 run env DMS_PLUGIN_LOG="$temporary_existing_plugin/plugins.log" MYUNIX_DMS_PLUGIN_METADATA_DIR="$temporary_existing_plugin/plugins" bash -c '
   dms() { printf "%s\n" "$*" >> "$DMS_PLUGIN_LOG"; }
+  timeout() { shift 2; "$@"; }
   source "'"$PROJECT_ROOT"'/scripts/lib/core.sh"
   source "'"$PROJECT_ROOT"'/scripts/lib/manifest.sh"
   source "'"$PROJECT_ROOT"'/modules/dnf/install.sh"

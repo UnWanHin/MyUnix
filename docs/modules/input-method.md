@@ -1,8 +1,28 @@
 # Input methods
 
-The module installs IBus and Fcitx5 engines for Chinese input, including Rime and Mozc. It installs `ibus-table-chinese-cangjie`, which provides IBus Cangjie 3 and Cangjie 5 for GNOME, plus `fcitx5-chinese-addons` (the Fcitx Table engine) and `fcitx5-table-extra` (including Cangjie tables).
+The module keeps the English keyboard in every profile and supports two
+independent Chinese capabilities: Cangjie 5 and Pinyin. One-click installation
+selects both; custom installation presents a keyboard selector with English
+locked on and Cangjie/Pinyin as optional choices. The package registry is
+`packages.tsv`; `packages.txt` is the reviewed union used by `doctor` for the
+one-click path.
+
+- Cangjie installs `ibus-table-chinese-cangjie`, `fcitx5-chinese-addons` and
+  `fcitx5-table-extra`.
+- Pinyin installs `ibus-libpinyin` and the shared
+  `fcitx5-chinese-addons` package.
+
+The rendered Fcitx5 profile uses the verified engine names `cangjie5` and
+`pinyin`, after `keyboard-us`. Rime, Mozc and Chewing are not default
+capabilities and are not installed by this module.
 
 On GNOME, open **Settings → Keyboard → Input Sources**, add **Chinese (Traditional) → Cangjie 5**, then use `Super`+`Space` to cycle input sources. On Niri + DMS, use Fcitx5: add `cangjie5` to the Fcitx5 profile and set its Niri session environment before logging out and back in. Export captures IBus dconf settings plus the reviewed Fcitx5 `config` and `profile` files; it intentionally excludes user dictionaries and account data.
+
+For an explicit, noninteractive module run:
+
+```bash
+MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=0 ./scripts/myunix install --module input-method
+```
 
 ## Application compatibility launchers
 

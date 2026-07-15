@@ -7,6 +7,7 @@ source "$PROJECT_ROOT/modules/bootstrap/install.sh"
 
 rpm() { printf '42\n'; }
 sudo() { printf '%s\n' "$*"; }
+timeout() { shift 2; "$@"; }
 export MYUNIX_TEST_MODE=fedora
 
 run install_bootstrap

@@ -15,3 +15,6 @@ assert_equals 'rpm:qq' "$(state_failed_items)"
 
 state_mark 'rpm:qq' succeeded
 assert_equals '' "$(state_failed_items)"
+
+state_mark 'module:input-method' deferred
+assert_equals 'module:input-method' "$(state_failed_items)"

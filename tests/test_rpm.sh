@@ -17,6 +17,7 @@ wget() {
 }
 sudo() { printf '%s\n' "$*"; }
 rpm() { printf '%s\n' "$*"; }
+timeout() { shift 2; "$@"; }
 
 run install_rpm_record qq QQ https://example.test/qq.rpm "$checksum" optional rpm qq
 assert_status 0

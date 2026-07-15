@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/../../scripts/lib/network.sh"
 
 fedora_release() { printf '%s\n' "${MYUNIX_FEDORA_RELEASE:-$(rpm -E %fedora)}"; }
 
@@ -31,7 +32,7 @@ install_niri_dms_plugins() {
       info "DMS plugin already installed: $plugin"
       continue
     fi
-    dms plugins install "$plugin"
+    network_run dnf "Installing DMS plugin: $plugin" dms plugins install "$plugin"
   done < "$manifest"
 }
 
@@ -107,8 +108,8 @@ install_niri_dms() {
   is_fedora || die 'Fedora is required'
   require_dms_supported_fedora
   module_dir="$(niri_dms_dir)"
-  sudo dnf copr enable -y avengemedia/danklinux
-  sudo dnf copr enable -y avengemedia/dms
+  network_run dnf 'Enabling DankLinux COPR repository' sudo dnf copr enable -y avengemedia/danklinux
+  network_run dnf 'Enabling DMS COPR repository' sudo dnf copr enable -y avengemedia/dms
   verify_dnf_manifest_available "$module_dir/packages.txt"
   install_dnf_manifest "$module_dir/packages.txt"
   install_niri_dms_plugins "$module_dir/plugins.txt"

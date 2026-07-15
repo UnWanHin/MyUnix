@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/../../scripts/lib/network.sh"
 
 readonly KDECONNECT_NIRI_INCLUDE='include optional=true "myunix/kdeconnect.kdl"'
 
@@ -109,7 +110,7 @@ install_phone_connect() {
   is_fedora || die 'Fedora is required'
   if [[ "${MYUNIX_PHONE_CONNECT_SKIP_PACKAGES:-}" != 1 ]]; then
     install_dnf_manifest "$(phone_connect_dir)/packages.txt"
-    phone_connect_wants_nautilus && sudo dnf install -y kde-connect-nautilus
+    phone_connect_wants_nautilus && network_run dnf 'Installing KDE Connect Nautilus integration' sudo dnf install -y kde-connect-nautilus
   fi
   import_kdeconnect_niri_fragment
   ensure_kdeconnect_niri_include

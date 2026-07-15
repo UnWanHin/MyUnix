@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/../../scripts/lib/network.sh"
 
 manifest_packages() {
   local manifest=$1 line
@@ -33,7 +34,7 @@ install_dnf_manifest() {
   done < <(manifest_packages "$manifest")
 
   ((${#packages[@]})) || return 0
-  sudo dnf install -y "${packages[@]}"
+  network_run dnf 'Installing DNF package manifest' sudo dnf install -y "${packages[@]}"
 }
 
 install_optional_dnf_manifest() {
@@ -44,7 +45,7 @@ install_optional_dnf_manifest() {
     is_comment_or_blank "$line" && continue
     read -r -p "Install ${line}? [y/N] " reply
     if [[ "$reply" =~ ^[Yy]([Ee][Ss])?$ ]]; then
-      sudo dnf install -y "$line"
+      network_run dnf "Installing optional DNF package: $line" sudo dnf install -y "$line"
     else
       info "Skip $line"
     fi
