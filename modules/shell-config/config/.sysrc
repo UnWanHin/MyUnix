@@ -1,7 +1,6 @@
 # Shared Bash/Zsh entry point. Keep portable settings in sysrc.d/*.rc.
 _sysrc_dir="$HOME/.config"
-for _sysrc_fragment in env.rc aliases.rc functions.rc; do
-  _sysrc_path="$_sysrc_dir/sysrc.d/$_sysrc_fragment"
+for _sysrc_path in "$_sysrc_dir"/sysrc.d/*.rc; do
   [ -r "$_sysrc_path" ] && . "$_sysrc_path"
 done
-unset _sysrc_dir _sysrc_fragment _sysrc_path
+unset _sysrc_dir _sysrc_path

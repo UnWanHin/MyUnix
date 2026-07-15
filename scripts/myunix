@@ -24,6 +24,7 @@ source "$ROOT/modules/shell-config/export.sh"
 source "$ROOT/modules/phone-connect/install.sh"
 source "$ROOT/modules/phone-connect/export.sh"
 source "$ROOT/modules/portal-login/install.sh"
+source "$ROOT/modules/development-toolchain/install.sh"
 
 run_doctor() {
   local manifest
@@ -35,7 +36,8 @@ run_doctor() {
     "$ROOT/modules/dnf/optional.txt" \
     "$ROOT/modules/input-method/packages.txt" \
     "$ROOT/modules/phone-connect/packages.txt" \
-    "$ROOT/modules/portal-login/packages.txt"; do
+    "$ROOT/modules/portal-login/packages.txt" \
+    "$ROOT/modules/development-toolchain/packages.txt"; do
     verify_dnf_manifest_available "$manifest" || die "DNF manifest contains unavailable packages: $manifest"
   done
   info 'Fedora GNOME prerequisites verified'
@@ -71,6 +73,7 @@ run_module() {
     shell-config) install_shell_config || status=1 ;;
     phone-connect) install_phone_connect || status=1 ;;
     portal-login) install_portal_login || status=1 ;;
+    development-toolchain) install_development_toolchain || status=1 ;;
     *) die "Unknown module: $module" ;;
   esac
   if ((status == 0)); then
@@ -171,10 +174,40 @@ choose_custom_input_methods() {
   done <<< "$selections"
 }
 
+choose_custom_development_toolchain() {
+  local optional components scope_choice index
+  local -a names=(build-tools jdk cmake ninja rust python anaconda node go gcc clang)
+  optional="$(ui_choose_many 'Optional modules' '' 'Development toolchain')" || return $?
+  grep -qx '0' <<< "$optional" || return 1
+
+  components="$(ui_choose_many 'Development toolchain components' '' \
+    'Build tools' 'JDK 26' 'CMake 4.4' 'Ninja' 'Rust / Cargo' 'Python development' \
+    'Anaconda' 'Node.js' 'Go' 'GCC / G++' 'Clang / LLDB')" || return $?
+  [[ -n "$components" ]] || {
+    info 'No development-toolchain components selected.'
+    return 1
+  }
+  MYUNIX_TOOLCHAIN_COMPONENTS=''
+  while IFS= read -r index; do
+    [[ "$index" =~ ^[0-9]+$ && "$index" -lt "${#names[@]}" ]] || die "Invalid development-toolchain selection: $index"
+    MYUNIX_TOOLCHAIN_COMPONENTS+="${MYUNIX_TOOLCHAIN_COMPONENTS:+,}${names[$index]}"
+  done <<< "$components"
+  scope_choice="$(ui_choose_one 'Development toolchain scope' 'System: DNF + /opt for all users' 'User: portable tools under ~/.local/opt')" || return $?
+  case "$scope_choice" in
+    0) MYUNIX_TOOLCHAIN_SCOPE=system ;;
+    1) MYUNIX_TOOLCHAIN_SCOPE=user ;;
+    *) die "Invalid development-toolchain scope selection: $scope_choice" ;;
+  esac
+  export MYUNIX_TOOLCHAIN_COMPONENTS MYUNIX_TOOLCHAIN_SCOPE
+}
+
 run_custom_install() {
+  local install_toolchain=0
   export MYUNIX_INSTALL_MODE=custom
   choose_custom_input_methods
+  choose_custom_development_toolchain && install_toolchain=1 || true
   run_selected_modules bootstrap dnf rpm gnome input-method
+  ((install_toolchain == 0)) || run_selected_modules development-toolchain
 }
 
 run_export() {

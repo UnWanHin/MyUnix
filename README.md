@@ -25,21 +25,24 @@ Review the generated DNF candidate list and GNOME/input-method exports before co
 ./scripts/myunix install --module shell-config
 ./scripts/myunix install --module phone-connect
 ./scripts/myunix install --module portal-login
+./scripts/myunix install --module development-toolchain
 ./scripts/myunix retry
 ```
 
 The first menu uses `↑`/`↓` to move, `Space` to toggle a choice and `Enter` to
 confirm. One-click installs the conservative GNOME-safe baseline with the
-English keyboard, Cangjie 5 and Pinyin. Custom installation currently
-customizes only input methods: English stays selected, while Cangjie 5 and
-Pinyin can be selected independently. `--all` is the noninteractive
-equivalent of one-click. Neither path installs Niri/DMS or replaces the login
-manager; the greeter replacement is always a separate guarded command.
+English keyboard, Cangjie 5 and Pinyin. Custom installation first configures
+input methods, then offers the optional Development Toolchain step with its
+own component and scope screens. `--all` is the noninteractive equivalent of
+one-click. Neither path installs Niri/DMS or replaces the login manager; the
+greeter replacement is always a separate guarded command.
 
 For a scripted input-method choice, pass the selected capabilities explicitly:
 
 ```bash
 MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=0 ./scripts/myunix install --module input-method
+MYUNIX_TOOLCHAIN_SCOPE=user MYUNIX_TOOLCHAIN_COMPONENTS=jdk,cmake,anaconda \
+  ./scripts/myunix install --module development-toolchain
 ```
 
 Each module prints `[current/total]` progress; network operations print their

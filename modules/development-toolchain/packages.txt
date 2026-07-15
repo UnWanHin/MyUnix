@@ -1,0 +1,31 @@
+# DNF-managed development-toolchain packages. The Development Tools group is
+# installed separately when the build-tools component is selected.
+meson
+autoconf
+automake
+libtool
+gdb
+valgrind
+ccache
+pkgconf-pkg-config
+neovim
+tmux
+shellcheck
+curl
+wget
+tar
+gzip
+ninja-build
+rust
+cargo
+python3-devel
+python3-pip
+python3-virtualenv
+pipx
+nodejs
+npm
+golang
+gcc
+gcc-c++
+clang
+lldb

@@ -9,7 +9,11 @@ assert_output_contains 'Unknown module: unknown'
 run bash -c '
   export MYUNIX_SOURCE_ONLY=1 MYUNIX_TEST_MODE=fedora MYUNIX_UI_TEST_MODE=1
   source "'"$PROJECT_ROOT"'/scripts/myunix"
-  ui_choose_many() { printf "0\\n1\\n"; }
+  ui_choose_many() {
+    if [[ "$1" == "Choose input methods" ]]; then
+      printf "0\\n1\\n"
+    fi
+  }
   run_module() {
     if [[ "$1" == input-method ]]; then
       printf "input:%s:%s\\n" "$MYUNIX_INPUT_CANGJIE" "$MYUNIX_INPUT_PINYIN"
@@ -34,6 +38,28 @@ run bash -c '
 '
 assert_status 0
 assert_output_contains 'input:1:1'
+
+run bash -c '
+  export MYUNIX_SOURCE_ONLY=1 MYUNIX_TEST_MODE=fedora MYUNIX_UI_TEST_MODE=1
+  source "'"$PROJECT_ROOT"'/scripts/myunix"
+  ui_choose_many() {
+    case "$1" in
+      "Choose input methods") printf "0\n" ;;
+      "Optional modules") printf "0\n" ;;
+      "Development toolchain components") printf "1\n2\n6\n" ;;
+    esac
+  }
+  ui_choose_one() { printf "1\n"; }
+  run_module() {
+    if [[ "$1" == development-toolchain ]]; then
+      printf "toolchain:%s:%s\n" "$MYUNIX_TOOLCHAIN_SCOPE" "$MYUNIX_TOOLCHAIN_COMPONENTS"
+    fi
+    return 0
+  }
+  run_custom_install
+'
+assert_status 0
+assert_output_contains 'toolchain:user:jdk,cmake,anaconda'
 
 run bash -c '
   export MYUNIX_SOURCE_ONLY=1 MYUNIX_UI_TEST_MODE=1 MYUNIX_UI_NO_RENDER=1

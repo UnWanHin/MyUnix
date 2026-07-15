@@ -1,0 +1,34 @@
+# component|kind|value
+build-tools|group|Development Tools
+build-tools|package|meson
+build-tools|package|autoconf
+build-tools|package|automake
+build-tools|package|libtool
+build-tools|package|gdb
+build-tools|package|valgrind
+build-tools|package|ccache
+build-tools|package|pkgconf-pkg-config
+build-tools|package|neovim
+build-tools|package|tmux
+build-tools|package|shellcheck
+build-tools|package|curl
+build-tools|package|wget
+build-tools|package|tar
+build-tools|package|gzip
+jdk|portable|jdk
+cmake|portable|cmake
+ninja|package|ninja-build
+rust|package|rust
+rust|package|cargo
+python|package|python3-devel
+python|package|python3-pip
+python|package|python3-virtualenv
+python|package|pipx
+anaconda|portable|anaconda
+node|package|nodejs
+node|package|npm
+go|package|golang
+gcc|package|gcc
+gcc|package|gcc-c++
+clang|package|clang
+clang|package|lldb

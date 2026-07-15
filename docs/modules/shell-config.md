@@ -11,13 +11,15 @@ shell-specific configuration.
 └── sysrc.d/
     ├── env.rc
     ├── aliases.rc
-    └── functions.rc
+    ├── functions.rc
+    └── development-toolchain.rc  # managed by the optional toolchain module
 ```
 
 `env.rc` owns portable `export` statements, `aliases.rc` owns aliases, and
 `functions.rc` owns functions that work in both Bash and Zsh. `.sysrc` loads
-those files in that fixed order. Keep each file public and portable: do not add
-passwords, tokens, private keys, shell history, browser data, or
+all readable `sysrc.d/*.rc` fragments in lexical order, so independent MyUnix
+modules can own their own public fragment. Keep each file public and portable:
+do not add passwords, tokens, private keys, shell history, browser data, or
 machine-specific device paths.
 
 ## Install or reapply
@@ -43,7 +45,9 @@ git diff -- modules/shell-config
 ```
 
 The exporter copies only `.sysrc`, `env.rc`, `aliases.rc`, and `functions.rc`.
-Review the diff before committing, especially environment values.
+The optional Development Toolchain module supplies its own reviewed fragment;
+the shell exporter deliberately does not capture arbitrary extra user
+fragments. Review the diff before committing, especially environment values.
 
 ## Boundaries and recovery
 

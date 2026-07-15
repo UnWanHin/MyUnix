@@ -10,7 +10,7 @@ printf '%s\n' 'old zsh' > "$temporary_dir/home/.zshrc"
 
 run env HOME="$temporary_dir/home" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/shell-config/install.sh'; install_shell_config; install_shell_config; cat \"\$HOME/.config/.sysrc\""
 assert_status 0
-assert_output_contains 'sysrc.d/$_sysrc_fragment'
+assert_output_contains 'sysrc.d/*.rc'
 assert_equals 1 "$(grep -c '^# >>> MyUnix shared shell configuration >>>$' "$temporary_dir/home/.bashrc")"
 assert_equals 1 "$(grep -c '^# >>> MyUnix shared shell configuration >>>$' "$temporary_dir/home/.zshrc")"
 grep -Fqx '[ -r "$HOME/.config/.sysrc" ] && . "$HOME/.config/.sysrc"' "$temporary_dir/home/.bashrc"
