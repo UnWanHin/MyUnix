@@ -1,25 +1,39 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT/scripts/lib/core.sh"
 source "$ROOT/scripts/lib/manifest.sh"
 source "$ROOT/scripts/lib/state.sh"
 source "$ROOT/modules/bootstrap/install.sh"
 source "$ROOT/modules/dnf/install.sh"
+source "$ROOT/modules/dnf/export.sh"
 source "$ROOT/modules/rpm/install.sh"
 source "$ROOT/modules/gnome/install.sh"
 source "$ROOT/modules/gnome/export.sh"
 source "$ROOT/modules/input-method/install.sh"
 source "$ROOT/modules/input-method/export.sh"
 source "$ROOT/modules/niri-dms/install.sh"
+source "$ROOT/modules/niri-dms/export.sh"
 source "$ROOT/modules/niri-dms-greeter/install.sh"
 source "$ROOT/modules/niri-dms-greeter/rollback.sh"
+source "$ROOT/modules/shell-config/install.sh"
+source "$ROOT/modules/shell-config/export.sh"
+source "$ROOT/modules/phone-connect/install.sh"
+source "$ROOT/modules/phone-connect/export.sh"
 
 run_doctor() {
+  local manifest
   is_fedora || die 'Fedora is required'
   require_command dnf
   require_command dconf
+  for manifest in \
+    "$ROOT/modules/dnf/core.txt" \
+    "$ROOT/modules/dnf/optional.txt" \
+    "$ROOT/modules/input-method/packages.txt" \
+    "$ROOT/modules/phone-connect/packages.txt"; do
+    verify_dnf_manifest_available "$manifest" || die "DNF manifest contains unavailable packages: $manifest"
+  done
   info 'Fedora GNOME prerequisites verified'
 }
 
@@ -50,6 +64,8 @@ run_module() {
     input-method) install_input_methods || status=1 ;;
     niri-dms) install_niri_dms || status=1 ;;
     niri-dms-greeter) install_niri_dms_greeter || status=1 ;;
+    shell-config) install_shell_config || status=1 ;;
+    phone-connect) install_phone_connect || status=1 ;;
     *) die "Unknown module: $module" ;;
   esac
   if ((status == 0)); then
@@ -72,7 +88,7 @@ run_selected_modules() {
 run_guided_install() {
   local module reply
   export MYUNIX_INSTALL_MODE=guided
-  for module in bootstrap dnf rpm gnome input-method; do
+  for module in bootstrap dnf rpm gnome input-method niri-dms shell-config phone-connect; do
     read -r -p "Install ${module}? [y/N] " reply
     [[ "$reply" =~ ^[Yy]([Ee][Ss])?$ ]] && run_module "$module" || true
   done
@@ -87,9 +103,10 @@ run_export() {
   is_fedora || die 'Fedora is required'
   export_gnome
   export_input_methods
-  require_command dnf
-  dnf repoquery --userinstalled --qf '%{name}' | sort -u > "$ROOT/modules/dnf/exported-userinstalled.txt"
-  info 'DNF user-installed package candidates exported for review'
+  export_niri_dms
+  export_shell_config
+  export_phone_connect
+  export_userinstalled_dnf_candidates
 }
 
 run_retry() {
@@ -129,6 +146,11 @@ run_install() {
     *) die "Unknown install option: $1" ;;
   esac
 }
+
+if [[ "${MYUNIX_SOURCE_ONLY:-}" == 1 ]]; then
+  [[ "${BASH_SOURCE[0]}" != "$0" ]] && return 0
+  exit 0
+fi
 
 case "${1:-}" in
   doctor) run_doctor ;;

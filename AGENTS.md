@@ -2,6 +2,12 @@
 
 This repository is the reproducible Fedora GNOME migration source of truth.
 
+## Local-first workflow
+
+- Treat this local working tree as authoritative. Make and verify changes here before referring to any remote state.
+- Do not push to GitHub unless the user explicitly asks to synchronize the verified local work.
+- Before reporting completion, show the local branch, `git status`, and relevant verification output. A remote branch alone is never evidence that this local machine is ready.
+
 This is repository-local guidance: it governs work performed from this
 repository. Put personal defaults shared across repositories in
 `~/.codex/AGENTS.md`. Neither location monitors the operating system or runs

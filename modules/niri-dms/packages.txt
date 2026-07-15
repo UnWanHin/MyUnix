@@ -1,0 +1,7 @@
+# Packages supplied by the DMS COPR repositories after install_niri_dms enables them.
+dms
+niri
+quickshell
+kitty
+hyfetch
+zsh

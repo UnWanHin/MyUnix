@@ -1,0 +1,4 @@
+# Public DMS plugins recreated after the Niri + DMS package installation.
+dankActions
+dankGifSearch
+dankKDEConnect

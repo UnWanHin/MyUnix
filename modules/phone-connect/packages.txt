@@ -1,0 +1,2 @@
+# KDE Connect service for DMS Phone Connect on Fedora.
+kdeconnectd
