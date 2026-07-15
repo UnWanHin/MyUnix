@@ -1,0 +1,2 @@
+# NetworkManager tray UI for standalone Niri/DMS sessions.
+network-manager-applet

@@ -23,6 +23,7 @@ source "$ROOT/modules/shell-config/install.sh"
 source "$ROOT/modules/shell-config/export.sh"
 source "$ROOT/modules/phone-connect/install.sh"
 source "$ROOT/modules/phone-connect/export.sh"
+source "$ROOT/modules/portal-login/install.sh"
 
 run_doctor() {
   local manifest
@@ -33,7 +34,8 @@ run_doctor() {
     "$ROOT/modules/dnf/core.txt" \
     "$ROOT/modules/dnf/optional.txt" \
     "$ROOT/modules/input-method/packages.txt" \
-    "$ROOT/modules/phone-connect/packages.txt"; do
+    "$ROOT/modules/phone-connect/packages.txt" \
+    "$ROOT/modules/portal-login/packages.txt"; do
     verify_dnf_manifest_available "$manifest" || die "DNF manifest contains unavailable packages: $manifest"
   done
   info 'Fedora GNOME prerequisites verified'
@@ -68,6 +70,7 @@ run_module() {
     niri-dms-greeter) install_niri_dms_greeter || status=1 ;;
     shell-config) install_shell_config || status=1 ;;
     phone-connect) install_phone_connect || status=1 ;;
+    portal-login) install_portal_login || status=1 ;;
     *) die "Unknown module: $module" ;;
   esac
   if ((status == 0)); then

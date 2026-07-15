@@ -24,6 +24,7 @@ Review the generated DNF candidate list and GNOME/input-method exports before co
 ./scripts/myunix install --module niri-dms
 ./scripts/myunix install --module shell-config
 ./scripts/myunix install --module phone-connect
+./scripts/myunix install --module portal-login
 ./scripts/myunix retry
 ```
 
@@ -55,6 +56,11 @@ MYUNIX_DOWNLOAD_TIMEOUT_SECONDS=900 ./scripts/myunix install --module rpm
 ```
 
 Direct RPM applications are declared in `modules/rpm/apps.tsv`. Add only official HTTPS sources with a pinned SHA-256; packages are downloaded to a temporary directory with `wget`, verified, installed through DNF, and removed. See [module documentation](docs/modules/) for details.
+
+The optional [Portal Login](docs/modules/portal-login.md) module adds the
+NetworkManager tray applet to Niri/DMS and a generic **Wi-Fi Login** entry in
+DMS Spotlight. It opens the current network's captive-portal page only after
+you select it; it stores no Wi-Fi credentials or per-network redirect URLs.
 
 After installing or importing input methods, log out and back in to let the active GNOME or Niri session reload its input-method services. The optional [shared shell configuration](docs/modules/shell-config.md) module manages portable Bash/Zsh settings through `~/.config/.sysrc` without mixing them into Niri's KDL configuration. [Phone Connect](docs/modules/phone-connect.md) recreates KDE Connect software and Niri startup without exporting paired-phone data.
 
