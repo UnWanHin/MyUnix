@@ -2,3 +2,5 @@
 .myunix-test-state/
 *.rpm
 .obsidian/
+config/
+readme.md
