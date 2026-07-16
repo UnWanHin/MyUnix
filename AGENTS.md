@@ -5,7 +5,7 @@ This repository is the reproducible Fedora GNOME migration source of truth.
 ## Local-first workflow
 
 - Treat this local working tree as authoritative. Make and verify changes here before referring to any remote state.
-- Do not push to GitHub unless the user explicitly asks to synchronize the verified local work.
+- After verified local work is committed, automatically push it to `origin/fedora`; do not wait for a separate reminder. Stop and report instead if validation fails, a secret review flags data, or the remote rejects the push.
 - Before reporting completion, show the local branch, `git status`, and relevant verification output. A remote branch alone is never evidence that this local machine is ready.
 
 This is repository-local guidance: it governs work performed from this
