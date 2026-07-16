@@ -1,0 +1,2 @@
+# Steam is supplied by RPM Fusion after the bootstrap module enables it.
+steam
