@@ -1,0 +1,19 @@
+{
+  "frameEnabled": false,
+  "frameThickness": 16,
+  "frameRounding": 23,
+  "frameColor": "",
+  "frameOpacity": 1,
+  "frameScreenPreferences": [
+    "all"
+  ],
+  "frameBarSize": 40,
+  "frameShowOnOverview": false,
+  "frameBlurEnabled": true,
+  "frameCloseGaps": true,
+  "frameLauncherEmergeSide": "bottom",
+  "frameLauncherArcExtender": false,
+  "frameLauncherEdgeHover": false,
+  "frameMode": "connected",
+  "frameBarInsetPadding": -1
+}

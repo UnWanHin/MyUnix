@@ -27,16 +27,19 @@ Review the generated DNF candidate list and GNOME/input-method exports before co
 ./scripts/myunix install --module portal-login
 ./scripts/myunix install --module development-toolchain
 ./scripts/myunix install --module distrobox
+./scripts/myunix install --module distrobox-ros2-humble
+./scripts/myunix install --module distrobox-codex
 ./scripts/myunix retry
 ```
 
 The first menu uses `↑`/`↓` to move, `Space` to toggle a choice and `Enter` to
 confirm. One-click installs the conservative GNOME-safe baseline with the
-English keyboard, Cangjie 5 and Pinyin. Custom installation first configures
-input methods, then offers the optional Development Toolchain step with its
-own component and scope screens. `--all` is the noninteractive equivalent of
-one-click. Neither path installs Niri/DMS or replaces the login manager; the
-greeter replacement is always a separate guarded command.
+English keyboard, Cangjie 5, Pinyin, and [Steam](docs/modules/steam.md) from
+RPM Fusion. Custom installation first configures input methods, then offers
+optional Steam, Niri + DMS, and Development Toolchain screens. `--all` is the
+noninteractive equivalent of one-click. Neither path installs Niri/DMS or
+replaces the login manager; the greeter replacement is always a separate
+guarded command.
 
 For a scripted input-method choice, pass the selected capabilities explicitly:
 
@@ -61,6 +64,10 @@ MYUNIX_DOWNLOAD_TIMEOUT_SECONDS=900 ./scripts/myunix install --module rpm
 
 Direct RPM applications are declared in `modules/rpm/apps.tsv`. Add only official HTTPS sources with a pinned SHA-256; packages are downloaded to a temporary directory with `wget`, verified, installed through DNF, and removed. See [module documentation](docs/modules/) for details.
 
+Steam is deliberately separate from direct RPM applications: it is installed
+from RPM Fusion by DNF and receives a user-level Niri compatibility launcher
+with `-system-composer`.
+
 The optional [Portal Login](docs/modules/portal-login.md) module adds the
 NetworkManager tray applet to Niri/DMS and a generic **Wi-Fi Login** entry in
 DMS Spotlight. It opens the current network's captive-portal page only after
@@ -69,6 +76,11 @@ you select it; it stores no Wi-Fi credentials or per-network redirect URLs.
 The optional [Distrobox](docs/modules/distrobox.md) module installs only the
 Fedora Distrobox package. It does not create a distribution, pull an image or
 choose a container mirror.
+
+For container-native Codex used with ROS and other Ubuntu-only toolchains, use
+`./scripts/myunix install --module distrobox-codex`; it stores container
+configuration under `/opt/distrobox/ubuntu22/.codex` and never copies
+credentials from Fedora.
 
 After installing or importing input methods, log out and back in to let the active GNOME or Niri session reload its input-method services. The optional [shared shell configuration](docs/modules/shell-config.md) module manages portable Bash/Zsh settings through `~/.config/.sysrc` without mixing them into Niri's KDL configuration. [Phone Connect](docs/modules/phone-connect.md) recreates KDE Connect software and Niri startup without exporting paired-phone data.
 

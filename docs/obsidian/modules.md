@@ -10,7 +10,7 @@ desktop settings and exported state from overwriting one another.
 | rpm | checksum-pinned downloaded RPMs | [[../modules/rpm|rpm]] |
 | gnome | GNOME media-key shortcuts | [[../modules/gnome|gnome]] |
 | input-method | IBus/Fcitx5 and app launch adapters | [[../modules/input-method|input method]] |
-| niri-dms | optional Niri, DMS, reviewed plugin IDs and KDL session configuration | [[../modules/niri-dms|niri dms]] |
+| niri-dms | optional Niri, DMS, reviewed plugin IDs, KDL session files, optional `Mod+F8` touchpad shortcut and categorized public personalization | [[../modules/niri-dms|niri dms]] |
 | shell-config | Bash/Zsh common `.sysrc` fragments | [[../modules/shell-config|shell config]] |
 | phone-connect | KDE Connect package, firewall gate and Niri fragment | [[../modules/phone-connect|phone connect]] |
 

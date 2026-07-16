@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+state_file="${MYUNIX_NIRI_TOUCHPAD_STATE_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/niri/myunix/touchpad.kdl}"
+notifier="${MYUNIX_NOTIFY_SEND:-notify-send}"
+
+write_state() {
+  local mode=$1 directory temporary
+  directory="$(dirname "$state_file")"
+  mkdir -p "$directory"
+  temporary="$(mktemp "$directory/.touchpad.kdl.XXXXXX")"
+
+  if [[ "$mode" == disabled ]]; then
+    printf '%s\n' \
+      'input {' \
+      '    touchpad {' \
+      '        off' \
+      '    }' \
+      '}' > "$temporary"
+  else
+    printf '%s\n' \
+      'input {' \
+      '    touchpad {' \
+      '        // Enabled: base input preferences remain in config.kdl.' \
+      '    }' \
+      '}' > "$temporary"
+  fi
+
+  mv -f "$temporary" "$state_file"
+}
+
+if grep -qE '^[[:space:]]*off[[:space:]]*$' "$state_file" 2>/dev/null; then
+  write_state enabled
+  message='Touchpad enabled'
+else
+  write_state disabled
+  message='Touchpad disabled'
+fi
+
+if [[ "${MYUNIX_NIRI_TOUCHPAD_SKIP_RELOAD:-0}" != 1 ]] && command -v niri >/dev/null 2>&1; then
+  niri msg action load-config-file >/dev/null 2>&1 || true
+fi
+
+if command -v "$notifier" >/dev/null 2>&1; then
+  "$notifier" 'Touchpad' "$message" || true
+fi
+
+printf '%s\n' "$message"

@@ -3,4 +3,7 @@
 *.rpm
 .obsidian/
 config/
+!modules/niri-dms/config/
+!modules/niri-dms/config/dms/
+!modules/niri-dms/config/dms/*.json
 readme.md

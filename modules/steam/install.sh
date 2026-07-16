@@ -52,8 +52,8 @@ install_steam_desktop_override() {
 install_steam() {
   local module_dir
   module_dir="$(steam_module_dir)"
-  install_dnf_manifest "$module_dir/packages.txt"
-  rpm -q steam
-  install_steam_desktop_override
+  install_dnf_manifest "$module_dir/packages.txt" || return 1
+  rpm -q steam || return 1
+  install_steam_desktop_override || return 1
   info 'Steam installed with the Niri-compatible system-composer launcher.'
 }

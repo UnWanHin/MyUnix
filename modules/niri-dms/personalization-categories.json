@@ -1,0 +1,43 @@
+{
+  "appearance": [
+    "animationSpeed", "animationVariant", "customAnimationDuration",
+    "modalAnimationSpeed", "modalCustomAnimationDuration",
+    "popoutAnimationSpeed", "popoutCustomAnimationDuration",
+    "enableRippleEffects", "motionEffect", "cornerRadius",
+    "fontFamily", "monoFontFamily", "fontScale", "fontWeight",
+    "m3ElevationEnabled", "m3ElevationIntensity", "m3ElevationOpacity",
+    "m3ElevationColorMode", "m3ElevationLightDirection", "m3ElevationCustomColor",
+    "barElevationEnabled", "blurEnabled", "blurForegroundLayers",
+    "blurLayerOutlineOpacity", "blurBorderColor", "blurBorderOpacity",
+    "widgetBackgroundColor", "widgetBackgroundCustomColor",
+    "widgetBackgroundCustomStrength", "widgetColorMode", "buttonColorMode",
+    "popupTransparency", "textRenderQuality", "textRenderType"
+  ],
+  "bar": [
+    "barConfigs", "barInsetPaddingShared", "barInsetPaddingSyncAll",
+    "barMaxVisibleApps", "barMaxVisibleRunningApps", "barShowOverflowBadge",
+    "centeringMode", "focusedWindowCompactMode", "focusedWindowSize",
+    "focusedWindowShowIcon", "runningAppsCompactMode", "runningAppsCurrentMonitor",
+    "runningAppsCurrentWorkspace", "runningAppsGroupByApp", "trayAutoOverflow",
+    "trayMaxVisibleItems", "trayPopupSingleLine", "systemTrayIconTintMode",
+    "systemTrayIconTintSaturation", "systemTrayIconTintStrength"
+  ],
+  "dock": [
+    "showDock", "dockAutoHide", "dockSmartAutoHide", "dockUseOverlayLayer",
+    "dockGroupByApp", "dockPosition", "dockBottomGap", "dockIconSize",
+    "dockIndicatorStyle", "dockIsolateDisplays", "dockLauncherEnabled",
+    "dockLauncherLogoBrightness", "dockLauncherLogoColorOverride",
+    "dockLauncherLogoContrast", "dockLauncherLogoMode", "dockLauncherLogoSizeOffset",
+    "dockMargin", "dockMaxVisibleApps", "dockMaxVisibleRunningApps",
+    "dockOpenOnOverview", "dockRestoreSpecialWorkspaceOnClick",
+    "dockShowOverflowBadge", "dockShowTrash", "dockSpacing", "dockTransparency",
+    "dockBorderColor", "dockBorderEnabled", "dockBorderOpacity", "dockBorderThickness"
+  ],
+  "frame": [
+    "frameOpacity", "frameScreenPreferences", "frameBarSize", "frameShowOnOverview",
+    "frameBlurEnabled", "frameCloseGaps", "frameLauncherEmergeSide",
+    "frameLauncherArcExtender", "frameLauncherEdgeHover", "frameMode",
+    "frameBarInsetPadding", "frameColor", "frameEnabled", "frameRounding",
+    "frameThickness"
+  ]
+}

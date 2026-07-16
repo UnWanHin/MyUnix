@@ -33,9 +33,10 @@ assert_output_contains 'spawn-at-startup "fcitx5" "-d"'
 }
 
 temporary_dir="$(mktemp -d)"
-mkdir -p "$temporary_dir/source/dms" "$temporary_dir/home/.config/niri/dms"
+mkdir -p "$temporary_dir/source/dms" "$temporary_dir/source/myunix" "$temporary_dir/home/.config/niri/dms"
 printf '%s\n' 'environment {' '}' > "$temporary_dir/source/config.kdl"
 printf '%s\n' 'binds {}' > "$temporary_dir/source/dms/binds.kdl"
+printf '%s\n' 'input {' '  touchpad {' '  }' '}' > "$temporary_dir/source/myunix/touchpad.kdl"
 printf '%s\n' 'old-config' > "$temporary_dir/home/.config/niri/config.kdl"
 run env HOME="$temporary_dir/home" MYUNIX_NIRI_DMS_CONFIG_SOURCE="$temporary_dir/source" MYUNIX_NIRI_CONFIG_DIR="$temporary_dir/home/.config/niri" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; import_niri_dms_config; cat \"\$MYUNIX_NIRI_CONFIG_DIR/config.kdl\""
 assert_status 0
@@ -44,12 +45,28 @@ find "$temporary_dir/home/.local/state/myunix/backups/niri-dms" -type f -name co
   printf '%s\n' 'Expected existing Niri config backup' >&2
   exit 1
 }
+[[ -f "$temporary_dir/home/.config/niri/myunix/touchpad.kdl" ]] || {
+  printf '%s\n' 'Expected managed touchpad fragment to be imported' >&2
+  exit 1
+}
+run env HOME="$temporary_dir/home" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; install_niri_dms_touchpad_toggle; test -x \"\$HOME/.local/bin/niri-touchpad-toggle\""
+assert_status 0
+
+temporary_binding="$(mktemp -d)"
+run env HOME="$temporary_binding/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_binding/home/.config/niri" MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=1 bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_touchpad_toggle_binding; cat \"\$MYUNIX_NIRI_CONFIG_DIR/myunix/touchpad-bind.kdl\""
+assert_status 0
+assert_output_contains 'Mod+F8'
+assert_output_contains 'niri-touchpad-toggle'
+run env HOME="$temporary_binding/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_binding/home/.config/niri" MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=0 bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_touchpad_toggle_binding; test ! -e \"\$MYUNIX_NIRI_CONFIG_DIR/myunix/touchpad-bind.kdl\""
+assert_status 0
 
 temporary_export="$(mktemp -d)"
 mkdir -p "$temporary_export/home/.config/niri" "$temporary_export/target"
 cp -a "$PROJECT_ROOT/modules/niri-dms/config/niri/." "$temporary_export/home/.config/niri/"
 mkdir -p "$temporary_export/home/.config/niri/myunix"
 printf '%s\n' 'private phone fragment' > "$temporary_export/home/.config/niri/myunix/kdeconnect.kdl"
+printf '%s\n' 'input {' '  touchpad {' '  }' '}' > "$temporary_export/home/.config/niri/myunix/touchpad.kdl"
+printf '%s\n' 'binds {' '  Mod+F8 { spawn "niri-touchpad-toggle"; }' '}' > "$temporary_export/home/.config/niri/myunix/touchpad-bind.kdl"
 printf '%s\n' 'private backup' > "$temporary_export/home/.config/niri/config.kdl.backup.private"
 run env HOME="$temporary_export/home" MYUNIX_NIRI_DMS_CONFIG_TARGET="$temporary_export/target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/export.sh'; export_niri_dms"
 assert_status 0
@@ -73,6 +90,98 @@ assert_status 0
   printf '%s\n' 'Niri/DMS exporter must not export Phone Connect state' >&2
   exit 1
 }
+[[ -f "$temporary_export/target/myunix/touchpad.kdl" ]] || {
+  printf '%s\n' 'Expected managed touchpad fragment to be exported' >&2
+  exit 1
+}
+[[ -f "$temporary_export/target/myunix/touchpad-bind.kdl" ]] || {
+  printf '%s\n' 'Expected managed touchpad binding to be exported' >&2
+  exit 1
+}
+rm "$temporary_export/home/.config/niri/myunix/touchpad-bind.kdl"
+run env HOME="$temporary_export/home" MYUNIX_NIRI_DMS_CONFIG_TARGET="$temporary_export/target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/export.sh'; export_niri_dms; test ! -e '$temporary_export/target/myunix/touchpad-bind.kdl'"
+assert_status 0
+
+temporary_touchpad="$(mktemp -d)"
+touchpad_state="$temporary_touchpad/niri/myunix/touchpad.kdl"
+mkdir -p "$(dirname "$touchpad_state")"
+printf '%s\n' 'input {' '  touchpad {' '  }' '}' > "$touchpad_state"
+run env \
+  MYUNIX_NIRI_TOUCHPAD_STATE_FILE="$touchpad_state" \
+  MYUNIX_NIRI_TOUCHPAD_SKIP_RELOAD=1 \
+  MYUNIX_NOTIFY_SEND=true \
+  "$PROJECT_ROOT/modules/niri-dms/bin/niri-touchpad-toggle"
+assert_status 0
+grep -qx '[[:space:]]*off' "$touchpad_state" || {
+  printf '%s\n' 'Expected first touchpad toggle to disable the touchpad' >&2
+  exit 1
+}
+run env \
+  MYUNIX_NIRI_TOUCHPAD_STATE_FILE="$touchpad_state" \
+  MYUNIX_NIRI_TOUCHPAD_SKIP_RELOAD=1 \
+  MYUNIX_NOTIFY_SEND=true \
+  "$PROJECT_ROOT/modules/niri-dms/bin/niri-touchpad-toggle"
+assert_status 0
+! grep -qx '[[:space:]]*off' "$touchpad_state" || {
+  printf '%s\n' 'Expected second touchpad toggle to enable the touchpad' >&2
+  exit 1
+}
+
+[[ -x "$PROJECT_ROOT/modules/niri-dms/bin/niri-touchpad-toggle" ]] || {
+  printf '%s\n' 'Expected managed Niri touchpad helper' >&2
+  exit 1
+}
+
+temporary_personalization="$(mktemp -d)"
+settings="$temporary_personalization/settings.json"
+category_target="$temporary_personalization/exported"
+cat > "$settings" <<'EOF'
+{
+  "barConfigs": [{"id":"default","autoHide":false}],
+  "showDock": true,
+  "dockPosition": 0,
+  "animationSpeed": 0.8,
+  "fontFamily": "Inter Variable",
+  "frameOpacity": 0.9,
+  "wifiNetworkPins": {"private":"network"},
+  "launcherLogoCustomPath": "/home/user/private-logo.svg",
+  "builtInPluginSettings": {"privatePlugin": true}
+}
+EOF
+run env MYUNIX_DMS_SETTINGS_FILE="$settings" MYUNIX_DMS_PERSONALIZATION_TARGET="$category_target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/export.sh'; export_dms_personalization; cat '$category_target/bar.json'"
+assert_status 0
+assert_output_contains '"barConfigs"'
+[[ "$OUTPUT" != *'wifiNetworkPins'* && "$OUTPUT" != *'private-logo'* && "$OUTPUT" != *'privatePlugin'* ]] || {
+  printf '%s\n' 'DMS personalization export included excluded state' >&2
+  exit 1
+}
+
+cat > "$settings" <<'EOF'
+{
+  "barConfigs": [{"id":"default","autoHide":true}],
+  "unknownLocalSetting": "preserve-me"
+}
+EOF
+run env MYUNIX_DMS_SETTINGS_FILE="$settings" MYUNIX_DMS_PERSONALIZATION_SOURCE="$category_target" MYUNIX_DMS_BACKUP_DIR="$temporary_personalization/backups" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; import_dms_personalization; cat '$settings'"
+assert_status 0
+assert_output_contains '"autoHide": false'
+assert_output_contains '"unknownLocalSetting": "preserve-me"'
+find "$temporary_personalization/backups" -type f -name DankMaterialShell-settings.json -print -quit | grep -q . || {
+  printf '%s\n' 'Expected DMS personalization import backup' >&2
+  exit 1
+}
+
+printf '%s\n' '{"wifiNetworkPins":{"private":"network"}}' > "$category_target/bar.json"
+run env MYUNIX_DMS_SETTINGS_FILE="$settings" MYUNIX_DMS_PERSONALIZATION_SOURCE="$category_target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; import_dms_personalization"
+assert_status 2
+assert_output_contains 'Invalid DMS personalization category'
+
+for category in appearance bar dock frame; do
+  ! git -C "$PROJECT_ROOT" check-ignore -q "modules/niri-dms/config/dms/$category.json" || {
+    printf 'DMS personalization category is ignored: %s\n' "$category" >&2
+    exit 1
+  }
+done
 
 run env MYUNIX_SOURCE_ONLY=1 MYUNIX_UI_TEST_MODE=1 bash -c '
   source "'"$PROJECT_ROOT"'/scripts/myunix"

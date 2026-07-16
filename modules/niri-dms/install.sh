@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../../scripts/lib/network.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/lib/personalization.sh"
 
 fedora_release() { printf '%s\n' "${MYUNIX_FEDORA_RELEASE:-$(rpm -E %fedora)}"; }
 
@@ -16,6 +17,42 @@ require_dms_supported_fedora() {
   local release
   release="$(fedora_release)"
   [[ "$release" == 43 || "$release" == 44 ]] || die 'DMS is supported only on Fedora 43 or 44'
+}
+
+install_niri_dms_touchpad_toggle() {
+  local module_dir source target
+  module_dir="$(niri_dms_dir)"
+  source="$module_dir/bin/niri-touchpad-toggle"
+  target="${MYUNIX_NIRI_DMS_BIN_DIR:-$HOME/.local/bin}/niri-touchpad-toggle"
+  [[ -f "$source" ]] || die "Missing Niri touchpad toggle helper: $source"
+  mkdir -p "$(dirname "$target")"
+  cp -a "$source" "$target"
+  chmod 0755 "$target"
+}
+
+configure_niri_dms_touchpad_toggle_binding() {
+  local config_dir binding_file temporary
+  case "${MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE:-}" in
+    '') return 0 ;;
+    0|1) ;;
+    *) die 'MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE must be 0 or 1' ;;
+  esac
+
+  config_dir="${MYUNIX_NIRI_CONFIG_DIR:-$HOME/.config/niri}"
+  binding_file="$config_dir/myunix/touchpad-bind.kdl"
+  if [[ "$MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE" == 0 ]]; then
+    rm -f "$binding_file"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$binding_file")"
+  temporary="$(mktemp "${binding_file}.myunix.XXXXXX")"
+  printf '%s\n' \
+    '// Managed by MyUnix custom Niri + DMS personalization.' \
+    'binds {' \
+    '    Mod+F8 hotkey-overlay-title="Toggle Touchpad" { spawn "sh" "-lc" "$HOME/.local/bin/niri-touchpad-toggle"; }' \
+    '}' > "$temporary"
+  mv "$temporary" "$binding_file"
 }
 
 install_niri_dms_plugins() {
@@ -44,19 +81,21 @@ import_niri_dms_config() {
 
   target="${MYUNIX_NIRI_CONFIG_DIR:-$HOME/.config/niri}"
   backup_dir="$HOME/.local/state/myunix/backups/niri-dms/$(date +%Y%m%d-%H%M%S)"
-  if [[ -e "$target/config.kdl" || -d "$target/dms" ]]; then
+  if [[ -e "$target/config.kdl" || -d "$target/dms" || -f "$target/myunix/touchpad.kdl" ]]; then
     mkdir -p "$backup_dir"
     [[ -e "$target/config.kdl" ]] && cp -a "$target/config.kdl" "$backup_dir/config.kdl"
     [[ -d "$target/dms" ]] && cp -a "$target/dms" "$backup_dir/dms"
+    [[ -f "$target/myunix/touchpad.kdl" ]] && cp -a "$target/myunix/touchpad.kdl" "$backup_dir/touchpad.kdl"
   fi
 
-  mkdir -p "$target/dms"
+  mkdir -p "$target/dms" "$target/myunix"
   cp -a "$source/config.kdl" "$target/config.kdl"
   if [[ -d "$source/dms" ]]; then
     for file in "$source"/dms/*.kdl; do
       [[ -f "$file" ]] && cp -a "$file" "$target/dms/$(basename "$file")"
     done
   fi
+  [[ -f "$source/myunix/touchpad.kdl" ]] && cp -a "$source/myunix/touchpad.kdl" "$target/myunix/touchpad.kdl"
 }
 
 configure_niri_fcitx_session() {
@@ -114,6 +153,9 @@ install_niri_dms() {
   install_dnf_manifest "$module_dir/packages.txt"
   install_niri_dms_plugins "$module_dir/plugins.txt"
   import_niri_dms_config
+  install_niri_dms_touchpad_toggle
+  configure_niri_dms_touchpad_toggle_binding
   configure_niri_fcitx_session
+  import_dms_personalization
   info 'Niri + DMS installed. Run the input-method module, then log out and select Niri from the login-session chooser.'
 }

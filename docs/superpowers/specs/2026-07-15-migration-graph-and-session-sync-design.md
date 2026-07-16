@@ -59,11 +59,12 @@ is the only owner of `~/.config/niri/myunix/kdeconnect.kdl`.
 ### DMS application state
 
 The baseline installs DMS and recreates the reviewed plugin set from a public
-plugin-ID manifest, but does not export `DankMaterialShell/settings.json`,
-plugin settings, wallpaper paths, recent-data caches, or KDE Connect
-pairing/device identities. Those files can contain machine-specific paths or
-private state. The reusable DMS behaviour is kept in Niri/DMS KDL configuration
-and module documentation.
+plugin-ID manifest. It exports a strict allowlist from
+`DankMaterialShell/settings.json` into separate public bar, dock, appearance
+and frame categories. Plugin settings, wallpaper paths, recent-data caches,
+commands, device pins, display profiles, and KDE Connect pairing/device
+identities remain excluded. The reusable DMS behaviour is kept in categorized
+JSON alongside Niri/DMS KDL configuration.
 
 ### Packages and sources
 

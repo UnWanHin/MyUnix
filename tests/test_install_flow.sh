@@ -26,9 +26,29 @@ assert_status 0
 assert_output_contains 'input:1:0'
 
 run bash -c '
+  export MYUNIX_SOURCE_ONLY=1 MYUNIX_TEST_MODE=fedora MYUNIX_UI_TEST_MODE=1
+  source "'"$PROJECT_ROOT"'/scripts/myunix"
+  ui_choose_many() {
+    case "$1" in
+      "Choose input methods") printf "0\\n" ;;
+      "Optional desktop modules") printf "0\\n" ;;
+      "Niri + DMS personalization") printf "0\\n" ;;
+    esac
+  }
+  run_module() {
+    [[ "$1" == niri-dms ]] && printf "niri-dms:%s\\n" "$MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE"
+    return 0
+  }
+  run_custom_install
+'
+assert_status 0
+assert_output_contains 'niri-dms:1'
+
+run bash -c '
   export MYUNIX_SOURCE_ONLY=1 MYUNIX_TEST_MODE=fedora
   source "'"$PROJECT_ROOT"'/scripts/myunix"
   run_module() {
+    printf "module:%s\\n" "$1"
     if [[ "$1" == input-method ]]; then
       printf "input:%s:%s\\n" "$MYUNIX_INPUT_CANGJIE" "$MYUNIX_INPUT_PINYIN"
     fi
@@ -38,6 +58,22 @@ run bash -c '
 '
 assert_status 0
 assert_output_contains 'input:1:1'
+assert_output_contains 'module:steam'
+
+run bash -c '
+  export MYUNIX_SOURCE_ONLY=1 MYUNIX_TEST_MODE=fedora MYUNIX_UI_TEST_MODE=1
+  source "'"$PROJECT_ROOT"'/scripts/myunix"
+  ui_choose_many() {
+    case "$1" in
+      "Choose input methods") printf "0\\n" ;;
+      "Optional desktop applications") printf "0\\n" ;;
+    esac
+  }
+  run_module() { printf "module:%s\\n" "$1"; return 0; }
+  run_custom_install
+'
+assert_status 0
+assert_output_contains 'module:steam'
 
 run bash -c '
   export MYUNIX_SOURCE_ONLY=1 MYUNIX_TEST_MODE=fedora MYUNIX_UI_TEST_MODE=1
