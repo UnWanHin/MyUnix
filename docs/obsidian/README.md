@@ -17,6 +17,7 @@ Start with [[workstation]].
 ## Navigation
 
 - [[workstation]] — operating-system and desktop relationship hub.
+- [[installation-map]] — visual guide to one-click, custom and on-demand modules.
 - [[modules]] — module ownership and source manifests.
 - [[session]] — GNOME/Niri/DMS/Fcitx session boundaries.
 - [[recovery]] — export, restore and diagnosis commands.

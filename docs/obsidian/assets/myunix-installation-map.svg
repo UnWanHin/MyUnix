@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 700">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Noto+Sans+SC:wght@400;500;700&amp;display=swap');
+    text { font-family: 'JetBrains Mono', 'Noto Sans SC', sans-serif; }
+    .title { fill: #f8fafc; font-size: 22px; font-weight: 700; }
+    .subtitle { fill: #94a3b8; font-size: 11px; }
+    .region { font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+    .node { fill: #f8fafc; font-size: 12px; font-weight: 600; }
+    .detail { fill: #94a3b8; font-size: 9px; }
+    .small { fill: #cbd5e1; font-size: 9px; }
+  </style>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#1e293b" stroke-width=".5"/>
+    </pattern>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0,10 3.5,0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0,10 3.5,0 7" fill="#22d3ee"/>
+    </marker>
+  </defs>
+  <rect width="1180" height="700" fill="#0f172a"/>
+  <rect width="1180" height="700" fill="url(#grid)"/>
+
+  <text x="36" y="42" class="title">MyUnix · Fedora Migration Map</text>
+  <text x="36" y="63" class="subtitle">可重現的搬家基線 · 自訂能力 · 按需工具</text>
+
+  <rect x="36" y="94" width="170" height="82" rx="10" fill="#0f172a"/>
+  <rect x="36" y="94" width="170" height="82" rx="10" fill="rgba(8,51,68,.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="121" y="126" class="node" text-anchor="middle">Fresh Fedora</text>
+  <text x="121" y="147" class="detail" text-anchor="middle">MyUnix entry point</text>
+
+  <path d="M206 135H268" stroke="#22d3ee" stroke-width="1.5" fill="none" marker-end="url(#arrow-cyan)"/>
+  <rect x="276" y="94" width="210" height="82" rx="10" fill="#0f172a"/>
+  <rect x="276" y="94" width="210" height="82" rx="10" fill="rgba(59,130,246,.3)" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="381" y="126" class="node" text-anchor="middle">Choose installation mode</text>
+  <text x="381" y="147" class="detail" text-anchor="middle">one-click · custom · module</text>
+
+  <rect x="34" y="218" width="345" height="326" rx="14" fill="none" stroke="#22d3ee" stroke-width="1" stroke-dasharray="8,4"/>
+  <text x="52" y="242" class="region" fill="#22d3ee">ONE-CLICK BASELINE</text>
+  <text x="52" y="260" class="detail">./scripts/myunix install --all</text>
+  <path d="M381 176V205H207V281" stroke="#64748b" stroke-width="1.2" fill="none" marker-end="url(#arrow)"/>
+  <rect x="58" y="282" width="138" height="58" rx="7" fill="rgba(8,51,68,.4)" stroke="#22d3ee"/>
+  <text x="127" y="307" class="node" text-anchor="middle">Bootstrap</text>
+  <text x="127" y="325" class="detail" text-anchor="middle">RPM Fusion</text>
+  <rect x="216" y="282" width="138" height="58" rx="7" fill="rgba(8,51,68,.4)" stroke="#22d3ee"/>
+  <text x="285" y="307" class="node" text-anchor="middle">DNF Core</text>
+  <text x="285" y="325" class="detail" text-anchor="middle">Fedora baseline</text>
+  <rect x="58" y="365" width="138" height="58" rx="7" fill="rgba(8,51,68,.4)" stroke="#22d3ee"/>
+  <text x="127" y="390" class="node" text-anchor="middle">GNOME</text>
+  <text x="127" y="408" class="detail" text-anchor="middle">shortcuts</text>
+  <rect x="216" y="365" width="138" height="58" rx="7" fill="rgba(8,51,68,.4)" stroke="#22d3ee"/>
+  <text x="285" y="390" class="node" text-anchor="middle">Input methods</text>
+  <text x="285" y="408" class="detail" text-anchor="middle">EN · Cangjie · Pinyin</text>
+  <rect x="58" y="448" width="296" height="58" rx="7" fill="rgba(8,51,68,.4)" stroke="#22d3ee"/>
+  <text x="206" y="473" class="node" text-anchor="middle">Steam</text>
+  <text x="206" y="491" class="detail" text-anchor="middle">RPM Fusion · Niri system composer</text>
+
+  <rect x="418" y="218" width="345" height="326" rx="14" fill="none" stroke="#a78bfa" stroke-width="1" stroke-dasharray="8,4"/>
+  <text x="436" y="242" class="region" fill="#a78bfa">CUSTOM CAPABILITIES</text>
+  <text x="436" y="260" class="detail">interactive selections</text>
+  <path d="M381 176V205H590V281" stroke="#64748b" stroke-width="1.2" fill="none" marker-end="url(#arrow)"/>
+  <rect x="442" y="282" width="138" height="58" rx="7" fill="rgba(76,29,149,.4)" stroke="#a78bfa"/>
+  <text x="511" y="307" class="node" text-anchor="middle">Steam</text>
+  <text x="511" y="325" class="detail" text-anchor="middle">opt-in</text>
+  <rect x="600" y="282" width="138" height="58" rx="7" fill="rgba(76,29,149,.4)" stroke="#a78bfa"/>
+  <text x="669" y="307" class="node" text-anchor="middle">Niri + DMS</text>
+  <text x="669" y="325" class="detail" text-anchor="middle">keeps GNOME</text>
+  <rect x="442" y="365" width="138" height="58" rx="7" fill="rgba(76,29,149,.4)" stroke="#a78bfa"/>
+  <text x="511" y="390" class="node" text-anchor="middle">Touchpad</text>
+  <text x="511" y="408" class="detail" text-anchor="middle">optional Mod+F8</text>
+  <rect x="600" y="365" width="138" height="58" rx="7" fill="rgba(76,29,149,.4)" stroke="#a78bfa"/>
+  <text x="669" y="390" class="node" text-anchor="middle">Toolchain</text>
+  <text x="669" y="408" class="detail" text-anchor="middle">system or user</text>
+  <rect x="442" y="448" width="296" height="58" rx="7" fill="rgba(76,29,149,.4)" stroke="#a78bfa"/>
+  <text x="590" y="473" class="node" text-anchor="middle">Session configuration</text>
+  <text x="590" y="491" class="detail" text-anchor="middle">Fcitx5 · DMS · shortcuts · personalization</text>
+
+  <rect x="802" y="218" width="344" height="326" rx="14" fill="none" stroke="#fbbf24" stroke-width="1" stroke-dasharray="8,4"/>
+  <text x="820" y="242" class="region" fill="#fbbf24">ON-DEMAND MODULES</text>
+  <text x="820" y="260" class="detail">install one capability when needed</text>
+  <path d="M381 176V205H974V281" stroke="#64748b" stroke-width="1.2" fill="none" marker-end="url(#arrow)"/>
+  <rect x="826" y="282" width="138" height="58" rx="7" fill="rgba(120,53,15,.3)" stroke="#fbbf24"/>
+  <text x="895" y="307" class="node" text-anchor="middle">Direct RPMs</text>
+  <text x="895" y="325" class="detail" text-anchor="middle">WeChat · FlClash</text>
+  <rect x="984" y="282" width="138" height="58" rx="7" fill="rgba(120,53,15,.3)" stroke="#fbbf24"/>
+  <text x="1053" y="307" class="node" text-anchor="middle">Phone / Portal</text>
+  <text x="1053" y="325" class="detail" text-anchor="middle">KDE Connect · Wi-Fi</text>
+  <rect x="826" y="365" width="138" height="58" rx="7" fill="rgba(120,53,15,.3)" stroke="#fbbf24"/>
+  <text x="895" y="390" class="node" text-anchor="middle">Distrobox</text>
+  <text x="895" y="408" class="detail" text-anchor="middle">Ubuntu · ROS2 · Codex</text>
+  <rect x="984" y="365" width="138" height="58" rx="7" fill="rgba(120,53,15,.3)" stroke="#fbbf24"/>
+  <text x="1053" y="390" class="node" text-anchor="middle">Shell / Greeter</text>
+  <text x="1053" y="408" class="detail" text-anchor="middle">.sysrc · guarded</text>
+  <rect x="826" y="448" width="296" height="58" rx="7" fill="rgba(120,53,15,.3)" stroke="#fbbf24"/>
+  <text x="974" y="473" class="node" text-anchor="middle">Explicit module commands</text>
+  <text x="974" y="491" class="detail" text-anchor="middle">isolated, retryable, documented</text>
+
+  <path d="M207 544V594H590" stroke="#34d399" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M590 544V594" stroke="#34d399" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M974 544V594H590" stroke="#34d399" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+  <rect x="423" y="592" width="334" height="70" rx="10" fill="#0f172a"/>
+  <rect x="423" y="592" width="334" height="70" rx="10" fill="rgba(6,78,59,.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="590" y="620" class="node" text-anchor="middle">Portable public configuration</text>
+  <text x="590" y="641" class="detail" text-anchor="middle">export · verify · commit · restore on the next Fedora machine</text>
+  <text x="36" y="684" class="small">Interactive: docs/obsidian/installation-map.md · Graph View: wiki links · Sensitive data never enters Git</text>
+</svg>

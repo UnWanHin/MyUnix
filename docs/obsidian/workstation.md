@@ -3,6 +3,9 @@
 [[MyUnix migration graph|MyUnix]] manages a Fedora workstation that keeps
 GNOME available while allowing an optional Niri + DMS session.
 
+For an at-a-glance list of what is installed automatically versus selected
+later, open [[installation-map]].
+
 ```mermaid
 flowchart TD
   Fedora[Fedora base] --> Bootstrap[RPM Fusion / bootstrap]
