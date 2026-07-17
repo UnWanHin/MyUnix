@@ -25,6 +25,7 @@ Review the generated DNF candidate list and GNOME/input-method exports before co
 ./scripts/myunix install --module shell-config
 ./scripts/myunix install --module phone-connect
 ./scripts/myunix install --module portal-login
+./scripts/myunix install --module time-sync
 ./scripts/myunix install --module development-toolchain
 ./scripts/myunix install --module distrobox
 ./scripts/myunix install --module distrobox-ros2-humble
@@ -40,6 +41,10 @@ optional Steam, Niri + DMS, and Development Toolchain screens. `--all` is the
 noninteractive equivalent of one-click. Neither path installs Niri/DMS or
 replaces the login manager; the [greeter replacement](docs/modules/niri-dms-greeter.md)
 is always a separate guarded command.
+
+The baseline also configures [system time synchronization](docs/modules/time-sync.md): it installs Fedora's
+`chrony`, enables the time service, corrects the clock, and stores the hardware clock in UTC without changing
+the new computer's existing timezone.
 
 For a scripted input-method choice, pass the selected capabilities explicitly:
 

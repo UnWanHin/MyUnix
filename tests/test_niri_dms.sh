@@ -143,6 +143,8 @@ cat > "$settings" <<'EOF'
   "animationSpeed": 0.8,
   "fontFamily": "Inter Variable",
   "frameOpacity": 0.9,
+  "clockFormat": "24h",
+  "useAutoLocation": true,
   "wifiNetworkPins": {"private":"network"},
   "launcherLogoCustomPath": "/home/user/private-logo.svg",
   "builtInPluginSettings": {"privatePlugin": true}
@@ -156,15 +158,24 @@ assert_output_contains '"barConfigs"'
   exit 1
 }
 
+run cat "$category_target/time-weather.json"
+assert_status 0
+assert_output_contains '"clockFormat": "24h"'
+assert_output_contains '"useAutoLocation": true'
+
 cat > "$settings" <<'EOF'
 {
   "barConfigs": [{"id":"default","autoHide":true}],
+  "clockFormat": "12h",
+  "useAutoLocation": false,
   "unknownLocalSetting": "preserve-me"
 }
 EOF
 run env MYUNIX_DMS_SETTINGS_FILE="$settings" MYUNIX_DMS_PERSONALIZATION_SOURCE="$category_target" MYUNIX_DMS_BACKUP_DIR="$temporary_personalization/backups" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; import_dms_personalization; cat '$settings'"
 assert_status 0
 assert_output_contains '"autoHide": false'
+assert_output_contains '"clockFormat": "24h"'
+assert_output_contains '"useAutoLocation": true'
 assert_output_contains '"unknownLocalSetting": "preserve-me"'
 find "$temporary_personalization/backups" -type f -name DankMaterialShell-settings.json -print -quit | grep -q . || {
   printf '%s\n' 'Expected DMS personalization import backup' >&2
@@ -176,7 +187,7 @@ run env MYUNIX_DMS_SETTINGS_FILE="$settings" MYUNIX_DMS_PERSONALIZATION_SOURCE="
 assert_status 2
 assert_output_contains 'Invalid DMS personalization category'
 
-for category in appearance bar dock frame; do
+for category in appearance bar dock frame time-weather; do
   ! git -C "$PROJECT_ROOT" check-ignore -q "modules/niri-dms/config/dms/$category.json" || {
     printf 'DMS personalization category is ignored: %s\n' "$category" >&2
     exit 1

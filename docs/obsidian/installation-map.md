@@ -18,6 +18,7 @@ flowchart TD
 
   Base --> Bootstrap[[Bootstrap + RPM Fusion]]
   Base --> DNF[[DNF core packages]]
+  Base --> Time[[System time sync]]
   Base --> GNOME[[GNOME shortcuts]]
   Base --> Input[English + Cangjie 5 + Pinyin]
   Base --> Steam[[Steam + Niri compatibility launcher]]
@@ -47,6 +48,7 @@ flowchart TD
 
 - [[../modules/bootstrap|Bootstrap + RPM Fusion]]
 - [[../modules/dnf|DNF core packages]]
+- [[../modules/time-sync|System time sync]]，保留新電腦既有時區
 - [[../modules/gnome|GNOME shortcuts]]
 - [[../modules/input-method|English、Cangjie 5、Pinyin]]
 - [[../modules/steam|Steam]]，含 Niri 的 `-system-composer` 相容啟動器
@@ -71,6 +73,7 @@ GNOME 會保留；Niri 是並存的登入 session。[[session]] 記錄輸入法�
 | --- | --- |
 | WeChat、FlClash、受 checksum 保護的下載 RPM | [[../modules/rpm|Direct RPM registry]] |
 | 校園網 captive portal | [[../modules/portal-login|Portal Login]] |
+| 校正時間／修正 RTC 儲存方式 | [[../modules/time-sync|System Time Sync]] |
 | 手機配對 | [[../modules/phone-connect|Phone Connect]] |
 | Bash/Zsh 共用設定 | [[../modules/shell-config|Shared shell config]] |
 | Ubuntu container | [[../modules/distrobox|Distrobox]] |

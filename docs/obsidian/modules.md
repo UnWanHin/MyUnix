@@ -7,6 +7,7 @@ desktop settings and exported state from overwriting one another.
 | --- | --- | --- |
 | bootstrap | RPM Fusion repositories | [[../modules/bootstrap|bootstrap]] |
 | dnf | Fedora package manifests | [[../modules/dnf|dnf]] |
+| time-sync | chrony clock correction and UTC RTC storage | [[../modules/time-sync|system time sync]] |
 | rpm | checksum-pinned downloaded RPMs | [[../modules/rpm|rpm]] |
 | gnome | GNOME media-key shortcuts | [[../modules/gnome|gnome]] |
 | input-method | IBus/Fcitx5 and app launch adapters | [[../modules/input-method|input method]] |

@@ -39,5 +39,10 @@
     "frameLauncherArcExtender", "frameLauncherEdgeHover", "frameMode",
     "frameBarInsetPadding", "frameColor", "frameEnabled", "frameRounding",
     "frameThickness"
+  ],
+  "time-weather": [
+    "clockFormat", "showSeconds", "padHours12Hour", "firstDayOfWeek",
+    "showWeekNumber", "calendarBackend", "clockDateFormat", "lockDateFormat",
+    "useFahrenheit", "windSpeedUnit", "weatherEnabled", "useAutoLocation"
   ]
 }

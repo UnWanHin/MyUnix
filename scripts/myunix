@@ -10,6 +10,7 @@ source "$ROOT/scripts/lib/network.sh"
 source "$ROOT/modules/bootstrap/install.sh"
 source "$ROOT/modules/dnf/install.sh"
 source "$ROOT/modules/dnf/export.sh"
+source "$ROOT/modules/time-sync/install.sh"
 source "$ROOT/modules/rpm/install.sh"
 source "$ROOT/modules/gnome/install.sh"
 source "$ROOT/modules/gnome/export.sh"
@@ -41,6 +42,7 @@ run_doctor() {
     "$ROOT/modules/input-method/packages.txt" \
     "$ROOT/modules/phone-connect/packages.txt" \
     "$ROOT/modules/portal-login/packages.txt" \
+    "$ROOT/modules/time-sync/packages.txt" \
     "$ROOT/modules/development-toolchain/packages.txt" \
     "$ROOT/modules/distrobox/packages.txt"; do
     verify_dnf_manifest_available "$manifest" || die "DNF manifest contains unavailable packages: $manifest"
@@ -70,6 +72,7 @@ run_module() {
         install_optional_dnf_manifest "$ROOT/modules/dnf/optional.txt" || status=1
       fi
       ;;
+    time-sync) install_time_sync || status=1 ;;
     rpm) install_rpm_manifest "${MYUNIX_INSTALL_MODE:-all}" || status=1 ;;
     gnome) import_gnome || status=1 ;;
     input-method) install_input_methods "${MYUNIX_INPUT_CANGJIE:-1}" "${MYUNIX_INPUT_PINYIN:-1}" || status=1 ;;
@@ -168,7 +171,7 @@ run_selected_modules() {
 run_all_install() {
   export MYUNIX_INSTALL_MODE=all
   export MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=1
-  run_selected_modules bootstrap dnf rpm gnome input-method steam
+  run_selected_modules bootstrap dnf time-sync rpm gnome input-method steam
 }
 
 choose_custom_input_methods() {
@@ -236,7 +239,7 @@ run_custom_install() {
   choose_custom_desktop_applications && install_steam=1 || true
   choose_custom_niri_dms && install_niri_dms=1 || true
   choose_custom_development_toolchain && install_toolchain=1 || true
-  run_selected_modules bootstrap dnf rpm gnome input-method
+  run_selected_modules bootstrap dnf time-sync rpm gnome input-method
   ((install_steam == 0)) || run_selected_modules steam
   ((install_niri_dms == 0)) || run_selected_modules niri-dms
   ((install_toolchain == 0)) || run_selected_modules development-toolchain

@@ -27,10 +27,14 @@ assert_output_contains 'systemctl:enable --now chronyd.service'
 assert_output_contains 'chronyc:waitsync 10 0.1'
 assert_output_contains 'chronyc:makestep'
 assert_output_contains 'timedatectl:set-local-rtc 0'
-[[ "$OUTPUT" != *hiraeth* ]] || {
-  printf '%s\n' 'Time-sync output must not depend on a local user name' >&2
+[[ "$OUTPUT" != *set-timezone* ]] || {
+  printf '%s\n' 'Time-sync module must preserve the existing system timezone' >&2
   exit 1
 }
+if rg -n '/home/' "$PROJECT_ROOT/modules/time-sync"; then
+  printf '%s\n' 'Time-sync module must not contain an absolute home path' >&2
+  exit 1
+fi
 
 run env MYUNIX_TEST_MODE=fedora MYUNIX_TIME_SYNC_WAIT_ATTEMPTS=0 bash -c '
   source "'"$PROJECT_ROOT"'/scripts/lib/core.sh"

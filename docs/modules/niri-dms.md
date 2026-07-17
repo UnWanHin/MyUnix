@@ -48,6 +48,9 @@ Public DMS preferences are kept separately from Niri KDL in
 - `dock.json` — dock layout, placement and visual options.
 - `appearance.json` — typography, animation, elevation, blur and visual style.
 - `frame.json` — connected-frame appearance and geometry.
+- `time-weather.json` — clock format, calendar display, weather units, weather
+  visibility and IP-based Auto Location. It intentionally excludes coordinates,
+  city names and all DMS session data.
 
 `./scripts/myunix export` regenerates only these category files from the live
 DMS settings. The Niri+DMS installer shallow-merges only their allowlisted

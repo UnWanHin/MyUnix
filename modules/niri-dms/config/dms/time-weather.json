@@ -1,0 +1,14 @@
+{
+  "firstDayOfWeek": -1,
+  "showWeekNumber": false,
+  "calendarBackend": "auto",
+  "clockFormat": "24h",
+  "showSeconds": true,
+  "padHours12Hour": false,
+  "useFahrenheit": false,
+  "windSpeedUnit": "kmh",
+  "clockDateFormat": "",
+  "lockDateFormat": "",
+  "useAutoLocation": true,
+  "weatherEnabled": true
+}

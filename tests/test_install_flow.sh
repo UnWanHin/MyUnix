@@ -2,6 +2,9 @@
 set -Eeuo pipefail
 source "$(dirname "$0")/test_helper.bash"
 
+temporary="$(mktemp -d)"
+trap 'rm -rf -- "$temporary"' EXIT
+
 run env MYUNIX_TEST_MODE=fedora "$PROJECT_ROOT/scripts/myunix" install --module unknown
 assert_status 2
 assert_output_contains 'Unknown module: unknown'
@@ -59,6 +62,15 @@ run bash -c '
 assert_status 0
 assert_output_contains 'input:1:1'
 assert_output_contains 'module:steam'
+assert_output_contains 'module:time-sync'
+
+run env MYUNIX_SOURCE_ONLY=1 MYUNIX_TEST_MODE=fedora MYUNIX_STATE_DIR="$temporary/state" bash -c '
+  source "'"$PROJECT_ROOT"'/scripts/myunix"
+  install_time_sync() { printf "time-sync dispatched\n"; }
+  run_module time-sync
+'
+assert_status 0
+assert_output_contains 'time-sync dispatched'
 
 run bash -c '
   export MYUNIX_SOURCE_ONLY=1 MYUNIX_TEST_MODE=fedora MYUNIX_UI_TEST_MODE=1

@@ -10,6 +10,7 @@ later, open [[installation-map]].
 flowchart TD
   Fedora[Fedora base] --> Bootstrap[RPM Fusion / bootstrap]
   Fedora --> DNF[DNF manifests]
+  Fedora --> Time[Chrony / system time]
   Fedora --> RPM[Direct RPM registry]
   Fedora --> GNOME[GNOME shortcuts]
   Fedora --> Niri[Niri + DMS]
@@ -28,6 +29,7 @@ flowchart TD
 
 - [[../modules/bootstrap|Bootstrap and RPM Fusion]]
 - [[../modules/dnf|DNF packages]]
+- [[../modules/time-sync|System time sync]]
 - [[../modules/rpm|Direct RPM applications]]
 - [[../modules/gnome|GNOME shortcuts]]
 - [[../modules/niri-dms|Niri + DMS]]
