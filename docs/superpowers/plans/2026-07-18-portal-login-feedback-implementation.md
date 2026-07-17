@@ -2,16 +2,16 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make the user-invoked Wi-Fi Login launcher visibly report its state and reliably open a detected captive-portal login page.
+**Goal:** Make the user-invoked Wi-Fi Login launcher visibly report its state and open a detected captive-portal page only after the user selects a notification action.
 
-**Architecture:** Extend the existing user-level Bash helper with a best-effort `notify-send` wrapper and a meta-refresh URL parser. Treat `portal`, `limited`, and `unknown` as probe states; preserve `full` as a no-browser path. Keep all URL validation before `xdg-open`.
+**Architecture:** Extend the existing user-level Bash helper with a best-effort `notify-send` wrapper, a notification-action wait helper, and a meta-refresh URL parser. Treat `portal`, `limited`, and `unknown` as probe states; preserve `full` as a no-browser path. Keep all URL validation before `xdg-open` and invoke it only for an `open` action response.
 
 **Tech Stack:** Bash, NetworkManager `nmcli`, `curl`, `notify-send`, DNF manifests, shell tests.
 
 ## Global Constraints
 
 - Never store a network hostname, IP, redirect token, account name, password, or browser profile.
-- Open a URL only from a user invocation and only after `portal_login_validate_url` accepts HTTP(S).
+- Open a URL only from a user invocation, after `portal_login_validate_url` accepts HTTP(S), and when the notification action response is exactly `open`.
 - Do not alter NetworkManager profiles, configure an automatic dispatcher, or touch GDM, greetd, Niri, or ToDesk.
 - `notify-send` failures must not prevent terminal output or a valid portal launch.
 

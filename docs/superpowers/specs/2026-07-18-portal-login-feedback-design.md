@@ -26,8 +26,10 @@ from one of:
 - JavaScript location assignment;
 - an HTML meta refresh URL.
 
-Only HTTP(S) destinations are accepted. A valid destination is passed to
-`xdg-open` and a desktop notification reports that the portal is opening.
+Only HTTP(S) destinations are accepted. A valid destination is kept in memory
+while a desktop notification presents an **Open sign-in page** action. The
+launcher invokes `xdg-open` only when that action is selected; dismissing the
+notification or allowing it to expire does not open a browser.
 
 When connectivity is `full`, `none`, or otherwise unavailable, the launcher
 will display a clear desktop notification instead of only writing to a hidden
@@ -43,6 +45,8 @@ the installer and its tests work from a clean checkout.
 - No HUST host, IP address, redirect token, account name, password, or browser
   profile is stored or committed.
 - The launcher remains a user-level helper under `~/.local/bin`.
+- A detected URL exists only for the lifetime of the user-invoked helper; it
+  is never written to a profile, cache, log, or repository file.
 - The module does not alter NetworkManager connection profiles, install a
   dispatcher, or auto-open untrusted portal pages.
 - GDM, greetd, Niri configuration, and ToDesk are out of scope.
@@ -51,7 +55,8 @@ the installer and its tests work from a clean checkout.
 
 - Shell tests cover `full` notification without a probe, `limited` and
   `unknown` redirects, HTTP/JavaScript/meta-refresh parsing, rejected schemes,
-  and browser-launch failure notification.
+  browser-launch failure notification, accepted notification actions, and
+  dismissed notification actions.
 - Installer tests verify that `libnotify` is requested with
   `network-manager-applet`.
 - Run the focused portal test, full project suite, Bash syntax checks, and

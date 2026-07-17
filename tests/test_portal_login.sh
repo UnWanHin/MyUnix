@@ -49,51 +49,9 @@ assert_equals 'https://portal.example.test/login' "$OUTPUT"
 run bash -c '
   source "'"$portal_script"'"
   nmcli() { printf "portal\n"; }
-  curl() {
-    while (($#)); do
-      case "$1" in -D) headers=$2; shift 2;; -o) body=$2; shift 2;; *) shift;; esac
-    done
-    printf "<script>location.href='"'"'https://portal.example.test/login'"'"'</script>\n" > "$body"
-    : > "$headers"
+  notify-send() {
+    case "$*" in *--action=open*) printf "open\n";; esac
   }
-  xdg-open() { printf "open=%s\n" "$1"; }
-  portal_login
-'
-assert_status 0
-assert_equals 'open=https://portal.example.test/login' "$OUTPUT"
-
-run bash -c '
-  source "'"$portal_script"'"
-  nmcli() { printf "full\n"; }
-  notify-send() { printf "notify=%s\n" "$*"; }
-  curl() { printf "unexpected curl\n"; return 1; }
-  portal_login
-'
-assert_status 0
-assert_output_contains 'Already connected; no sign-in is needed.'
-assert_output_contains 'notify=--urgency=normal Wi-Fi Login Already connected; no sign-in is needed.'
-
-run bash -c '
-  source "'"$portal_script"'"
-  nmcli() { printf "limited\n"; }
-  notify-send() { :; }
-  curl() {
-    while (($#)); do
-      case "$1" in -D) headers=$2; shift 2;; -o) body=$2; shift 2;; *) shift;; esac
-    done
-    : > "$headers"
-    printf "<meta http-equiv=\"refresh\" content=\"0; url=https://portal.example.test/login\">\n" > "$body"
-  }
-  xdg-open() { printf "open=%s\n" "$1"; }
-  portal_login
-'
-assert_status 0
-assert_equals 'open=https://portal.example.test/login' "$OUTPUT"
-
-run bash -c '
-  source "'"$portal_script"'"
-  nmcli() { printf "unknown\n"; }
-  notify-send() { :; }
   curl() {
     while (($#)); do
       case "$1" in -D) headers=$2; shift 2;; -o) body=$2; shift 2;; *) shift;; esac
@@ -110,7 +68,82 @@ assert_equals 'open=https://portal.example.test/login' "$OUTPUT"
 run bash -c '
   source "'"$portal_script"'"
   nmcli() { printf "portal\n"; }
+  notify-send() { :; }
+  curl() {
+    while (($#)); do
+      case "$1" in -D) headers=$2; shift 2;; -o) body=$2; shift 2;; *) shift;; esac
+    done
+    printf "<script>location.href='"'"'https://portal.example.test/login'"'"'</script>\n" > "$body"
+    : > "$headers"
+  }
+  xdg-open() { printf "unexpected open\n"; }
+  portal_login
+'
+assert_status 0
+assert_output_contains 'Sign-in page is ready. Select Open sign-in page in the notification.'
+[[ "$OUTPUT" != *'unexpected open'* ]] || {
+  printf '%s\n' 'Portal helper opened a page after the notification was dismissed' >&2
+  exit 1
+}
+
+run bash -c '
+  source "'"$portal_script"'"
+  nmcli() { printf "full\n"; }
   notify-send() { printf "notify=%s\n" "$*"; }
+  curl() { printf "unexpected curl\n"; return 1; }
+  portal_login
+'
+assert_status 0
+assert_output_contains 'Already connected; no sign-in is needed.'
+assert_output_contains 'notify=--urgency=normal Wi-Fi Login Already connected; no sign-in is needed.'
+
+run bash -c '
+  source "'"$portal_script"'"
+  nmcli() { printf "limited\n"; }
+  notify-send() {
+    case "$*" in *--action=open*) printf "open\n";; esac
+  }
+  curl() {
+    while (($#)); do
+      case "$1" in -D) headers=$2; shift 2;; -o) body=$2; shift 2;; *) shift;; esac
+    done
+    : > "$headers"
+    printf "<meta http-equiv=\"refresh\" content=\"0; url=https://portal.example.test/login\">\n" > "$body"
+  }
+  xdg-open() { printf "open=%s\n" "$1"; }
+  portal_login
+'
+assert_status 0
+assert_equals 'open=https://portal.example.test/login' "$OUTPUT"
+
+run bash -c '
+  source "'"$portal_script"'"
+  nmcli() { printf "unknown\n"; }
+  notify-send() {
+    case "$*" in *--action=open*) printf "open\n";; esac
+  }
+  curl() {
+    while (($#)); do
+      case "$1" in -D) headers=$2; shift 2;; -o) body=$2; shift 2;; *) shift;; esac
+    done
+    printf "<script>location.href='"'"'https://portal.example.test/login'"'"'</script>\n" > "$body"
+    : > "$headers"
+  }
+  xdg-open() { printf "open=%s\n" "$1"; }
+  portal_login
+'
+assert_status 0
+assert_equals 'open=https://portal.example.test/login' "$OUTPUT"
+
+run bash -c '
+  source "'"$portal_script"'"
+  nmcli() { printf "portal\n"; }
+  notify-send() {
+    case "$*" in
+      *--action=open*) printf "open\n" ;;
+      *) printf "notify=%s\n" "$*" ;;
+    esac
+  }
   curl() {
     while (($#)); do
       case "$1" in -D) headers=$2; shift 2;; -o) body=$2; shift 2;; *) shift;; esac

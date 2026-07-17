@@ -70,8 +70,9 @@ with `-system-composer`.
 
 The optional [Portal Login](docs/modules/portal-login.md) module adds the
 NetworkManager tray applet to Niri/DMS and a generic **Wi-Fi Login** entry in
-DMS Spotlight. It opens the current network's captive-portal page only after
-you select it; it stores no Wi-Fi credentials or per-network redirect URLs.
+DMS Spotlight. It detects the current network's captive-portal page, then
+opens it only after you select **Open sign-in page** in its notification; it
+stores no Wi-Fi credentials or per-network redirect URLs.
 
 The optional [Distrobox](docs/modules/distrobox.md) module installs only the
 Fedora Distrobox package. It does not create a distribution, pull an image or

@@ -16,6 +16,18 @@ portal_login_notify() {
   fi
 }
 
+portal_login_request_open() {
+  local action
+  command -v notify-send >/dev/null 2>&1 || return 1
+  action="$(notify-send \
+    --urgency=normal \
+    --action=open='Open sign-in page' \
+    --wait \
+    'Wi-Fi Login' \
+    'Sign-in page is ready.')" || return 1
+  [[ "$action" == open ]]
+}
+
 portal_login_validate_url() {
   [[ "$1" =~ ^https?://[^[:space:]]+$ ]]
 }
@@ -83,12 +95,16 @@ portal_login() {
     portal_login_notify critical 'Wi-Fi Login' 'The network returned an unsafe sign-in address.'
     return 1
   }
-  if ! xdg-open "$url"; then
-    printf 'Unable to open the captive-portal sign-in page.\n' >&2
-    portal_login_notify critical 'Wi-Fi Login' 'Unable to open the sign-in page in a browser.'
-    return 1
+  if portal_login_request_open; then
+    if ! xdg-open "$url"; then
+      printf 'Unable to open the captive-portal sign-in page.\n' >&2
+      portal_login_notify critical 'Wi-Fi Login' 'Unable to open the sign-in page in a browser.'
+      return 1
+    fi
+    portal_login_notify normal 'Wi-Fi Login' 'Opening the sign-in page in your browser.'
+    return 0
   fi
-  portal_login_notify normal 'Wi-Fi Login' 'Opening the sign-in page in your browser.'
+  printf 'Sign-in page is ready. Select Open sign-in page in the notification.\n'
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

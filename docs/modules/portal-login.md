@@ -18,9 +18,10 @@ press Enter.
 The launcher checks NetworkManager's current connectivity. When it is
 `portal`, `limited`, or `unknown`, it requests `http://neverssl.com`, extracts
 a standard HTTP `Location` redirect, JavaScript location assignment, or HTML
-meta-refresh URL, validates that it is HTTP(S), then passes it to `xdg-open`.
-The destination is therefore discovered from the current network rather than
-being hard-coded.
+meta-refresh URL, and validates that it is HTTP(S). It then presents a desktop
+notification with **Open sign-in page**. The browser opens only after you
+select that action. The destination is therefore discovered from the current
+network rather than being hard-coded.
 
 When connectivity is already `full`, Wi-Fi Login does not open a browser
 because there is no portal to sign into. It instead shows a desktop
@@ -30,8 +31,9 @@ clear notification rather than silently doing nothing.
 
 This works for HUST, hotels, airports and other portal Wi-Fi networks because
 the destination is discovered live. MyUnix does not contain a HUST address,
-does not auto-open a browser on every network connection, and does not save
-redirect tokens, device addresses, account names or passwords.
+does not auto-open a browser, including when the Wi-Fi Login entry is
+selected, and does not save redirect tokens, device addresses, account names
+or passwords.
 
 For terminal troubleshooting only, the same helper is available as:
 
