@@ -8,6 +8,15 @@
 
 **Tech Stack:** Bash, `sed`, Niri IPC, ToDesk RPM.
 
+## Execution Result
+
+Executed on 2026-07-18. The package was unmodified, a private backup was made,
+and `settingnewmaindlgmode` was tested with value `1`. Niri continued to report
+the ToDesk window at `520 x 330.86`; the experiment did not demonstrate a
+resizable window. ToDesk emitted a CrashReport in both the experimental and
+restored modes, so this plan does not attribute the report to the setting. The
+backup was restored and the final value is `0`.
+
 ## Global Constraints
 
 - Change only `/opt/todesk/config/config.ini` key `settingnewmaindlgmode`.

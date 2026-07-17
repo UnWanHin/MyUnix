@@ -43,6 +43,17 @@ it does not make the window resizable, restore the backup and do not introduce
 a compositor workaround. If it works, record the observation but do not export
 the private ToDesk configuration into MyUnix.
 
+### ToDesk experiment result
+
+The mode was temporarily changed from `0` to `1` after a private local backup
+was created. The restarted process did not yield a newly verifiable resizable
+window: Niri continued to report the ToDesk window at `520 x 330.86`. The
+application emitted a CrashReport during this launch, but emitted the same
+CrashReport after the configuration was restored, so the crash cannot be
+attributed to this setting alone. The experiment therefore did not demonstrate
+a working improvement; `settingnewmaindlgmode` was restored to `0`, and its
+private configuration remains outside MyUnix.
+
 ## Verification
 
 - `rpm -V todesk` reports no local package modifications before the experiment.
