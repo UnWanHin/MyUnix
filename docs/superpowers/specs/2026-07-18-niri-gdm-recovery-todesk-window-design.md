@@ -54,6 +54,19 @@ attributed to this setting alone. The experiment therefore did not demonstrate
 a working improvement; `settingnewmaindlgmode` was restored to `0`, and its
 private configuration remains outside MyUnix.
 
+### Current ToDesk crash result
+
+The official `todesk-4.8.6.2-235.x86_64` client reproducibly exits with
+`SIGSEGV` approximately 24 to 26 seconds after launch. Recreating its private
+configuration and launching without the GTK/Qt input-method environment
+variables produces the same result. The coredump points to the bundled HTML UI
+(`html::element::determine_style` from `gtk4view::idle_callback`), not Niri,
+GDM, the package files, or the input method. The official Linux download page
+currently provides the same release, so reinstalling cannot change this
+result. Keep the current package entry for reproducibility, but treat a vendor
+update or an explicitly approved compatibility downgrade as prerequisites for
+a functional ToDesk client.
+
 ## Verification
 
 - `rpm -V todesk` reports no local package modifications before the experiment.
@@ -69,6 +82,7 @@ private configuration remains outside MyUnix.
 ## Out Of Scope
 
 - Replacing or patching the ToDesk binary.
+- Downgrading ToDesk without an explicit approval and a compatible RPM source.
 - Automatically enabling or disabling display managers during ordinary
   Niri/DMS installation.
 - Changing graphics drivers or kernels.

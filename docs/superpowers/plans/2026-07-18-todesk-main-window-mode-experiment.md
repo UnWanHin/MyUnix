@@ -17,6 +17,15 @@ resizable window. ToDesk emitted a CrashReport in both the experimental and
 restored modes, so this plan does not attribute the report to the setting. The
 backup was restored and the final value is `0`.
 
+Follow-up investigation found the current official client itself crashes with
+`SIGSEGV` after roughly 24 to 26 seconds. A freshly generated private
+configuration and an environment with the GTK/Qt input-method variables
+removed both reproduce the crash. The failure occurs in the bundled HTML UI,
+so neither Niri/DMS, GDM, nor Fcitx/IBus is the corrective layer. The current
+official x86_64 RPM is still `4.8.6.2`; do not silently downgrade the user to
+an older package. A newer vendor build or explicit approval for a compatibility
+test is required before further remediation.
+
 ## Global Constraints
 
 - Change only `/opt/todesk/config/config.ini` key `settingnewmaindlgmode`.
