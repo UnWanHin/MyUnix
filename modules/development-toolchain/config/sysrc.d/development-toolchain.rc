@@ -1,0 +1,9 @@
+# MyUnix user-scope Anaconda integration. It is safe when Anaconda is absent.
+_myunix_toolchain_root="$HOME/.local/opt"
+export PATH="$HOME/.local/bin:$PATH"
+
+if [ -r "$_myunix_toolchain_root/anaconda3/etc/profile.d/conda.sh" ]; then
+  . "$_myunix_toolchain_root/anaconda3/etc/profile.d/conda.sh"
+fi
+
+unset _myunix_toolchain_root

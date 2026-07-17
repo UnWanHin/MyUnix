@@ -30,6 +30,24 @@ assert_equals 'https://portal.example.test/login' "$OUTPUT"
 
 run bash -c '
   source "'"$portal_script"'"
+  tmp="$(mktemp -d)"
+  printf "<meta content=\"0; url=https://portal.example.test/login\" http-equiv=\"refresh\">\n" > "$tmp/body"
+  portal_login_meta_refresh_url "$tmp/body"
+'
+assert_status 0
+assert_equals 'https://portal.example.test/login' "$OUTPUT"
+
+run bash -c '
+  source "'"$portal_script"'"
+  tmp="$(mktemp -d)"
+  printf "<meta http-equiv=\"refresh\" content=\"0; url=https://portal.example.test/login\">\n" > "$tmp/body"
+  portal_login_meta_refresh_url "$tmp/body"
+'
+assert_status 0
+assert_equals 'https://portal.example.test/login' "$OUTPUT"
+
+run bash -c '
+  source "'"$portal_script"'"
   nmcli() { printf "portal\n"; }
   curl() {
     while (($#)); do
@@ -47,11 +65,65 @@ assert_equals 'open=https://portal.example.test/login' "$OUTPUT"
 run bash -c '
   source "'"$portal_script"'"
   nmcli() { printf "full\n"; }
+  notify-send() { printf "notify=%s\n" "$*"; }
   curl() { printf "unexpected curl\n"; return 1; }
   portal_login
 '
 assert_status 0
-assert_output_contains 'No captive-portal sign-in is needed'
+assert_output_contains 'Already connected; no sign-in is needed.'
+assert_output_contains 'notify=--urgency=normal Wi-Fi Login Already connected; no sign-in is needed.'
+
+run bash -c '
+  source "'"$portal_script"'"
+  nmcli() { printf "limited\n"; }
+  notify-send() { :; }
+  curl() {
+    while (($#)); do
+      case "$1" in -D) headers=$2; shift 2;; -o) body=$2; shift 2;; *) shift;; esac
+    done
+    : > "$headers"
+    printf "<meta http-equiv=\"refresh\" content=\"0; url=https://portal.example.test/login\">\n" > "$body"
+  }
+  xdg-open() { printf "open=%s\n" "$1"; }
+  portal_login
+'
+assert_status 0
+assert_equals 'open=https://portal.example.test/login' "$OUTPUT"
+
+run bash -c '
+  source "'"$portal_script"'"
+  nmcli() { printf "unknown\n"; }
+  notify-send() { :; }
+  curl() {
+    while (($#)); do
+      case "$1" in -D) headers=$2; shift 2;; -o) body=$2; shift 2;; *) shift;; esac
+    done
+    printf "<script>location.href='"'"'https://portal.example.test/login'"'"'</script>\n" > "$body"
+    : > "$headers"
+  }
+  xdg-open() { printf "open=%s\n" "$1"; }
+  portal_login
+'
+assert_status 0
+assert_equals 'open=https://portal.example.test/login' "$OUTPUT"
+
+run bash -c '
+  source "'"$portal_script"'"
+  nmcli() { printf "portal\n"; }
+  notify-send() { printf "notify=%s\n" "$*"; }
+  curl() {
+    while (($#)); do
+      case "$1" in -D) headers=$2; shift 2;; -o) body=$2; shift 2;; *) shift;; esac
+    done
+    printf "<script>location.href='"'"'https://portal.example.test/login'"'"'</script>\n" > "$body"
+    : > "$headers"
+  }
+  xdg-open() { return 1; }
+  portal_login
+'
+assert_status 1
+assert_output_contains 'Unable to open the captive-portal sign-in page.'
+assert_output_contains 'notify=--urgency=critical Wi-Fi Login Unable to open the sign-in page in a browser.'
 
 run bash -c '
   source "'"$portal_script"'"
@@ -63,11 +135,13 @@ run bash -c '
     printf "<script>location.href='"'"'javascript:alert(1)'"'"'</script>\n" > "$body"
     : > "$headers"
   }
+  notify-send() { printf "notify=%s\n" "$*"; }
   xdg-open() { printf "unexpected open\n"; }
   portal_login
 '
 assert_status 1
 assert_output_contains 'Refusing unsupported captive-portal redirect scheme'
+assert_output_contains 'notify=--urgency=critical Wi-Fi Login The network returned an unsafe sign-in address.'
 [[ "$OUTPUT" != *'unexpected open'* ]] || {
   printf '%s\n' 'Portal helper opened an unsafe redirect' >&2
   exit 1
@@ -87,6 +161,7 @@ run env HOME="$tmp/home" XDG_DATA_HOME="$tmp/home/.local/share" MYUNIX_TEST_MODE
 '
 assert_status 0
 assert_output_contains 'network-manager-applet'
+assert_output_contains 'libnotify'
 [[ -x "$tmp/home/.local/bin/myunix-portal-login" ]] || {
   printf '%s\n' 'Expected portal-login helper to be installed' >&2
   exit 1

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Wi-Fi Login
+Comment=Open the sign-in page for the current captive Wi-Fi network
+Exec=myunix-portal-login
+Icon=network-wireless
+Categories=Network;
+Terminal=false

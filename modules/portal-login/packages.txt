@@ -1,2 +1,4 @@
 # NetworkManager tray UI for standalone Niri/DMS sessions.
 network-manager-applet
+# Desktop notifications for Wi-Fi Login results in DMS sessions.
+libnotify

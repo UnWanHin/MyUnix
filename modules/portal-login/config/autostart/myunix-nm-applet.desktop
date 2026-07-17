@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=MyUnix Network Manager Applet
+Exec=nm-applet --indicator
+OnlyShowIn=GNOME;KDE;niri;
+X-GNOME-Autostart-enabled=true
+NoDisplay=true

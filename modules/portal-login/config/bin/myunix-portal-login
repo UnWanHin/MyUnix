@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+portal_login_probe_url() {
+  printf '%s\n' "${MYUNIX_PORTAL_LOGIN_PROBE_URL:-http://neverssl.com}"
+}
+
+portal_login_timeout_seconds() {
+  printf '%s\n' "${MYUNIX_PORTAL_LOGIN_TIMEOUT_SECONDS:-10}"
+}
+
+portal_login_notify() {
+  local urgency=$1 summary=$2 message=$3
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send --urgency="$urgency" "$summary" "$message" || true
+  fi
+}
+
+portal_login_validate_url() {
+  [[ "$1" =~ ^https?://[^[:space:]]+$ ]]
+}
+
+portal_login_header_url() {
+  awk 'tolower($1) == "location:" { sub(/\r$/, "", $2); print $2; exit }' "$1"
+}
+
+portal_login_body_url() {
+  sed -nE "s/.*(location\.href|window\.location|top\.self\.location\.href)[[:space:]]*=[[:space:]]*['\"]([^'\"]+)['\"].*/\2/p" "$1" | head -n 1
+}
+
+portal_login_meta_refresh_url() {
+  grep -iE '<meta[^>]*http-equiv[[:space:]]*=[[:space:]]*["'"'"']?refresh' "$1" \
+    | sed -nE "s/.*[Uu][Rr][Ll][[:space:]]*=[[:space:]]*['\"]?([^;\"'[:space:]>]+).*/\1/p" \
+    | head -n 1
+}
+
+portal_login_fetch_url() {
+  local tmp headers body timeout url
+  tmp="$(mktemp -d)"
+  headers="$tmp/headers"
+  body="$tmp/body"
+  timeout="$(portal_login_timeout_seconds)"
+  if ! curl -sS --connect-timeout "$timeout" --max-time "$timeout" -D "$headers" -o "$body" "$(portal_login_probe_url)"; then
+    rm -rf -- "$tmp"
+    printf 'Unable to contact the captive-portal probe.\n' >&2
+    return 1
+  fi
+  url="$(portal_login_header_url "$headers")"
+  [[ -n "$url" ]] || url="$(portal_login_body_url "$body")"
+  [[ -n "$url" ]] || url="$(portal_login_meta_refresh_url "$body")"
+  rm -rf -- "$tmp"
+  [[ -n "$url" ]] || {
+    printf 'No supported captive-portal redirect was found.\n' >&2
+    return 1
+  }
+  printf '%s\n' "$url"
+}
+
+portal_login() {
+  local connectivity message url
+  connectivity="$(nmcli -g CONNECTIVITY general 2>/dev/null | tail -n 1 | tr -d '\r')"
+  case "$connectivity" in
+    full)
+      message='Already connected; no sign-in is needed.'
+      printf '%s\n' "$message"
+      portal_login_notify normal 'Wi-Fi Login' "$message"
+      return 0
+      ;;
+    portal|limited|unknown) ;;
+    *)
+      message="NetworkManager reports connectivity ${connectivity:-unknown}; no sign-in page is available."
+      printf '%s\n' "$message" >&2
+      portal_login_notify critical 'Wi-Fi Login' "$message"
+      return 1
+      ;;
+  esac
+  url="$(portal_login_fetch_url)" || {
+    portal_login_notify critical 'Wi-Fi Login' 'Unable to find a sign-in page for this network.'
+    return 1
+  }
+  portal_login_validate_url "$url" || {
+    printf 'Refusing unsupported captive-portal redirect scheme.\n' >&2
+    portal_login_notify critical 'Wi-Fi Login' 'The network returned an unsafe sign-in address.'
+    return 1
+  }
+  if ! xdg-open "$url"; then
+    printf 'Unable to open the captive-portal sign-in page.\n' >&2
+    portal_login_notify critical 'Wi-Fi Login' 'Unable to open the sign-in page in a browser.'
+    return 1
+  fi
+  portal_login_notify normal 'Wi-Fi Login' 'Opening the sign-in page in your browser.'
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  portal_login "$@"
+fi

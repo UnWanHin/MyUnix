@@ -15,10 +15,18 @@ press Enter.
 
 ## Generic captive-portal detection
 
-The launcher checks NetworkManager's current connectivity. Only when it is
-`portal` does it request `http://neverssl.com`, extract a standard HTTP
-`Location` redirect or a JavaScript location assignment, validate that it is
-HTTP(S), then pass it to `xdg-open`.
+The launcher checks NetworkManager's current connectivity. When it is
+`portal`, `limited`, or `unknown`, it requests `http://neverssl.com`, extracts
+a standard HTTP `Location` redirect, JavaScript location assignment, or HTML
+meta-refresh URL, validates that it is HTTP(S), then passes it to `xdg-open`.
+The destination is therefore discovered from the current network rather than
+being hard-coded.
+
+When connectivity is already `full`, Wi-Fi Login does not open a browser
+because there is no portal to sign into. It instead shows a desktop
+notification that the network is already connected. Missing connectivity,
+probe failures, unsafe redirects, and browser-launch failures also show a
+clear notification rather than silently doing nothing.
 
 This works for HUST, hotels, airports and other portal Wi-Fi networks because
 the destination is discovered live. MyUnix does not contain a HUST address,
@@ -31,6 +39,6 @@ For terminal troubleshooting only, the same helper is available as:
 myunix-portal-login
 ```
 
-If it says no supported redirect was found, open the network's portal page
+If it reports that no sign-in page was found, open the network's portal page
 through the normal `nm-applet` controls or report the response shape before
 adding any network-specific handling.

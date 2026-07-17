@@ -6,4 +6,14 @@ config/
 !modules/niri-dms/config/
 !modules/niri-dms/config/dms/
 !modules/niri-dms/config/dms/*.json
+!modules/development-toolchain/config/
+!modules/development-toolchain/config/sysrc.d/
+!modules/development-toolchain/config/sysrc.d/*.rc
+!modules/portal-login/config/
+!modules/portal-login/config/applications/
+!modules/portal-login/config/applications/*.desktop
+!modules/portal-login/config/autostart/
+!modules/portal-login/config/autostart/*.desktop
+!modules/portal-login/config/bin/
+!modules/portal-login/config/bin/*
 readme.md
