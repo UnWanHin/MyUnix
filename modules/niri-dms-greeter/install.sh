@@ -17,5 +17,5 @@ install_niri_dms_greeter() {
   sudo dms greeter status
   sudo dms greeter enable
   sudo dms greeter sync
-  info "DankGreeter enabled; GDM backup: $backup"
+  info "DankGreeter configured; GDM backup: $backup. Reboot and verify the login screen before relying on it."
 }

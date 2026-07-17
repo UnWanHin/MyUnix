@@ -38,8 +38,8 @@ English keyboard, Cangjie 5, Pinyin, and [Steam](docs/modules/steam.md) from
 RPM Fusion. Custom installation first configures input methods, then offers
 optional Steam, Niri + DMS, and Development Toolchain screens. `--all` is the
 noninteractive equivalent of one-click. Neither path installs Niri/DMS or
-replaces the login manager; the greeter replacement is always a separate
-guarded command.
+replaces the login manager; the [greeter replacement](docs/modules/niri-dms-greeter.md)
+is always a separate guarded command.
 
 For a scripted input-method choice, pass the selected capabilities explicitly:
 
