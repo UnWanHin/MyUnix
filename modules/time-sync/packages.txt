@@ -1,0 +1,2 @@
+# Fedora NTP client and service used by the portable time-sync module.
+chrony
