@@ -1,7 +1,6 @@
 // This file is owned by MyUnix and toggled by niri-touchpad-toggle.
-// Base tap, scrolling, and acceleration preferences remain in config.kdl.
 input {
     touchpad {
-        // Enabled by default.
+        tap
     }
 }
