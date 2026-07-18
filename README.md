@@ -67,7 +67,7 @@ MYUNIX_NETWORK_ATTEMPTS=5 MYUNIX_DNF_TIMEOUT_SECONDS=2400 ./scripts/myunix insta
 MYUNIX_DOWNLOAD_TIMEOUT_SECONDS=900 ./scripts/myunix install --module rpm
 ```
 
-Direct RPM applications are declared in `modules/rpm/apps.tsv`. Add only official HTTPS sources with a pinned SHA-256; packages are downloaded to a temporary directory with `wget`, verified, installed through DNF, and removed. See [module documentation](docs/modules/) for details.
+Direct RPM applications are declared in `modules/rpm/apps.tsv`. Add only official HTTPS sources with a pinned SHA-256; packages are downloaded to a temporary directory with `wget`, verified, installed through DNF, and removed. [Feishu](docs/modules/feishu.md) is documented separately because its official page issues short-lived signed RPM URLs that cannot safely live in a reusable manifest. See [module documentation](docs/modules/) for details.
 
 Steam is deliberately separate from direct RPM applications: it is installed
 from RPM Fusion by DNF and receives a user-level Niri compatibility launcher
