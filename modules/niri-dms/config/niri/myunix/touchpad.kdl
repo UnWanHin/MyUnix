@@ -1,4 +1,3 @@
-// This file is owned by MyUnix and toggled by niri-touchpad-toggle.
 input {
     touchpad {
         tap

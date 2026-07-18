@@ -28,9 +28,11 @@ does not reserve a key. You can alternatively bind the command yourself in the
 DMS Keybinds UI. It switches the public fragment
 `~/.config/niri/myunix/touchpad.kdl` between enabled and `off`, then reloads
 Niri and shows a desktop notification when available. It uses no `sudo` and
-defaults to enabled on a new installation. The Niri+DMS exporter copies only
-these public `myunix/` fragments; Phone Connect's `kdeconnect.kdl` remains
-owned by the Phone Connect module and is not copied here.
+defaults to enabled on a new installation. When enabled, a one-finger tap is a
+left click and two-finger scrolling uses the traditional direction; the toggle
+does not reset either preference. The Niri+DMS exporter copies only these
+public `myunix/` fragments; Phone Connect's `kdeconnect.kdl` remains owned by
+the Phone Connect module and is not copied here.
 
 The export is an allowlist: it does not recurse through `~/.config/niri`, so
 timestamped backups and unrelated files stay local. `myunix/kdeconnect.kdl` is
