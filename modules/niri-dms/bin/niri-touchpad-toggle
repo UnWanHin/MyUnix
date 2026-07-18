@@ -21,7 +21,7 @@ write_state() {
     printf '%s\n' \
       'input {' \
       '    touchpad {' \
-      '        // Enabled: base input preferences remain in config.kdl.' \
+      '        tap' \
       '    }' \
       '}' > "$temporary"
   fi

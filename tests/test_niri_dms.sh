@@ -126,6 +126,10 @@ assert_status 0
   printf '%s\n' 'Expected second touchpad toggle to enable the touchpad' >&2
   exit 1
 }
+grep -qx '[[:space:]]*tap' "$touchpad_state" || {
+  printf '%s\n' 'Expected enabled touchpad fragment to preserve tap-to-click' >&2
+  exit 1
+}
 
 [[ -x "$PROJECT_ROOT/modules/niri-dms/bin/niri-touchpad-toggle" ]] || {
   printf '%s\n' 'Expected managed Niri touchpad helper' >&2
