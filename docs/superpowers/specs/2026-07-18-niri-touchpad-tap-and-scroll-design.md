@@ -8,12 +8,12 @@ configuration declares `tap`, while MyUnix's later touchpad fragment is used by
 the `Mod+F8` toggle and currently writes an empty enabled `touchpad` block.
 That later fragment can discard the base behavior after the touchpad is toggled
 back on. The desired behavior is Windows-style single-finger tap-to-click and
-traditional, non-natural vertical scrolling.
+reverse (natural) vertical scrolling.
 
 ## Decision
 
 Make the MyUnix-owned touchpad fragment the single owner of persistent
-touchpad preferences. Its enabled state explicitly enables `tap` and omits
+touchpad preferences. Its enabled state explicitly enables `tap` and
 `natural-scroll`; its disabled state contains only `off`.
 
 The toggle helper must write the same explicit enabled fragment, so `Mod+F8`
@@ -39,8 +39,8 @@ managed binds file.
 ## Verification
 
 - `niri validate` accepts the active configuration.
-- The module test suite verifies the enabled fragment contains `tap`, omits
+- The module test suite verifies the enabled fragment contains `tap` and
   `natural-scroll`, and the disabled fragment contains `off`.
 - Reload Niri configuration, then manually verify a light one-finger tap
-  produces a left click and two-finger vertical scrolling follows the
-  traditional direction.
+  produces a left click and two-finger vertical scrolling follows the reverse
+  direction.

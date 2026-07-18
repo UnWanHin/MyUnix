@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make tap-to-click persist across `Mod+F8` toggles and use traditional touchpad scrolling in Niri.
+**Goal:** Make tap-to-click and reverse touchpad scrolling persist across `Mod+F8` toggles in Niri.
 
 **Architecture:** The MyUnix touchpad fragment becomes the sole persistent owner of enabled touchpad preferences. The toggle helper writes either the complete enabled fragment (`tap`) or the disabled fragment (`off`), then asks Niri to reload. The base Niri template no longer duplicates input preferences that a later include can supersede.
 
@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Keep the `Mod+F8` binding in DMS's managed binds file.
-- The enabled touchpad fragment must contain `tap` and must not contain `natural-scroll`.
+- The enabled touchpad fragment must contain `tap` and `natural-scroll`.
 - The disabled touchpad fragment must contain only the `off` touchpad state.
 - Do not change mouse, trackpoint, kernel, driver, or libinput package settings.
 - Keep all paths user-relative through `$HOME` or XDG variables; do not hardcode a username.
@@ -58,6 +58,7 @@ Replace the enabled branch emitted lines with:
 'input {' \
 '    touchpad {' \
 '        tap' \
+'        natural-scroll' \
 '    }' \
 '}' > "$temporary"
 ```
@@ -67,7 +68,7 @@ Keep the disabled branch unchanged so it writes `off` only.
 - [ ] **Step 4: Assert both toggle states**
 
 After the first execution, assert `off` exists and `tap` does not. After the
-second execution, assert `tap` exists and `natural-scroll` does not:
+second execution, assert both `tap` and `natural-scroll` exist:
 
 ```bash
 run grep -Fx '        off' "$touchpad_state"
@@ -79,8 +80,8 @@ run "$temporary_touchpad/niri-touchpad-toggle"
 assert_status 0
 run grep -Fx '        tap' "$touchpad_state"
 assert_status 0
-run grep -F 'natural-scroll' "$touchpad_state"
-assert_status 1
+run grep -Fx '        natural-scroll' "$touchpad_state"
+assert_status 0
 ```
 
 - [ ] **Step 5: Run the focused test and commit the helper change**
@@ -105,7 +106,7 @@ Expected: all Niri-DMS tests pass.
 
 **Interfaces:**
 - Consumes: Niri's `input { touchpad { ... } }` KDL section.
-- Produces: a default enabled fragment that has `tap` and traditional scrolling.
+- Produces: a default enabled fragment that has `tap` and reverse scrolling.
 
 - [ ] **Step 1: Add a template assertion for the desired state**
 
@@ -127,13 +128,14 @@ Set `modules/niri-dms/config/niri/myunix/touchpad.kdl` to:
 input {
     touchpad {
         tap
+        natural-scroll
     }
 }
 ```
 
 In `modules/niri-dms/config/niri/config.kdl`, remove both `tap` and
-`natural-scroll` from its base `touchpad` section. Do not add
-`natural-scroll` elsewhere.
+`natural-scroll` from its base `touchpad` section. Add both settings only to
+the MyUnix-owned fragment.
 
 - [ ] **Step 3: Apply the same validated fragments to the active session**
 
@@ -154,7 +156,7 @@ Run:
 ```bash
 bats tests/test_niri_dms.sh
 git add modules/niri-dms/config/niri/config.kdl modules/niri-dms/config/niri/myunix/touchpad.kdl tests/test_niri_dms.sh
-git commit -m "feat: set persistent Niri tap and traditional scrolling"
+git commit -m "feat: set persistent Niri tap and reverse scrolling"
 ```
 
 Expected: all Niri-DMS tests pass.
@@ -194,8 +196,8 @@ contains `tap`.
 - [ ] **Step 3: Document the user-visible behavior**
 
 State that `Mod+F8` toggles only the touchpad enabled state, a one-finger tap
-is a left click when enabled, and two-finger scroll uses the traditional
-direction. Do not document user-specific device names.
+is a left click when enabled, and two-finger scroll uses the reverse direction.
+Do not document user-specific device names.
 
 - [ ] **Step 4: Run complete validation, export, and commit**
 

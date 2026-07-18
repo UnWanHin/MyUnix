@@ -130,6 +130,10 @@ grep -qx '[[:space:]]*tap' "$touchpad_state" || {
   printf '%s\n' 'Expected enabled touchpad fragment to preserve tap-to-click' >&2
   exit 1
 }
+grep -qx '[[:space:]]*natural-scroll' "$touchpad_state" || {
+  printf '%s\n' 'Expected enabled touchpad fragment to preserve reverse scrolling' >&2
+  exit 1
+}
 
 [[ -x "$PROJECT_ROOT/modules/niri-dms/bin/niri-touchpad-toggle" ]] || {
   printf '%s\n' 'Expected managed Niri touchpad helper' >&2
@@ -139,8 +143,8 @@ grep -qx '[[:space:]]*tap' "$PROJECT_ROOT/modules/niri-dms/config/niri/myunix/to
   printf '%s\n' 'Expected touchpad template to enable tap-to-click' >&2
   exit 1
 }
-! grep -q '[[:space:]]*natural-scroll' "$PROJECT_ROOT/modules/niri-dms/config/niri/myunix/touchpad.kdl" || {
-  printf '%s\n' 'Expected touchpad template to use traditional scrolling' >&2
+grep -qx '[[:space:]]*natural-scroll' "$PROJECT_ROOT/modules/niri-dms/config/niri/myunix/touchpad.kdl" || {
+  printf '%s\n' 'Expected touchpad template to use reverse scrolling' >&2
   exit 1
 }
 

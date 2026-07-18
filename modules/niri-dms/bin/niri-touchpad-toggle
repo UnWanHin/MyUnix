@@ -22,6 +22,7 @@ write_state() {
       'input {' \
       '    touchpad {' \
       '        tap' \
+      '        natural-scroll' \
       '    }' \
       '}' > "$temporary"
   fi
