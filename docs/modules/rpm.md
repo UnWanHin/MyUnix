@@ -16,6 +16,7 @@ For now the verifier is `rpm`; the installer runs it as `rpm -q <verification_ar
 
 - **WeChat** is locked to the x86_64 RPM published on the official Tencent Linux download site. The URL is a rolling URL; refresh the lock before use if its SHA-256 no longer matches.
 - **FlClash** is locked to the official `chen08209/FlClash` GitHub Release `v0.8.94` x86_64 RPM.
+- **Tabby** is locked to the official `Eugeny/tabby` GitHub Release `v1.0.235` x86_64 RPM. Its installed RPM package is `tabby-terminal`; verify it with `rpm -q tabby-terminal`.
 - **QQ** is intentionally not enabled yet. Its official Linux QQ page currently resolves to Tencent CDN links that return HTTP 403 to unattended `wget` in this environment, so a reproducible checksum could not be generated. Do not replace it with a third-party mirror; add it when Tencent provides an automatable official download or checksum.
 - **Feishu** uses a short-lived signed official CDN URL. It is documented as a
   verified manual RPM workflow rather than added to `apps.tsv`, because an
