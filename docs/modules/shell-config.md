@@ -54,7 +54,10 @@ fragments. Review the diff before committing, especially environment values.
 After this module is installed, `jet` discovers currently available JetBrains
 launchers every time it runs. It works with JetBrains Toolbox commands and
 standard manual-install locations, so IDEs added or removed later are reflected
-without editing MyUnix.
+without editing MyUnix. When a launcher has JetBrains `product-info.json`
+metadata, the menu uses its official product name and version, so parallel
+installations are distinguishable, for example `CLion (2026.2.1)` and
+`CLion (2025.3.4)`.
 
 ```bash
 jet .

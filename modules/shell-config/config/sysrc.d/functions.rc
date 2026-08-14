@@ -1,12 +1,43 @@
 # Shared Bash/Zsh functions belong here.
 
+jet__launcher_label() {
+  local launcher=$1 resolved_launcher=$2 executable product_root product_info
+  local product_name product_version fallback_label fallback_root
+
+  executable="$resolved_launcher"
+  if [[ -f "$launcher" ]]; then
+    executable="$(sed -n 's/^"\([^"]*\)".*/\1/p' "$launcher" | sed -n '1p')"
+    [[ -x "$executable" ]] || executable="$resolved_launcher"
+  fi
+  executable="$(readlink -f -- "$executable" 2>/dev/null || printf '%s' "$resolved_launcher")"
+  product_root="$(dirname "$(dirname "$executable")")"
+  product_info="$product_root/product-info.json"
+
+  if [[ -r "$product_info" ]]; then
+    product_name="$(sed -n 's/^[[:space:]]*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$product_info" | sed -n '1p')"
+    product_version="$(sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$product_info" | sed -n '1p')"
+    if [[ -n "$product_name" && -n "$product_version" ]]; then
+      printf '%s (%s)\n' "$product_name" "$product_version"
+      return 0
+    fi
+  fi
+
+  fallback_label=${resolved_launcher##*/}
+  fallback_label=${fallback_label%.sh}
+  fallback_root=${product_root##*/}
+  if [[ "$fallback_root" != "$fallback_label" ]]; then
+    printf '%s (%s)\n' "$fallback_label" "$fallback_root"
+  else
+    printf '%s\n' "$fallback_label"
+  fi
+}
+
 jet__append_launcher() {
   local launcher=$1 output_file=$2 resolved label
   resolved="$(readlink -f -- "$launcher" 2>/dev/null || true)"
   [[ -n "$resolved" && -x "$resolved" ]] || return 0
 
-  label=${resolved##*/}
-  label=${label%.sh}
+  label="$(jet__launcher_label "$launcher" "$resolved")"
   printf '%s\t%s\n' "$label" "$resolved" >> "$output_file"
 }
 

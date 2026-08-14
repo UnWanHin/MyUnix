@@ -55,8 +55,11 @@ not launch an IDE and explains the valid choices.
    scanned because it contains internal helper scripts that are not project
    launchers.  An optional colon-separated `MYUNIX_JETBRAINS_PATHS` extends
    the search roots for manual installations.
-2. Deduplicate launchers by their resolved executable path and sort labels
-   deterministically.
+2. Deduplicate launchers by their resolved executable path and derive labels
+   from JetBrains `product-info.json` metadata when available.  Include the
+   product version in the label so parallel versions remain distinguishable;
+   otherwise fall back to the launcher and installation-directory names.  Sort
+   labels deterministically.
 3. Derive a safe hash from the resolved target directory and read the matching
    state file, if present.  Its content is only the selected launcher path.
 4. If that launcher is still discovered, move it to menu item 1 and mark it
