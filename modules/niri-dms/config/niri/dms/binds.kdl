@@ -129,6 +129,7 @@ binds {
     XF86Launch1 { screenshot; }
     Mod+Shift+E { quit; }
     Mod+E hotkey-overlay-title="Files" { spawn "sh" "-c" "nautilus"; }
+    Mod+F8 repeat=false hotkey-overlay-title="Touchpad" { spawn "sh" "-c" "$HOME/.local/bin/niri-touchpad-toggle"; }
     Mod+S hotkey-overlay-title="flameshot" { spawn "sh" "-c" "flameshot gui"; }
     Mod+T hotkey-overlay-title="Open Terminal" { spawn "kitty"; }
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }

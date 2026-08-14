@@ -57,6 +57,7 @@ run env HOME="$temporary_binding/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_bindin
 assert_status 0
 assert_output_contains 'Mod+F8'
 assert_output_contains 'niri-touchpad-toggle'
+assert_output_contains 'repeat=false'
 run env HOME="$temporary_binding/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_binding/home/.config/niri" MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=0 bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_touchpad_toggle_binding; test ! -e \"\$MYUNIX_NIRI_CONFIG_DIR/myunix/touchpad-bind.kdl\""
 assert_status 0
 
@@ -135,6 +136,24 @@ grep -qx '[[:space:]]*natural-scroll' "$touchpad_state" || {
   exit 1
 }
 
+touchpad_lock="$temporary_touchpad/niri-touchpad-toggle.lock"
+printf '%s\n' 'input {' '  touchpad {' '    tap' '  }' '}' > "$touchpad_state"
+flock "$touchpad_lock" sleep 2 &
+lock_holder=$!
+sleep 0.1
+run env \
+  MYUNIX_NIRI_TOUCHPAD_STATE_FILE="$touchpad_state" \
+  MYUNIX_NIRI_TOUCHPAD_LOCK_FILE="$touchpad_lock" \
+  MYUNIX_NIRI_TOUCHPAD_SKIP_RELOAD=1 \
+  MYUNIX_NOTIFY_SEND=true \
+  "$PROJECT_ROOT/modules/niri-dms/bin/niri-touchpad-toggle"
+wait "$lock_holder"
+assert_status 0
+! grep -qx '[[:space:]]*off' "$touchpad_state" || {
+  printf '%s\n' 'Expected a concurrent touchpad toggle to leave the existing state unchanged' >&2
+  exit 1
+}
+
 [[ -x "$PROJECT_ROOT/modules/niri-dms/bin/niri-touchpad-toggle" ]] || {
   printf '%s\n' 'Expected managed Niri touchpad helper' >&2
   exit 1
@@ -145,6 +164,10 @@ grep -qx '[[:space:]]*tap' "$PROJECT_ROOT/modules/niri-dms/config/niri/myunix/to
 }
 grep -qx '[[:space:]]*natural-scroll' "$PROJECT_ROOT/modules/niri-dms/config/niri/myunix/touchpad.kdl" || {
   printf '%s\n' 'Expected touchpad template to use reverse scrolling' >&2
+  exit 1
+}
+grep -qE 'Mod\+F8[[:space:]]+repeat=false' "$PROJECT_ROOT/modules/niri-dms/config/niri/dms/binds.kdl" || {
+  printf '%s\n' 'Expected the synchronized Mod+F8 binding to disable key repeat' >&2
   exit 1
 }
 

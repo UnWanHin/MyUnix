@@ -50,7 +50,7 @@ configure_niri_dms_touchpad_toggle_binding() {
   printf '%s\n' \
     '// Managed by MyUnix custom Niri + DMS personalization.' \
     'binds {' \
-    '    Mod+F8 hotkey-overlay-title="Toggle Touchpad" { spawn "sh" "-lc" "$HOME/.local/bin/niri-touchpad-toggle"; }' \
+    '    Mod+F8 repeat=false hotkey-overlay-title="Toggle Touchpad" { spawn "sh" "-lc" "$HOME/.local/bin/niri-touchpad-toggle"; }' \
     '}' > "$temporary"
   mv "$temporary" "$binding_file"
 }

@@ -2,7 +2,14 @@
 set -Eeuo pipefail
 
 state_file="${MYUNIX_NIRI_TOUCHPAD_STATE_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/niri/myunix/touchpad.kdl}"
+lock_file="${MYUNIX_NIRI_TOUCHPAD_LOCK_FILE:-${XDG_STATE_HOME:-$HOME/.local/state}/myunix/niri-touchpad-toggle.lock}"
 notifier="${MYUNIX_NOTIFY_SEND:-notify-send}"
+
+mkdir -p "$(dirname "$lock_file")"
+exec {lock_fd}>"$lock_file"
+# Niri binds repeat by default. Ignore an overlapping invocation so a held key
+# or a quick double press cannot race while replacing the state fragment.
+flock -n "$lock_fd" || exit 0
 
 write_state() {
   local mode=$1 directory temporary

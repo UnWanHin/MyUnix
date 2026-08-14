@@ -27,7 +27,9 @@ personalization. If selected, MyUnix creates a `Mod+F8` binding; if not, it
 does not reserve a key. You can alternatively bind the command yourself in the
 DMS Keybinds UI. It switches the public fragment
 `~/.config/niri/myunix/touchpad.kdl` between enabled and `off`, then reloads
-Niri and shows a desktop notification when available. It uses no `sudo` and
+Niri and shows a desktop notification when available. Its binding uses
+`repeat=false`, and the helper holds a user-state lock, so a held key or rapid
+second press cannot run two conflicting toggles at once. It uses no `sudo` and
 defaults to enabled on a new installation. When enabled, a one-finger tap is a
 left click and two-finger scrolling uses the reverse (natural) direction; the
 toggle does not reset either preference. The Niri+DMS exporter copies only these
