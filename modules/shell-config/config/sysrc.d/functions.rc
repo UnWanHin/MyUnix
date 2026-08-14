@@ -1,1 +1,159 @@
 # Shared Bash/Zsh functions belong here.
+
+jet__append_launcher() {
+  local launcher=$1 output_file=$2 resolved label
+  resolved="$(readlink -f -- "$launcher" 2>/dev/null || true)"
+  [[ -n "$resolved" && -x "$resolved" ]] || return 0
+
+  label=${resolved##*/}
+  label=${label%.sh}
+  printf '%s\t%s\n' "$label" "$resolved" >> "$output_file"
+}
+
+jet__collect_manual_launchers() {
+  local root=$1 output_file=$2 launcher
+  [[ -d "$root" ]] || return 0
+
+  while IFS= read -r launcher; do
+    jet__append_launcher "$launcher" "$output_file"
+  done < <(find "$root" -type f -path '*/bin/*.sh' -executable -print 2>/dev/null)
+}
+
+jet__collect_launchers() {
+  local output_file=$1 toolbox_dir root launcher
+  toolbox_dir=${JETBRAINS_TOOLBOX_SCRIPTS:-"$HOME/.local/share/JetBrains/Toolbox/scripts"}
+
+  if [[ -d "$toolbox_dir" ]]; then
+    while IFS= read -r launcher; do
+      jet__append_launcher "$launcher" "$output_file"
+    done < <(find "$toolbox_dir" -mindepth 1 -maxdepth 1 -type f -executable -print 2>/dev/null)
+  fi
+
+  for root in \
+    "$HOME/.local/share/JetBrains" \
+    "$HOME/JetBrains" \
+    /opt/jetbrains \
+    /opt/JetBrains; do
+    jet__collect_manual_launchers "$root" "$output_file"
+  done
+
+  if [[ -n ${MYUNIX_JETBRAINS_PATHS:-} ]]; then
+    while IFS= read -r root; do
+      [[ -n "$root" ]] || continue
+      jet__collect_manual_launchers "$root" "$output_file"
+    done < <(printf '%s\n' "$MYUNIX_JETBRAINS_PATHS" | tr ':' '\n')
+  fi
+}
+
+jet__build_menu() {
+  local candidates_file=$1 menu_file=$2 remembered_launcher=$3 temporary_file tab
+  tab="$(printf '\t')"
+  temporary_file="${menu_file}.sorted"
+
+  LC_ALL=C sort -t "$tab" -k2,2 "$candidates_file" \
+    | awk -F '\t' '!seen[$2]++' \
+    | LC_ALL=C sort -t "$tab" -k1,1 -k2,2 > "$temporary_file"
+
+  if [[ -n "$remembered_launcher" ]] \
+    && awk -F '\t' -v remembered="$remembered_launcher" '$2 == remembered { found = 1 } END { exit !found }' "$temporary_file"; then
+    awk -F '\t' -v remembered="$remembered_launcher" '$2 == remembered' "$temporary_file" > "$menu_file"
+    awk -F '\t' -v remembered="$remembered_launcher" '$2 != remembered' "$temporary_file" >> "$menu_file"
+    rm -f -- "$temporary_file"
+    printf '%s\n' 1
+    return 0
+  fi
+
+  mv "$temporary_file" "$menu_file"
+  printf '%s\n' 0
+}
+
+jet__state_file() {
+  local target_directory=$1 state_root key
+  state_root=${XDG_STATE_HOME:-"$HOME/.local/state"}/myunix/jetbrains/last
+  key="$(printf %s "$target_directory" | sha256sum | awk '{print $1}')"
+  printf '%s/%s\n' "$state_root" "$key"
+}
+
+jet() {
+  local target_directory=${1:-.} temporary_dir candidates_file menu_file state_file
+  local remembered_launcher has_remembered number label launcher choice selection
+
+  if (( $# > 1 )); then
+    printf '%s\n' 'Usage: jet [DIRECTORY]' >&2
+    return 2
+  fi
+
+  if [[ ! -d "$target_directory" ]]; then
+    printf 'Not a directory: %s\n' "$target_directory" >&2
+    return 2
+  fi
+  target_directory="$(cd -P -- "$target_directory" && pwd)" || return 1
+
+  temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/myunix-jet.XXXXXX")" || return 1
+  candidates_file="$temporary_dir/candidates"
+  menu_file="$temporary_dir/menu"
+  : > "$candidates_file"
+  jet__collect_launchers "$candidates_file"
+
+  if [[ ! -s "$candidates_file" ]]; then
+    rm -rf -- "$temporary_dir"
+    printf '%s\n' 'No JetBrains launcher found. Install a Toolbox command or set MYUNIX_JETBRAINS_PATHS.' >&2
+    return 1
+  fi
+
+  state_file="$(jet__state_file "$target_directory")"
+  remembered_launcher=''
+  [[ -r "$state_file" ]] && IFS= read -r remembered_launcher < "$state_file"
+  has_remembered="$(jet__build_menu "$candidates_file" "$menu_file" "$remembered_launcher")"
+  number=0
+
+  printf 'JetBrains IDEs for %s:\n' "$target_directory"
+  while IFS=$'\t' read -r label launcher; do
+    number=$((number + 1))
+    if [[ "$has_remembered" == 1 && "$number" == 1 ]]; then
+      printf '%d. %s (last)\n' "$number" "$label"
+    else
+      printf '%d. %s\n' "$number" "$label"
+    fi
+  done < "$menu_file"
+
+  if [[ "$has_remembered" == 1 ]]; then
+    printf 'Choose an IDE [1]: '
+  else
+    printf 'Choose an IDE [1-%d]: ' "$number"
+  fi
+  IFS= read -r choice || {
+    rm -rf -- "$temporary_dir"
+    return 1
+  }
+
+  if [[ -z "$choice" && "$has_remembered" == 1 ]]; then
+    choice=1
+  fi
+  case "$choice" in
+    ''|0|*[!0-9]*)
+      rm -rf -- "$temporary_dir"
+      printf 'Choose a number between 1 and %d.\n' "$number" >&2
+      return 2
+      ;;
+  esac
+  if (( choice > number )); then
+    rm -rf -- "$temporary_dir"
+    printf 'Invalid selection: %s. Choose a number between 1 and %d.\n' "$choice" "$number" >&2
+    return 2
+  fi
+
+  selection="$(sed -n "${choice}p" "$menu_file")"
+  launcher=${selection#*$'\t'}
+  if [[ -z "$launcher" || ! -x "$launcher" ]]; then
+    rm -rf -- "$temporary_dir"
+    printf '%s\n' 'The selected JetBrains launcher is no longer available.' >&2
+    return 1
+  fi
+
+  "$launcher" "$target_directory" >/dev/null 2>&1 &
+  mkdir -p "$(dirname "$state_file")"
+  printf '%s\n' "$launcher" > "${state_file}.tmp.$$"
+  mv "${state_file}.tmp.$$" "$state_file"
+  rm -rf -- "$temporary_dir"
+}
