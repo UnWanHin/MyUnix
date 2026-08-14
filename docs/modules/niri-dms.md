@@ -31,8 +31,9 @@ Niri and shows a desktop notification when available. Its binding uses
 `repeat=false`, and the helper holds a user-state lock, so a held key or rapid
 second press cannot run two conflicting toggles at once. It uses no `sudo` and
 defaults to enabled on a new installation. When enabled, a one-finger tap is a
-left click and two-finger scrolling uses the reverse (natural) direction; the
-toggle does not reset either preference. The Niri+DMS exporter copies only these
+left click, tap-and-drag enables one-finger dragging, and two-finger scrolling
+uses the reverse (natural) direction; the toggle does not reset either
+preference. The Niri+DMS exporter copies only these
 public `myunix/` fragments; Phone Connect's `kdeconnect.kdl` remains owned by
 the Phone Connect module and is not copied here.
 
