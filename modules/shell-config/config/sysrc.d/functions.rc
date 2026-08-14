@@ -30,8 +30,8 @@ jet__collect_launchers() {
   fi
 
   for root in \
-    "$HOME/.local/share/JetBrains" \
     "$HOME/JetBrains" \
+    "$HOME/.local/opt/jetbrains" \
     /opt/jetbrains \
     /opt/JetBrains; do
     jet__collect_manual_launchers "$root" "$output_file"

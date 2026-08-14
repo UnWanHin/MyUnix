@@ -50,9 +50,11 @@ not launch an IDE and explains the valid choices.
 ## Discovery and state flow
 
 1. Discover executable launchers from the Toolbox scripts directory on every
-   call, then discover executable `bin/*.sh` launchers below standard
-   JetBrains user and system locations.  An optional colon-separated
-   `MYUNIX_JETBRAINS_PATHS` extends the search roots for manual installations.
+   call, then discover executable `bin/*.sh` launchers below standard manual
+   JetBrains user and system roots.  The Toolbox app tree is not recursively
+   scanned because it contains internal helper scripts that are not project
+   launchers.  An optional colon-separated `MYUNIX_JETBRAINS_PATHS` extends
+   the search roots for manual installations.
 2. Deduplicate launchers by their resolved executable path and sort labels
    deterministically.
 3. Derive a safe hash from the resolved target directory and read the matching

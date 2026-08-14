@@ -74,10 +74,11 @@ Implement private `jet__*` helpers in `functions.rc` to:
 1. Resolve the requested directory with `cd -P` and reject non-directories.
 2. Collect executable Toolbox scripts from
    `${JETBRAINS_TOOLBOX_SCRIPTS:-$HOME/.local/share/JetBrains/Toolbox/scripts}`.
-3. Collect executable `bin/*.sh` launchers under
-   `$HOME/.local/share/JetBrains`, `$HOME/JetBrains`, `/opt/jetbrains`, and
-   `/opt/JetBrains`, plus colon-separated roots from
-   `MYUNIX_JETBRAINS_PATHS`.
+3. Collect executable `bin/*.sh` launchers under `$HOME/JetBrains`,
+   `$HOME/.local/opt/jetbrains`, `/opt/jetbrains`, and `/opt/JetBrains`, plus
+   colon-separated roots from `MYUNIX_JETBRAINS_PATHS`.  Do not recursively
+   scan the Toolbox app tree because it contains internal helper scripts that
+   are not project launchers.
 4. Resolve and de-duplicate paths, then build a deterministic label/path menu
    without hardcoded product names.
 5. Hash the physical target path to read/write one plain-text state file below

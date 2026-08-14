@@ -53,10 +53,18 @@ state_file="$state_home/myunix/jetbrains/last/$state_key"
 assert_equals "$toolbox_scripts/pycharm" "$(cat "$state_file")"
 
 make_launcher idea
+internal_launcher="$temporary_home/.local/share/JetBrains/Toolbox/apps/CLion/bin/format.sh"
+mkdir -p "$(dirname "$internal_launcher")"
+printf '%s\n' '#!/usr/bin/env bash' > "$internal_launcher"
+chmod +x "$internal_launcher"
 run_jet $'\n'
 assert_status 0
 assert_output_contains '1. pycharm (last)'
 assert_output_contains 'idea'
+[[ "$OUTPUT" != *format* ]] || {
+  printf '%s\n' 'Unexpected Toolbox internal launcher in Jet menu' >&2
+  exit 1
+}
 assert_equals "pycharm:$project_dir" "$(tail -n 1 "$launch_log")"
 
 rm -f "$toolbox_scripts/pycharm"

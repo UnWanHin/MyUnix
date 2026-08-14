@@ -49,6 +49,31 @@ The optional Development Toolchain module supplies its own reviewed fragment;
 the shell exporter deliberately does not capture arbitrary extra user
 fragments. Review the diff before committing, especially environment values.
 
+## JetBrains project launcher
+
+After this module is installed, `jet` discovers currently available JetBrains
+launchers every time it runs. It works with JetBrains Toolbox commands and
+standard manual-install locations, so IDEs added or removed later are reflected
+without editing MyUnix.
+
+```bash
+jet .
+jet ~/path/to/project
+jetcode .
+```
+
+The numbered selector remembers the IDE last used for each project directory.
+That entry appears first as `(last)` on the next invocation; press Enter to
+reuse it, or enter another number to change it. `jetcode` is an alias for
+`jet`.
+
+For a manual installation outside the standard locations, set the optional
+colon-separated `MYUNIX_JETBRAINS_PATHS` environment variable to its parent
+directory. The local selections are stored below
+`${XDG_STATE_HOME:-~/.local/state}/myunix/jetbrains/last/`. They contain only
+the chosen launcher path, are not exported by MyUnix, and do not include
+project contents or account data.
+
 ## Boundaries and recovery
 
 Oh My Zsh, Powerlevel10k, Zsh plugins, Bash completion, and NVM remain in
