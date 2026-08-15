@@ -26,6 +26,10 @@ tools after the existing shared shell configuration is installed. Ninja,
 Rust/Cargo, Python development packages, Node.js, Go, GCC, Clang and Build
 tools are also Fedora DNF system packages in both modes.
 
+The Build tools selection includes Fedora's `boost-devel` development package,
+which supplies Boost headers and CMake-discoverable libraries such as
+`Boost::system` for C++ projects.
+
 For a deterministic module invocation:
 
 ```bash

@@ -21,6 +21,10 @@ assert_output_contains 'cargo'
   exit 1
 }
 
+run bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$toolchain_module'; development_toolchain_resolve_dnf_packages 'build-tools'"
+assert_status 0
+assert_output_contains 'boost-devel'
+
 run bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$toolchain_module'; development_toolchain_validate_scope invalid"
 assert_status 2
 assert_output_contains 'Invalid development-toolchain scope'
