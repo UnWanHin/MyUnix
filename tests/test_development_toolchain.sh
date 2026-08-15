@@ -24,6 +24,7 @@ assert_output_contains 'cargo'
 run bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$toolchain_module'; development_toolchain_resolve_dnf_packages 'build-tools'"
 assert_status 0
 assert_output_contains 'boost-devel'
+assert_output_contains 'sqlite-devel'
 
 run bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$toolchain_module'; development_toolchain_validate_scope invalid"
 assert_status 2
