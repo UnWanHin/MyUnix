@@ -25,6 +25,8 @@ run bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$toolchain_modu
 assert_status 0
 assert_output_contains 'boost-devel'
 assert_output_contains 'sqlite-devel'
+assert_output_contains 'libasan'
+assert_output_contains 'libubsan'
 
 run bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$toolchain_module'; development_toolchain_validate_scope invalid"
 assert_status 2

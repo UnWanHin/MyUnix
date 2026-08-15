@@ -8,6 +8,10 @@ gdb
 valgrind
 ccache
 pkgconf-pkg-config
+boost-devel
+sqlite-devel
+libasan
+libubsan
 neovim
 tmux
 shellcheck

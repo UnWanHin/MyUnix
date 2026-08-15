@@ -26,10 +26,11 @@ tools after the existing shared shell configuration is installed. Ninja,
 Rust/Cargo, Python development packages, Node.js, Go, GCC, Clang and Build
 tools are also Fedora DNF system packages in both modes.
 
-The Build tools selection includes Fedora's `boost-devel` and `sqlite-devel`
-development packages. They supply Boost headers and CMake-discoverable
-libraries such as `Boost::system`, plus the SQLite headers and library needed
-by C++ projects.
+The Build tools selection includes Fedora's `boost-devel`, `sqlite-devel`,
+`libasan`, and `libubsan` packages. They supply Boost headers and
+CMake-discoverable libraries such as `Boost::system`, the SQLite headers and
+library needed by C++ projects, and the AddressSanitizer/UndefinedBehaviorSanitizer
+runtimes needed by CMake sanitizer builds.
 
 For a deterministic module invocation:
 
