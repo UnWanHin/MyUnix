@@ -18,6 +18,7 @@ desktop settings and exported state from overwriting one another.
 | portal-login | generic captive-portal launcher for Niri/DMS | [[../modules/portal-login|portal login]] |
 | development-toolchain | Fedora and user-scoped compiler/runtime components | [[../modules/development-toolchain|development toolchain]] |
 | distrobox | container tooling for Ubuntu and other distributions | [[../modules/distrobox|distrobox]] |
+| codex-super-bullet | global user-level Codex Luna/Sol execution policy and launcher | [[../modules/codex-super-bullet|codex super bullet]] |
 
 The guarded `niri-dms-greeter` module, `distrobox-ros2-humble`, and
 `distrobox-codex` are explicit follow-on modules. They are intentionally kept

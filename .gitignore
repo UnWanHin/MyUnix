@@ -16,4 +16,6 @@ config/
 !modules/portal-login/config/autostart/*.desktop
 !modules/portal-login/config/bin/
 !modules/portal-login/config/bin/*
+!modules/codex-super-bullet/config/
+!modules/codex-super-bullet/config/**
 readme.md

@@ -1,0 +1,7 @@
+# Layered by `codex -p super-bullet` on top of the user's existing config.toml.
+# Provider settings and authentication intentionally remain in the base config.
+model = "gpt-5.6-luna"
+model_reasoning_effort = "max"
+
+[features]
+multi_agent = true

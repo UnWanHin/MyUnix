@@ -30,12 +30,13 @@ Review the generated DNF candidate list and GNOME/input-method exports before co
 ./scripts/myunix install --module distrobox
 ./scripts/myunix install --module distrobox-ros2-humble
 ./scripts/myunix install --module distrobox-codex
+./scripts/myunix install --module codex-super-bullet
 ./scripts/myunix retry
 ```
 
 The first menu uses `↑`/`↓` to move, `Space` to toggle a choice and `Enter` to
 confirm. One-click installs the conservative GNOME-safe baseline with the
-English keyboard, Cangjie 5, Pinyin, and [Steam](docs/modules/steam.md) from
+English keyboard, Cangjie 5, Pinyin, the global [Codex SuperBullet](docs/modules/codex-super-bullet.md) mode, and [Steam](docs/modules/steam.md) from
 RPM Fusion. Custom installation first configures input methods, then offers
 optional Steam, Niri + DMS, and Development Toolchain screens. `--all` is the
 noninteractive equivalent of one-click. Neither path installs Niri/DMS or
@@ -87,6 +88,14 @@ For container-native Codex used with ROS and other Ubuntu-only toolchains, use
 `./scripts/myunix install --module distrobox-codex`; it stores container
 configuration under `/opt/distrobox/ubuntu22/.codex` and never copies
 credentials from Fedora.
+
+The `codex-super-bullet` module installs the global Codex policy and the
+`super-bullet` launcher. It is user-level and does not install an RPM or copy
+authentication. Run `super-bullet run` for an interactive Luna session,
+`super-bullet exec "task"` for Luna followed by a read-only Sol review, or
+`super-bullet review` for Sol-only validation. Say `关闭 SuperBullet` to disable
+the mode for the current conversation/turn and `开启 SuperBullet` to re-enable
+it. The launcher prints an active marker only for phases it really invokes.
 
 After installing or importing input methods, log out and back in to let the active GNOME or Niri session reload its input-method services. The optional [shared shell configuration](docs/modules/shell-config.md) module manages portable Bash/Zsh settings through `~/.config/.sysrc` without mixing them into Niri's KDL configuration. [Phone Connect](docs/modules/phone-connect.md) recreates KDE Connect software and Niri startup without exporting paired-phone data.
 

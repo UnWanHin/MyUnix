@@ -30,6 +30,7 @@ source "$ROOT/modules/development-toolchain/install.sh"
 source "$ROOT/modules/distrobox/install.sh"
 source "$ROOT/modules/distrobox-ros2-humble/install.sh"
 source "$ROOT/modules/distrobox-codex/install.sh"
+source "$ROOT/modules/codex-super-bullet/install.sh"
 
 run_doctor() {
   local manifest
@@ -86,6 +87,7 @@ run_module() {
     distrobox) install_distrobox || status=1 ;;
     distrobox-ros2-humble) install_distrobox_ros2_humble || status=1 ;;
     distrobox-codex) install_distrobox_codex || status=1 ;;
+    codex-super-bullet) install_codex_super_bullet || status=1 ;;
     *) die "Unknown module: $module" ;;
   esac
   if ((status == 0)); then
@@ -171,7 +173,7 @@ run_selected_modules() {
 run_all_install() {
   export MYUNIX_INSTALL_MODE=all
   export MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=1
-  run_selected_modules bootstrap dnf time-sync rpm gnome input-method steam
+  run_selected_modules bootstrap dnf time-sync rpm gnome input-method codex-super-bullet steam
 }
 
 choose_custom_input_methods() {
@@ -239,7 +241,7 @@ run_custom_install() {
   choose_custom_desktop_applications && install_steam=1 || true
   choose_custom_niri_dms && install_niri_dms=1 || true
   choose_custom_development_toolchain && install_toolchain=1 || true
-  run_selected_modules bootstrap dnf time-sync rpm gnome input-method
+  run_selected_modules bootstrap dnf time-sync rpm gnome input-method codex-super-bullet
   ((install_steam == 0)) || run_selected_modules steam
   ((install_niri_dms == 0)) || run_selected_modules niri-dms
   ((install_toolchain == 0)) || run_selected_modules development-toolchain
