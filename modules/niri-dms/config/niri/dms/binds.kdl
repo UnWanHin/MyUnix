@@ -128,6 +128,7 @@ binds {
     Print { screenshot; }
     XF86Launch1 { screenshot; }
     Mod+Shift+E { quit; }
+    Alt+E hotkey-overlay-title="Network Manager" { spawn "sh" "-c" "nm-connection-editor"; }
     Mod+E hotkey-overlay-title="Files" { spawn "sh" "-c" "nautilus"; }
     Mod+F8 repeat=false hotkey-overlay-title="Touchpad" { spawn "sh" "-c" "$HOME/.local/bin/niri-touchpad-toggle"; }
     Mod+S hotkey-overlay-title="flameshot" { spawn "sh" "-c" "flameshot gui"; }

@@ -92,6 +92,9 @@ import_niri_dms_config() {
   cp -a "$source/config.kdl" "$target/config.kdl"
   if [[ -d "$source/dms" ]]; then
     for file in "$source"/dms/*.kdl; do
+      case "$(basename "$file")" in
+        outputs.kdl|input.kdl) continue ;;
+      esac
       [[ -f "$file" ]] && cp -a "$file" "$target/dms/$(basename "$file")"
     done
   fi

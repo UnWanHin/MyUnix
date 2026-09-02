@@ -1,21 +1,4 @@
 {
-  "systemTrayIconTintMode": "none",
-  "systemTrayIconTintSaturation": 50,
-  "systemTrayIconTintStrength": 135,
-  "focusedWindowCompactMode": false,
-  "focusedWindowSize": 1,
-  "focusedWindowShowIcon": true,
-  "runningAppsCompactMode": true,
-  "barMaxVisibleApps": 0,
-  "barMaxVisibleRunningApps": 0,
-  "barShowOverflowBadge": true,
-  "trayAutoOverflow": true,
-  "trayPopupSingleLine": true,
-  "trayMaxVisibleItems": 0,
-  "runningAppsCurrentWorkspace": true,
-  "runningAppsGroupByApp": false,
-  "runningAppsCurrentMonitor": false,
-  "centeringMode": "index",
   "barConfigs": [
     {
       "id": "default",
@@ -42,7 +25,7 @@
           "enabled": true
         },
         {
-          "id": "dankActions",
+          "id": "dankActions:variant_1784218555658",
           "enabled": true
         }
       ],
@@ -118,7 +101,5 @@
       "hoverPopouts": false,
       "hoverPopoutDelay": 150
     }
-  ],
-  "barInsetPaddingShared": -1,
-  "barInsetPaddingSyncAll": false
+  ]
 }

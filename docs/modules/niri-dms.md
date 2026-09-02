@@ -63,6 +63,14 @@ keys into an existing `~/.config/DankMaterialShell/settings.json`, preserving
 unknown local keys. It does not restart DMS automatically; log out/in or run
 `dms restart` when you deliberately want imported appearance changes applied.
 
+The Niri exporter/importer deliberately excludes `dms/outputs.kdl`, which can
+contain monitor-specific modes, scale and positions. The optional include in
+`config.kdl` remains so each computer can keep or regenerate its own display
+profile; this prevents a laptop's output settings from causing an invalid
+layout or black screen on another machine. DMS's generated `dms/input.kdl` is
+also excluded because it is not referenced by the public config; touchpad
+behavior is carried by the portable `myunix/touchpad.kdl` fragment.
+
 The sync excludes plugin settings and metadata, paired phones, Wi-Fi,
 Bluetooth and audio-device pins, output/display profiles, wallpaper and custom
 paths, commands, usage histories, notification data, greeter settings, caches

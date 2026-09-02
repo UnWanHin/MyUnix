@@ -7,7 +7,7 @@ Recreate a Fedora GNOME workstation with modular, reviewable scripts. The reposi
 ```bash
 ./scripts/myunix doctor
 ./scripts/myunix export
-git add modules && git commit -m 'chore: export Fedora settings'
+git add modules docs tests && git commit -m 'chore: export Fedora settings'
 ```
 
 Review the generated DNF candidate list and GNOME/input-method exports before committing.

@@ -42,15 +42,20 @@ bash-completion
 bc
 bind-utils
 bluez-cups
+boost-devel
 brcmfmac-firmware
 brltty
 btop
 btrfs-progs
+bytedance-feishu-stable
 bzip2
+cargo
 cc-switch
+chatgpt
 chrony
 cifs-utils
 cirrus-audio-firmware
+clang
 cmatrix
 code
 colord
@@ -85,6 +90,7 @@ deltarpm
 desktop-backgrounds-gnome
 dgop
 diffstat
+distrobox
 dms
 dms-greeter
 dnf5
@@ -129,6 +135,7 @@ gcc
 gcc-c++
 gdm
 gettext
+gh
 ghostscript
 git
 glib-networking
@@ -204,6 +211,7 @@ hfsplus-tools
 hostname
 hplip
 htop
+hugo
 hunspell
 hyfetch
 hyperv-daemons
@@ -231,16 +239,21 @@ isomd5sum
 iwlegacy-firmware
 iwlwifi-dvm-firmware
 iwlwifi-mvm-firmware
+java-25-openjdk-devel
+json-devel
 kbd
 kbd-legacy
 kdeconnectd
 kernel
 kernel-core
+kernel-devel
 kernel-modules
+kernel-modules-core
 kernel-modules-extra
 kexec-tools
 kitty
 less
+libasan
 libertas-firmware
 libglvnd-gles
 libreoffice
@@ -251,6 +264,7 @@ libreoffice-impress
 libreoffice-writer
 librsvg2
 libsane-hpaio
+libubsan
 libva-intel-media-driver
 linux-firmware
 linuxqq
@@ -283,7 +297,9 @@ nautilus
 ncurses
 neovim
 net-tools
+network-manager-applet
 nfs-utils
+ninja-build
 niri
 nmap
 nmap-ncat
@@ -345,6 +361,7 @@ rpmfusion-nonfree-release
 rsms-inter-fonts
 rsync
 rsyslog
+rust
 rygel
 samba-client
 sane-backends-drivers-scanners
@@ -363,6 +380,7 @@ sos
 speech-dispatcher
 spice-vdagent
 spice-webdavd
+sqlite-devel
 sssd-common
 sssd-kcm
 sssd-proxy
@@ -377,6 +395,7 @@ systemd-oomd-defaults
 systemd-resolved
 systemd-udev
 systemtap
+tabby-terminal
 tar
 tcpdump
 teamd
@@ -385,6 +404,7 @@ time
 tinysparql
 tiwilink-firmware
 tldr
+todesk
 toolbox
 traceroute
 tree
@@ -395,6 +415,7 @@ uresourced
 usb_modeswitch
 usbutils
 util-linux
+vcpkg
 vim-enhanced
 vim-minimal
 virtualbox-guest-additions

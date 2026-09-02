@@ -36,6 +36,8 @@ temporary_dir="$(mktemp -d)"
 mkdir -p "$temporary_dir/source/dms" "$temporary_dir/source/myunix" "$temporary_dir/home/.config/niri/dms"
 printf '%s\n' 'environment {' '}' > "$temporary_dir/source/config.kdl"
 printf '%s\n' 'binds {}' > "$temporary_dir/source/dms/binds.kdl"
+printf '%s\n' 'output "eDP-1" { mode "3072x1920@60.000" }' > "$temporary_dir/source/dms/outputs.kdl"
+printf '%s\n' 'input {}' > "$temporary_dir/source/dms/input.kdl"
 printf '%s\n' 'input {' '  touchpad {' '  }' '}' > "$temporary_dir/source/myunix/touchpad.kdl"
 printf '%s\n' 'old-config' > "$temporary_dir/home/.config/niri/config.kdl"
 run env HOME="$temporary_dir/home" MYUNIX_NIRI_DMS_CONFIG_SOURCE="$temporary_dir/source" MYUNIX_NIRI_CONFIG_DIR="$temporary_dir/home/.config/niri" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; import_niri_dms_config; cat \"\$MYUNIX_NIRI_CONFIG_DIR/config.kdl\""
@@ -47,6 +49,14 @@ find "$temporary_dir/home/.local/state/myunix/backups/niri-dms" -type f -name co
 }
 [[ -f "$temporary_dir/home/.config/niri/myunix/touchpad.kdl" ]] || {
   printf '%s\n' 'Expected managed touchpad fragment to be imported' >&2
+  exit 1
+}
+[[ ! -e "$temporary_dir/home/.config/niri/dms/outputs.kdl" ]] || {
+  printf '%s\n' 'Niri importer must not install machine-specific output settings' >&2
+  exit 1
+}
+[[ ! -e "$temporary_dir/home/.config/niri/dms/input.kdl" ]] || {
+  printf '%s\n' 'Niri importer must not install generated input state' >&2
   exit 1
 }
 run env HOME="$temporary_dir/home" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; install_niri_dms_touchpad_toggle; test -x \"\$HOME/.local/bin/niri-touchpad-toggle\""
@@ -81,6 +91,14 @@ assert_status 0
 }
 [[ -f "$temporary_export/target/dms/alttab.kdl" ]] || {
   printf '%s\n' 'Expected generated DMS Alt-Tab configuration to be exported' >&2
+  exit 1
+}
+[[ ! -e "$temporary_export/target/dms/outputs.kdl" ]] || {
+  printf '%s\n' 'Niri exporter must not export machine-specific output settings' >&2
+  exit 1
+}
+[[ ! -e "$temporary_export/target/dms/input.kdl" ]] || {
+  printf '%s\n' 'Niri exporter must not export generated input state' >&2
   exit 1
 }
 [[ ! -e "$temporary_export/target/config.kdl.backup.private" ]] || {
