@@ -10,7 +10,8 @@ Recreate a Fedora GNOME workstation with modular, reviewable scripts. The reposi
 git add modules docs tests && git commit -m 'chore: export Fedora settings'
 ```
 
-Review the generated DNF candidate list and GNOME/input-method exports before committing.
+Review the generated DNF package and enabled-repository snapshots, then curate
+portable changes into the owning manifest before committing.
 
 ## On the new Fedora GNOME machine
 
@@ -35,9 +36,10 @@ Review the generated DNF candidate list and GNOME/input-method exports before co
 ```
 
 The first menu uses `↑`/`↓` to move, `Space` to toggle a choice and `Enter` to
-confirm. One-click installs the conservative GNOME-safe baseline with the
-English keyboard, Cangjie 5, Pinyin, the global [Codex SuperBullet](docs/modules/codex-super-bullet.md) mode, and [Steam](docs/modules/steam.md) from
-RPM Fusion. Custom installation first configures input methods, then offers
+confirm. One-click installs the conservative GNOME-safe baseline, the curated
+[portable DNF profile](docs/modules/dnf.md), English keyboard, Cangjie 5,
+Pinyin, the global [Codex SuperBullet](docs/modules/codex-super-bullet.md)
+mode, and [Steam](docs/modules/steam.md) from RPM Fusion. Custom installation first configures input methods, then offers
 optional Steam, Niri + DMS, and Development Toolchain screens. `--all` is the
 noninteractive equivalent of one-click. Neither path installs Niri/DMS or
 replaces the login manager; the [greeter replacement](docs/modules/niri-dms-greeter.md)

@@ -14,9 +14,9 @@ libasan
 libubsan
 neovim
 tmux
-shellcheck
+ShellCheck
 curl
-wget
+wget2-wget
 tar
 gzip
 java-latest-openjdk-headless

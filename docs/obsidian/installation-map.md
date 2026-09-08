@@ -17,7 +17,7 @@ flowchart TD
   Start -->|Later| Demand[Install a single module]
 
   Base --> Bootstrap[[Bootstrap + RPM Fusion]]
-  Base --> DNF[[DNF core packages]]
+  Base --> DNF[[DNF core + portable profile]]
   Base --> Time[[System time sync]]
   Base --> GNOME[[GNOME shortcuts]]
   Base --> Input[English + Cangjie 5 + Pinyin]
@@ -47,7 +47,7 @@ flowchart TD
 `./scripts/myunix install --all` 安裝可重現的 Fedora 基線：
 
 - [[../modules/bootstrap|Bootstrap + RPM Fusion]]
-- [[../modules/dnf|DNF core packages]]
+- [[../modules/dnf|DNF core packages + portable profile]]
 - [[../modules/time-sync|System time sync]]，保留新電腦既有時區
 - [[../modules/gnome|GNOME shortcuts]]
 - [[../modules/input-method|English、Cangjie 5、Pinyin]]

@@ -1,0 +1,12 @@
+# id|kind|value|scope
+# `profile` sources are enabled by the portable DNF profile. `niri-dms` is
+# enabled only by that optional desktop module. `catalog` is a recorded source
+# that remains opt-in because no one-click package currently needs it.
+rpmfusion|rpmfusion|-|profile
+chatgpt|repo|repos/chatgpt.repo|profile
+vscode|repo|repos/vscode.repo|profile
+google-chrome|repo|repos/google-chrome.repo|catalog
+danklinux|copr|avengemedia/danklinux|niri-dms
+dms-git|copr|avengemedia/dms-git|niri-dms
+yalter-niri|copr|yalter/niri|niri-dms
+pycharm|copr|phracek/PyCharm|catalog

@@ -150,15 +150,14 @@ install_niri_dms() {
   is_fedora || die 'Fedora is required'
   require_dms_supported_fedora
   module_dir="$(niri_dms_dir)"
-  network_run dnf 'Enabling DankLinux COPR repository' sudo dnf copr enable -y avengemedia/danklinux
-  network_run dnf 'Enabling DMS COPR repository' sudo dnf copr enable -y avengemedia/dms
-  verify_dnf_manifest_available "$module_dir/packages.txt"
-  install_dnf_manifest "$module_dir/packages.txt"
-  install_niri_dms_plugins "$module_dir/plugins.txt"
-  import_niri_dms_config
-  install_niri_dms_touchpad_toggle
-  configure_niri_dms_touchpad_toggle_binding
-  configure_niri_fcitx_session
+  install_dnf_sources_for_scope niri-dms || return $?
+  verify_dnf_manifest_available "$module_dir/packages.txt" || return $?
+  install_dnf_manifest "$module_dir/packages.txt" || return $?
+  install_niri_dms_plugins "$module_dir/plugins.txt" || return $?
+  import_niri_dms_config || return $?
+  install_niri_dms_touchpad_toggle || return $?
+  configure_niri_dms_touchpad_toggle_binding || return $?
+  configure_niri_fcitx_session || return $?
   import_dms_personalization
   info 'Niri + DMS installed. Run the input-method module, then log out and select Niri from the login-session chooser.'
 }

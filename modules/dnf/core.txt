@@ -1,6 +1,6 @@
 # Packages installed by ./scripts/myunix install --all.
 git
-wget
+wget2-wget
 curl
 jq
 gnome-tweaks

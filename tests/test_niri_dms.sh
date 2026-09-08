@@ -127,6 +127,7 @@ mkdir -p "$(dirname "$touchpad_state")"
 printf '%s\n' 'input {' '  touchpad {' '  }' '}' > "$touchpad_state"
 run env \
   MYUNIX_NIRI_TOUCHPAD_STATE_FILE="$touchpad_state" \
+  XDG_STATE_HOME="$temporary_touchpad/state" \
   MYUNIX_NIRI_TOUCHPAD_SKIP_RELOAD=1 \
   MYUNIX_NOTIFY_SEND=true \
   "$PROJECT_ROOT/modules/niri-dms/bin/niri-touchpad-toggle"
@@ -137,6 +138,7 @@ grep -qx '[[:space:]]*off' "$touchpad_state" || {
 }
 run env \
   MYUNIX_NIRI_TOUCHPAD_STATE_FILE="$touchpad_state" \
+  XDG_STATE_HOME="$temporary_touchpad/state" \
   MYUNIX_NIRI_TOUCHPAD_SKIP_RELOAD=1 \
   MYUNIX_NOTIFY_SEND=true \
   "$PROJECT_ROOT/modules/niri-dms/bin/niri-touchpad-toggle"

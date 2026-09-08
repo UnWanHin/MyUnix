@@ -14,9 +14,9 @@ build-tools|package|libasan
 build-tools|package|libubsan
 build-tools|package|neovim
 build-tools|package|tmux
-build-tools|package|shellcheck
+build-tools|package|ShellCheck
 build-tools|package|curl
-build-tools|package|wget
+build-tools|package|wget2-wget
 build-tools|package|tar
 build-tools|package|gzip
 jdk|package|java-latest-openjdk-headless

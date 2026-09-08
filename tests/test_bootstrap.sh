@@ -5,7 +5,12 @@ source "$(dirname "$0")/test_helper.bash"
 source "$PROJECT_ROOT/scripts/lib/core.sh"
 source "$PROJECT_ROOT/modules/bootstrap/install.sh"
 
-rpm() { printf '42\n'; }
+rpm() {
+  case "$1" in
+    -q) return 1 ;;
+    -E) printf '42\n' ;;
+  esac
+}
 sudo() { printf '%s\n' "$*"; }
 timeout() { shift 2; "$@"; }
 export MYUNIX_TEST_MODE=fedora

@@ -48,6 +48,8 @@ run_doctor() {
     "$ROOT/modules/distrobox/packages.txt"; do
     verify_dnf_manifest_available "$manifest" || die "DNF manifest contains unavailable packages: $manifest"
   done
+  validate_dnf_manifest "$ROOT/modules/dnf/portable.txt" || die "Invalid DNF manifest: $ROOT/modules/dnf/portable.txt"
+  validate_dnf_sources_manifest "$ROOT/modules/dnf/sources.tsv" || die "Invalid DNF source manifest: $ROOT/modules/dnf/sources.tsv"
   info 'Fedora GNOME prerequisites verified'
 }
 
@@ -69,6 +71,7 @@ run_module() {
     bootstrap) install_bootstrap || status=1 ;;
     dnf)
       install_dnf_manifest "$ROOT/modules/dnf/core.txt" || status=1
+      ((status != 0)) || install_dnf_portable_profile || status=1
       if ((status == 0)) && [[ "${MYUNIX_INSTALL_MODE:-all}" == guided ]]; then
         install_optional_dnf_manifest "$ROOT/modules/dnf/optional.txt" || status=1
       fi
@@ -255,6 +258,7 @@ run_export() {
   export_shell_config
   export_phone_connect
   export_userinstalled_dnf_candidates
+  export_enabled_dnf_repositories
 }
 
 run_retry() {
