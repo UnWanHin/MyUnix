@@ -71,3 +71,19 @@ find "$temporary_apps/home/.local/state/myunix/backups/input-method" -path '*/de
   printf '%s\n' 'Expected existing user launcher backup' >&2
   exit 1
 }
+
+temporary_module_run="$(mktemp -d)"
+run env \
+  HOME="$temporary_module_run/home" \
+  XDG_DATA_HOME="$temporary_module_run/home/.local/share" \
+  XDG_STATE_HOME="$temporary_module_run/home/.local/state" \
+  MYUNIX_SYSTEM_APPLICATIONS_DIR="$temporary_module_run/empty-applications" \
+  MYUNIX_SOURCE_ONLY=1 \
+  MYUNIX_TEST_MODE=fedora \
+  bash -c '
+    source "'"$PROJECT_ROOT"'/scripts/myunix"
+    install_dnf_manifest() { return 0; }
+    run_module input-method
+  '
+assert_status 0
+assert_output_contains 'Input method packages installed'

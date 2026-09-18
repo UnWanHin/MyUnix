@@ -191,12 +191,24 @@ import_fcitx5_public_config() {
 install_input_methods() {
   local cangjie=${1:-1} pinyin=${2:-1} manifest
   manifest="$(mktemp)"
-  trap 'rm -f "$manifest"' RETURN
-  input_method_resolve_packages "$cangjie" "$pinyin" > "$manifest"
+  if ! input_method_resolve_packages "$cangjie" "$pinyin" > "$manifest"; then
+    rm -f "$manifest"
+    return 1
+  fi
   info 'Installing input-method packages'
-  install_dnf_manifest "$manifest"
+  if ! install_dnf_manifest "$manifest"; then
+    rm -f "$manifest"
+    return 1
+  fi
   info 'Writing public Fcitx5 configuration'
-  import_fcitx5_public_config "$cangjie" "$pinyin"
-  install_input_method_app_overrides
+  if ! import_fcitx5_public_config "$cangjie" "$pinyin"; then
+    rm -f "$manifest"
+    return 1
+  fi
+  if ! install_input_method_app_overrides; then
+    rm -f "$manifest"
+    return 1
+  fi
+  rm -f "$manifest"
   info 'Input method packages installed. Log out and back in before using GNOME or Niri input sources.'
 }
