@@ -25,6 +25,16 @@ install_jetbrains_toolbox() {
   local toolbox_binary_rel target marker bin_link target_binary
   require_command tar
   require_command curl
+  target="$(jetbrains_toolbox_root)"
+  marker="$target/.myunix-managed"
+  bin_link="${MYUNIX_JETBRAINS_TOOLBOX_BIN:-$HOME/.local/bin/jetbrains-toolbox}"
+  if [[ -e "$target" && ! -f "$marker" ]]; then
+    die "Refusing to replace unmanaged JetBrains Toolbox directory: $target"
+  fi
+  if [[ -f "$marker" && -x "$bin_link" ]]; then
+    info "JetBrains Toolbox already installed; skipping download"
+    return 0
+  fi
   archive="${MYUNIX_JETBRAINS_TOOLBOX_ARCHIVE:-}"
   temporary="$(mktemp -d)"
   trap 'rm -rf -- "$temporary"; trap - RETURN' RETURN
@@ -48,17 +58,11 @@ install_jetbrains_toolbox() {
     source_root="$extracted/$root_name"
     toolbox_binary_rel="${relative#"$root_name"/}"
   fi
-  target="$(jetbrains_toolbox_root)"
-  marker="$target/.myunix-managed"
-  if [[ -e "$target" && ! -f "$marker" ]]; then
-    die "Refusing to replace unmanaged JetBrains Toolbox directory: $target"
-  fi
   mkdir -p "$target"
   cp -a "$source_root"/. "$target"/
   printf '%s\n' 'Managed by MyUnix; source: JetBrains Toolbox official download.' > "$marker"
   target_binary="$target/$toolbox_binary_rel"
   chmod 0755 "$target_binary"
-  bin_link="${MYUNIX_JETBRAINS_TOOLBOX_BIN:-$HOME/.local/bin/jetbrains-toolbox}"
   mkdir -p "$(dirname "$bin_link")"
   ln -sfn "$target_binary" "$bin_link"
   info "JetBrains Toolbox installed at $target"
