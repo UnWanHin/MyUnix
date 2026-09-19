@@ -19,6 +19,7 @@ network_timeout_seconds() {
   local kind=$1 seconds
   case "$kind" in
     dnf) seconds=${MYUNIX_DNF_TIMEOUT_SECONDS:-1800} ;;
+    npm) seconds=${MYUNIX_NPM_TIMEOUT_SECONDS:-1800} ;;
     download) seconds=${MYUNIX_DOWNLOAD_TIMEOUT_SECONDS:-600} ;;
     *) printf 'ERROR: Unknown network operation kind: %s\n' "$kind" >&2; return 2 ;;
   esac

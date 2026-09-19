@@ -19,6 +19,7 @@ desktop settings and exported state from overwriting one another.
 | development-toolchain | Fedora and user-scoped compiler/runtime components | [[../modules/development-toolchain|development toolchain]] |
 | distrobox | container tooling for Ubuntu and other distributions | [[../modules/distrobox|distrobox]] |
 | codex-super-bullet | global user-level Codex Luna/Sol execution policy and launcher | [[../modules/codex-super-bullet|codex super bullet]] |
+| codex-fedora | Fedora-native Node/npm runtime and official `@openai/codex` CLI; one-click default, authentication stays local | [[../modules/codex-fedora|Fedora native Codex]] |
 
 The guarded `niri-dms-greeter` module, `distrobox-ros2-humble`, and
 `distrobox-codex` are explicit follow-on modules. They are intentionally kept

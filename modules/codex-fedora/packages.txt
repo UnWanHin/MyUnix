@@ -1,0 +1,3 @@
+# Fedora runtime required by the official npm Codex CLI.
+nodejs
+npm

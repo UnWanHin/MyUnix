@@ -110,10 +110,10 @@ assert_status 0
 second_agents_digest="$(sha256sum "$fake_home/AGENTS.md" | cut -d' ' -f1)"
 assert_equals "$first_agents_digest" "$second_agents_digest"
 
-run env \
-  FAKE_CODEX_LOG="$fake_log" \
-  MYUNIX_CODEX_BIN="$fake_bin/codex" \
-  "$fake_bin/super-bullet" exec 'build the project'
+exec_repo="$(mktemp -d)"
+git -C "$exec_repo" init -q
+git -C "$exec_repo" -c user.name=Test -c user.email=test@example.invalid commit --allow-empty -m 'exec baseline' >/dev/null
+run bash -c "cd '$exec_repo' && FAKE_COMMIT_REPO='$exec_repo' FAKE_CODEX_LOG='$fake_log' MYUNIX_CODEX_BIN='$fake_bin/codex' '$fake_bin/super-bullet' exec 'build the project'"
 assert_status 0
 assert_output_contains 'SuperBullet: active — Luna execution'
 assert_output_contains 'SuperBullet: active — Sol validation'
@@ -124,6 +124,14 @@ run sed -n '2p' "$fake_log"
 assert_status 0
 assert_output_contains 'review'
 assert_output_contains 'gpt-5.6-sol'
+
+: > "$fake_log"
+run env \
+  FAKE_CODEX_LOG="$fake_log" \
+  MYUNIX_CODEX_BIN="$fake_bin/codex" \
+  "$fake_bin/super-bullet" exec 'build the project'
+assert_status 0
+assert_output_contains 'SuperBullet: active — Luna execution'
 
 : > "$fake_log"
 run env \

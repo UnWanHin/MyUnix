@@ -30,6 +30,7 @@ source "$ROOT/modules/development-toolchain/install.sh"
 source "$ROOT/modules/distrobox/install.sh"
 source "$ROOT/modules/distrobox-ros2-humble/install.sh"
 source "$ROOT/modules/distrobox-codex/install.sh"
+source "$ROOT/modules/codex-fedora/install.sh"
 source "$ROOT/modules/codex-super-bullet/install.sh"
 
 run_doctor() {
@@ -45,7 +46,8 @@ run_doctor() {
     "$ROOT/modules/portal-login/packages.txt" \
     "$ROOT/modules/time-sync/packages.txt" \
     "$ROOT/modules/development-toolchain/packages.txt" \
-    "$ROOT/modules/distrobox/packages.txt"; do
+    "$ROOT/modules/distrobox/packages.txt" \
+    "$ROOT/modules/codex-fedora/packages.txt"; do
     verify_dnf_manifest_available "$manifest" || die "DNF manifest contains unavailable packages: $manifest"
   done
   validate_dnf_manifest "$ROOT/modules/dnf/portable.txt" || die "Invalid DNF manifest: $ROOT/modules/dnf/portable.txt"
@@ -90,6 +92,7 @@ run_module() {
     distrobox) install_distrobox || status=1 ;;
     distrobox-ros2-humble) install_distrobox_ros2_humble || status=1 ;;
     distrobox-codex) install_distrobox_codex || status=1 ;;
+    codex-fedora) install_codex_fedora || status=1 ;;
     codex-super-bullet) install_codex_super_bullet || status=1 ;;
     *) die "Unknown module: $module" ;;
   esac
@@ -176,7 +179,7 @@ run_selected_modules() {
 run_all_install() {
   export MYUNIX_INSTALL_MODE=all
   export MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=1
-  run_selected_modules bootstrap dnf time-sync rpm gnome input-method niri-dms codex-super-bullet steam
+  run_selected_modules bootstrap dnf time-sync rpm gnome input-method niri-dms codex-fedora codex-super-bullet steam
 }
 
 choose_custom_input_methods() {

@@ -31,6 +31,7 @@ portable changes into the owning manifest before committing.
 ./scripts/myunix install --module distrobox
 ./scripts/myunix install --module distrobox-ros2-humble
 ./scripts/myunix install --module distrobox-codex
+./scripts/myunix install --module codex-fedora
 ./scripts/myunix install --module codex-super-bullet
 ./scripts/myunix retry
 ```
@@ -46,6 +47,10 @@ Development Toolchain screens. `--all` is the noninteractive equivalent of
 one-click. Niri is installed alongside GNOME; the [greeter
 replacement](docs/modules/niri-dms-greeter.md) remains a separate guarded
 command and is never installed automatically.
+
+The one-click baseline also installs Fedora's `nodejs`/`npm` runtime and the
+official `@openai/codex` CLI through the isolated [Fedora Codex module](docs/modules/codex-fedora.md).
+Run `codex login` once on each machine; credentials are never synchronized.
 
 The baseline also configures [system time synchronization](docs/modules/time-sync.md): it installs Fedora's
 `chrony`, enables the time service, corrects the clock, and stores the hardware clock in UTC without changing
