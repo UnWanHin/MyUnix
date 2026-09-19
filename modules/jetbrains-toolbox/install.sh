@@ -27,7 +27,7 @@ install_jetbrains_toolbox() {
   require_command curl
   archive="${MYUNIX_JETBRAINS_TOOLBOX_ARCHIVE:-}"
   temporary="$(mktemp -d)"
-  trap 'rm -rf -- "$temporary"' RETURN
+  trap 'rm -rf -- "$temporary"; trap - RETURN' RETURN
   if [[ -z "$archive" ]]; then
     archive="$temporary/jetbrains-toolbox.tar.gz"
     network_run download 'Downloading JetBrains Toolbox' curl --fail --location --proto '=https' --tlsv1.2 --output "$archive" "$(jetbrains_toolbox_url)" || return 1
