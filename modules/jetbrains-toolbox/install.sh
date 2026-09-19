@@ -20,6 +20,30 @@ jetbrains_toolbox_archive_is_safe() {
   done < <(tar -tzf "$archive")
 }
 
+install_jetbrains_toolbox_desktop_entry() {
+  local target=$1 bin_link=$2 desktop_dir desktop_target desktop_source icon_path
+  desktop_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+  desktop_target="$desktop_dir/jetbrains-toolbox.desktop"
+  mkdir -p "$desktop_dir"
+  desktop_source="$(find "$target" -type f -name jetbrains-toolbox.desktop -print -quit)"
+  if [[ -n "$desktop_source" ]]; then
+    cp -f "$desktop_source" "$desktop_target"
+  else
+    icon_path="$(find "$target" -type f \( -name toolbox.svg -o -name toolbox.png \) -print -quit)"
+    {
+      printf '%s\n' '[Desktop Entry]' 'Name=JetBrains Toolbox' 'Type=Application'
+      printf 'Exec=%s %%u\n' "$bin_link"
+      [[ -n "$icon_path" ]] && printf 'Icon=%s\n' "$icon_path"
+      printf '%s\n' 'Categories=Development;' 'Terminal=false' 'StartupNotify=true'
+    } > "$desktop_target"
+  fi
+  sed -i -E "s|^Exec=.*|Exec=$bin_link %u|" "$desktop_target"
+  chmod 0644 "$desktop_target"
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "$desktop_dir" >/dev/null 2>&1 || true
+  fi
+}
+
 install_jetbrains_toolbox() {
   local archive temporary extracted source_binary relative root_name source_root
   local toolbox_binary_rel target marker bin_link target_binary
@@ -32,6 +56,7 @@ install_jetbrains_toolbox() {
     die "Refusing to replace unmanaged JetBrains Toolbox directory: $target"
   fi
   if [[ -f "$marker" && -x "$bin_link" ]]; then
+    install_jetbrains_toolbox_desktop_entry "$target" "$bin_link"
     info "JetBrains Toolbox already installed; skipping download"
     return 0
   fi
@@ -65,5 +90,6 @@ install_jetbrains_toolbox() {
   chmod 0755 "$target_binary"
   mkdir -p "$(dirname "$bin_link")"
   ln -sfn "$target_binary" "$bin_link"
+  install_jetbrains_toolbox_desktop_entry "$target" "$bin_link"
   info "JetBrains Toolbox installed at $target"
 }

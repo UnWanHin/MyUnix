@@ -17,7 +17,8 @@ top-level directory layout, installs it under `~/.local/opt/jetbrains-toolbox`,
 and creates `~/.local/bin/jetbrains-toolbox`. It does not use `sudo` or install
 IDEs for you. Start Toolbox once, sign in if needed, and install
 CLion/PyCharm/IDEA from Toolbox. Re-running the module skips the download when
-the managed launcher is already present.
+the managed launcher is already present, while also repairing the user-level
+`~/.local/share/applications/jetbrains-toolbox.desktop` entry when necessary.
 
 After installing an IDE, use the synchronized `jet` command. It rescans
 Toolbox launchers on every invocation, so newly installed or removed IDEs are
