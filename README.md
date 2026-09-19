@@ -53,6 +53,10 @@ The one-click baseline also installs Fedora's `nodejs`/`npm` runtime and the
 official `@openai/codex` CLI through the isolated [Fedora Codex module](docs/modules/codex-fedora.md).
 Run `codex login` once on each machine; credentials are never synchronized.
 
+The synchronized [Niri/DMS shortcut list](docs/modules/niri-dms.md#managed-custom-shortcuts)
+documents the personal terminal, launcher, screenshot, touchpad, window and
+DMS controls restored by the one-click flow.
+
 The baseline also configures [system time synchronization](docs/modules/time-sync.md): it installs Fedora's
 `chrony`, enables the time service, corrects the clock, and stores the hardware clock in UTC without changing
 the new computer's existing timezone.

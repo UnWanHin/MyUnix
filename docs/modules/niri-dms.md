@@ -29,6 +29,44 @@ which is the synchronized DMS shortcut source. The DMS-generated
 `dms/alttab.kdl` may be exported for reproducibility, but it must not be
 hand-edited.
 
+## Managed custom shortcuts
+
+`Mod` means the Super/Windows key in Niri. The complete canonical list remains
+in [`modules/niri-dms/config/niri/dms/binds.kdl`](../../modules/niri-dms/config/niri/dms/binds.kdl);
+the shortcuts below are the MyUnix-managed DMS and desktop customizations:
+
+| Shortcut | Action |
+| --- | --- |
+| `Mod+T` | Open Kitty terminal |
+| `Mod+Space` | Open DMS application launcher |
+| `Mod+E` | Open Nautilus file manager |
+| `Alt+E` | Open NetworkManager connection editor |
+| `Mod+S` | Launch Flameshot region screenshot |
+| `Mod+F8` | Toggle all touchpads; preserves tap-to-click, drag and natural scrolling settings |
+| `Mod+Shift+T` | Toggle the focused window floating |
+| `Mod+Shift+F` | Toggle fullscreen for the focused window |
+| `Mod+Alt+L` | Lock screen through DMS |
+| `Mod+Comma` | Open DMS settings |
+| `Mod+M` | Toggle DMS process list/task manager |
+| `Mod+N` | Toggle DMS notification center |
+| `Mod+P` | Cycle display profile |
+| `Mod+V` | Open DMS clipboard manager |
+| `Mod+Y` | Open DMS wallpaper browser |
+| `Mod+Shift+N` | Toggle DMS notepad |
+| `Super+X` | Toggle DMS power menu |
+| `Alt+Space` | Toggle DMS spotlight bar |
+| `Ctrl+Alt+Delete` | Toggle DMS process list |
+| `Ctrl+Shift+R` | Open DMS workspace rename |
+| `Print` | Screenshot the current screen |
+| `Alt+Print` | Screenshot the focused window |
+
+The same file also synchronizes workspace/column navigation, window movement,
+tabbed-column mode, overview, monitor movement, volume/brightness/media keys,
+and the `Mod+1`…`Mod+9` workspace bindings. These are intentionally kept in
+the canonical KDL rather than duplicated in this document. If a key is changed
+locally, run `./scripts/myunix export` and review the resulting public diff
+before committing it to the migration source.
+
 The installed user command `~/.local/bin/niri-touchpad-toggle` toggles every
 Niri touchpad. In `./scripts/myunix install --guided`, select **Niri + DMS**
 under optional desktop modules, then choose whether to add its touchpad-toggle
