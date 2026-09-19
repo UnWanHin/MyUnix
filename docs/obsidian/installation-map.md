@@ -79,7 +79,7 @@ GNOME 會保留；Niri 是並存的登入 session。[[session]] 記錄輸入法�
 | 手機配對 | [[../modules/phone-connect|Phone Connect]] |
 | Bash/Zsh 共用設定 | [[../modules/shell-config|Shared shell config]] |
 | Ubuntu container | [[../modules/distrobox|Distrobox]] |
-| Fedora native Codex CLI | [[../modules/codex-fedora|Fedora native Codex]] |
+| Fedora development toolchain and native Codex CLI | [[../modules/development-toolchain|Development Toolchain]]、[[../modules/codex-fedora|Fedora native Codex]] |
 | Global Codex mode | [[../modules/codex-super-bullet|Codex SuperBullet]] |
 | ROS 2 Humble、container Codex | `distrobox-ros2-humble`、`distrobox-codex` modules |
 | 更換 GDM | `niri-dms-greeter` guarded module |

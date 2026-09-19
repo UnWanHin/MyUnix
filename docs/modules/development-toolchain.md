@@ -1,7 +1,8 @@
 # Development Toolchain
 
-This optional module reproduces the Fedora development environment recorded
-from the reference setup. It is not included in one-click installation.
+This module reproduces the Fedora development environment recorded from the
+reference setup. It is included in one-click installation and can also be run
+separately.
 
 ```bash
 ./scripts/myunix install --module development-toolchain

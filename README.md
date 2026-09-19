@@ -37,12 +37,13 @@ portable changes into the owning manifest before committing.
 ```
 
 The first menu uses `↑`/`↓` to move, `Space` to toggle a choice and `Enter` to
-confirm. One-click installs the conservative GNOME-safe baseline, the curated
+confirm. One-click installs the complete Fedora workstation baseline, the curated
 [portable DNF profile](docs/modules/dnf.md), English keyboard, Cangjie 5,
 Pinyin, synchronized [Niri + DMS](docs/modules/niri-dms.md) settings and
-hotkeys, the global [Codex SuperBullet](docs/modules/codex-super-bullet.md)
-mode, and [Steam](docs/modules/steam.md) from RPM Fusion. Custom installation
-first configures input methods, then offers optional Steam, Niri + DMS, and
+hotkeys, the full [Development Toolchain](docs/modules/development-toolchain.md),
+the global [Codex SuperBullet](docs/modules/codex-super-bullet.md) mode, and
+[Steam](docs/modules/steam.md) from RPM Fusion. Custom installation first
+configures input methods, then offers optional Steam, Niri + DMS, and
 Development Toolchain screens. `--all` is the noninteractive equivalent of
 one-click. Niri is installed alongside GNOME; the [greeter
 replacement](docs/modules/niri-dms-greeter.md) remains a separate guarded
