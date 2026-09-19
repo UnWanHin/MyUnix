@@ -125,6 +125,14 @@ install_dnf_manifest() {
   network_run dnf 'Installing DNF package manifest' sudo dnf install -y "${packages[@]}"
 }
 
+install_dnf_ffmpeg_compat() {
+  if command -v rpm >/dev/null 2>&1 && rpm -q ffmpeg-free >/dev/null 2>&1; then
+    network_run dnf \
+      'Replacing Fedora ffmpeg-free with RPM Fusion ffmpeg' \
+      sudo dnf install -y ffmpeg --allowerasing
+  fi
+}
+
 install_dnf_portable_profile() {
   local manifest
   manifest="$(dnf_portable_manifest)"
@@ -141,6 +149,7 @@ install_optional_dnf_manifest() {
     is_comment_or_blank "$line" && continue
     read -r -p "Install ${line}? [y/N] " reply
     if [[ "$reply" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+      [[ "$line" == ffmpeg ]] && install_dnf_ffmpeg_compat
       network_run dnf "Installing optional DNF package: $line" sudo dnf install -y "$line"
     else
       info "Skip $line"

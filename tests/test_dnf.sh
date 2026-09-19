@@ -24,3 +24,10 @@ set -e
 assert_status 0
 assert_output_contains 'dnf install -y vlc'
 assert_output_contains 'Skip ffmpeg'
+
+rpm() {
+  [[ "$1" == -q && "$2" == ffmpeg-free ]]
+}
+run install_dnf_ffmpeg_compat
+assert_status 0
+assert_output_contains 'dnf install -y ffmpeg --allowerasing'

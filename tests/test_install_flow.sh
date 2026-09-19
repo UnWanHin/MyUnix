@@ -75,6 +75,7 @@ run bash -c '
   source "'"$PROJECT_ROOT"'/scripts/myunix"
   install_dnf_manifest() { printf "dnf-manifest:%s\n" "$1"; }
   install_dnf_portable_profile() { printf "portable-profile\n"; }
+  install_dnf_ffmpeg_compat() { printf "ffmpeg-compat\n"; }
   verify_dnf_manifest_available() { printf "verify:%s\n" "$1"; }
   run_module dnf
 '

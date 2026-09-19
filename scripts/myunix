@@ -86,6 +86,7 @@ run_module() {
         case "${MYUNIX_INSTALL_MODE:-all}" in
           guided) install_optional_dnf_manifest "$ROOT/modules/dnf/optional.txt" || status=1 ;;
           all)
+            install_dnf_ffmpeg_compat || status=1
             verify_dnf_manifest_available "$ROOT/modules/dnf/optional.txt" || status=1
             ((status != 0)) || install_dnf_manifest "$ROOT/modules/dnf/optional.txt" || status=1
             ;;

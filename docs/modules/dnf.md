@@ -7,6 +7,9 @@ without copying any account state. `optional.txt` records reviewed desktop
 packages: FFmpeg, VLC, OBS Studio and LibreOffice. `--all` installs every
 package in this file; guided installation asks about each one, while custom
 installation leaves them unselected unless the DNF module is run separately.
+When Fedora's `ffmpeg-free` is installed, the DNF module first replaces it
+with RPM Fusion's full `ffmpeg` package using a narrowly scoped
+`--allowerasing` transaction; this avoids the known codec-package conflict.
 Keep one package name per line; comments begin with `#`.
 
 `sources.tsv` is the source registry. `profile` entries are enabled before
