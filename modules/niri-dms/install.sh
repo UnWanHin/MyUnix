@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../../scripts/lib/network.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/lib/personalization.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/lib/kitty.sh"
 
 fedora_release() { printf '%s\n' "${MYUNIX_FEDORA_RELEASE:-$(rpm -E %fedora)}"; }
 
@@ -155,6 +156,7 @@ install_niri_dms() {
   install_dnf_manifest "$module_dir/packages.txt" || return $?
   install_niri_dms_plugins "$module_dir/plugins.txt" || return $?
   import_niri_dms_config || return $?
+  import_kitty_config || return $?
   install_niri_dms_touchpad_toggle || return $?
   configure_niri_dms_touchpad_toggle_binding || return $?
   configure_niri_fcitx_session || return $?

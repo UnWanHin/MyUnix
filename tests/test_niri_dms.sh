@@ -79,7 +79,12 @@ printf '%s\n' 'private phone fragment' > "$temporary_export/home/.config/niri/my
 printf '%s\n' 'input {' '  touchpad {' '  }' '}' > "$temporary_export/home/.config/niri/myunix/touchpad.kdl"
 printf '%s\n' 'binds {' '  Mod+F8 { spawn "niri-touchpad-toggle"; }' '}' > "$temporary_export/home/.config/niri/myunix/touchpad-bind.kdl"
 printf '%s\n' 'private backup' > "$temporary_export/home/.config/niri/config.kdl.backup.private"
-run env HOME="$temporary_export/home" MYUNIX_NIRI_DMS_CONFIG_TARGET="$temporary_export/target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/export.sh'; export_niri_dms"
+mkdir -p "$temporary_export/home/.config/kitty"
+printf '%s\n' 'font_size 12' > "$temporary_export/home/.config/kitty/kitty.conf"
+printf '%s\n' 'background #000000' > "$temporary_export/home/.config/kitty/dank-theme.conf"
+printf '%s\n' 'tab_bar_style powerline' > "$temporary_export/home/.config/kitty/dank-tabs.conf"
+kitty_target="$temporary_export/kitty-target"
+run env HOME="$temporary_export/home" MYUNIX_NIRI_DMS_CONFIG_TARGET="$temporary_export/target" MYUNIX_KITTY_CONFIG_SOURCE="$kitty_target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/export.sh'; export_niri_dms"
 assert_status 0
 [[ -f "$temporary_export/target/config.kdl" ]] || {
   printf '%s\n' 'Expected Niri config to be exported to the requested target' >&2
@@ -117,8 +122,14 @@ assert_status 0
   printf '%s\n' 'Expected managed touchpad binding to be exported' >&2
   exit 1
 }
+for kitty_file in kitty.conf dank-theme.conf dank-tabs.conf; do
+  [[ -f "$kitty_target/$kitty_file" ]] || {
+    printf 'Expected Kitty config export: %s\n' "$kitty_file" >&2
+    exit 1
+  }
+done
 rm "$temporary_export/home/.config/niri/myunix/touchpad-bind.kdl"
-run env HOME="$temporary_export/home" MYUNIX_NIRI_DMS_CONFIG_TARGET="$temporary_export/target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/export.sh'; export_niri_dms; test ! -e '$temporary_export/target/myunix/touchpad-bind.kdl'"
+run env HOME="$temporary_export/home" MYUNIX_NIRI_DMS_CONFIG_TARGET="$temporary_export/target" MYUNIX_KITTY_CONFIG_SOURCE="$kitty_target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/export.sh'; export_niri_dms; test ! -e '$temporary_export/target/myunix/touchpad-bind.kdl'"
 assert_status 0
 
 temporary_touchpad="$(mktemp -d)"

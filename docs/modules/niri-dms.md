@@ -110,6 +110,12 @@ keys into an existing `~/.config/DankMaterialShell/settings.json`, preserving
 unknown local keys. It does not restart DMS automatically; log out/in or run
 `dms restart` when you deliberately want imported appearance changes applied.
 
+Kitty is synchronized through a separate public allowlist under
+`modules/niri-dms/config/kitty/`: `kitty.conf`, `dank-theme.conf`, and
+`dank-tabs.conf`. The installer backs up changed files below the Niri/DMS
+backup state directory before importing them. Kitty history, runtime sockets,
+backup files, and other unlisted files remain local.
+
 The Niri exporter/importer deliberately excludes `dms/outputs.kdl`, which can
 contain monitor-specific modes, scale and positions. The optional include in
 `config.kdl` remains so each computer can keep or regenerate its own display
