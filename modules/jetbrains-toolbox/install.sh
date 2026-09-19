@@ -21,7 +21,8 @@ jetbrains_toolbox_archive_is_safe() {
 }
 
 install_jetbrains_toolbox() {
-  local archive temporary extracted source_root target marker bin_link
+  local archive temporary extracted source_binary relative root_name source_root
+  local toolbox_binary_rel target marker bin_link target_binary
   require_command tar
   require_command curl
   archive="${MYUNIX_JETBRAINS_TOOLBOX_ARCHIVE:-}"
@@ -36,8 +37,17 @@ install_jetbrains_toolbox() {
   extracted="$temporary/extracted"
   mkdir -p "$extracted"
   tar --no-same-owner --no-same-permissions -xzf "$archive" -C "$extracted"
-  source_root="$(find "$extracted" -mindepth 1 -maxdepth 1 -type d -print -quit)"
-  [[ -n "$source_root" && -x "$source_root/jetbrains-toolbox" ]] || die 'JetBrains Toolbox archive has no expected executable'
+  source_binary="$(find "$extracted" -type f -name jetbrains-toolbox -print -quit)"
+  [[ -n "$source_binary" && -x "$source_binary" ]] || die 'JetBrains Toolbox archive has no expected executable'
+  relative="${source_binary#"$extracted"/}"
+  root_name="${relative%%/*}"
+  if [[ "$relative" == "$root_name" ]]; then
+    source_root="$extracted"
+    toolbox_binary_rel="$relative"
+  else
+    source_root="$extracted/$root_name"
+    toolbox_binary_rel="${relative#"$root_name"/}"
+  fi
   target="$(jetbrains_toolbox_root)"
   marker="$target/.myunix-managed"
   if [[ -e "$target" && ! -f "$marker" ]]; then
@@ -46,9 +56,10 @@ install_jetbrains_toolbox() {
   mkdir -p "$target"
   cp -a "$source_root"/. "$target"/
   printf '%s\n' 'Managed by MyUnix; source: JetBrains Toolbox official download.' > "$marker"
-  chmod 0755 "$target/jetbrains-toolbox"
+  target_binary="$target/$toolbox_binary_rel"
+  chmod 0755 "$target_binary"
   bin_link="${MYUNIX_JETBRAINS_TOOLBOX_BIN:-$HOME/.local/bin/jetbrains-toolbox}"
   mkdir -p "$(dirname "$bin_link")"
-  ln -sfn "$target/jetbrains-toolbox" "$bin_link"
+  ln -sfn "$target_binary" "$bin_link"
   info "JetBrains Toolbox installed at $target"
 }

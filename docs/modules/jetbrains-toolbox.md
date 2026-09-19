@@ -12,10 +12,11 @@ directly:
 ```
 
 The module downloads JetBrains' official HTTPS Linux archive, rejects unsafe
-archive paths, installs it under `~/.local/opt/jetbrains-toolbox`, and creates
-`~/.local/bin/jetbrains-toolbox`. It does not use `sudo` or install IDEs for
-you. Start Toolbox once, sign in if needed, and install CLion/PyCharm/IDEA
-from Toolbox.
+archive paths, locates the Toolbox executable regardless of the archive's
+top-level directory layout, installs it under `~/.local/opt/jetbrains-toolbox`,
+and creates `~/.local/bin/jetbrains-toolbox`. It does not use `sudo` or install
+IDEs for you. Start Toolbox once, sign in if needed, and install
+CLion/PyCharm/IDEA from Toolbox.
 
 After installing an IDE, use the synchronized `jet` command. It rescans
 Toolbox launchers on every invocation, so newly installed or removed IDEs are

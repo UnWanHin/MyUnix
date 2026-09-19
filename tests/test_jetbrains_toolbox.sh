@@ -15,6 +15,13 @@ run env HOME="$temporary/home" MYUNIX_JETBRAINS_TOOLBOX_ARCHIVE="$temporary/tool
 assert_status 0
 assert_output_contains 'Managed by MyUnix'
 
+mkdir -p "$temporary/root"
+printf '%s\n' '#!/usr/bin/env bash' 'printf "JetBrains Toolbox root test\n"' > "$temporary/root/jetbrains-toolbox"
+chmod 0755 "$temporary/root/jetbrains-toolbox"
+tar -czf "$temporary/root-toolbox.tar.gz" -C "$temporary/root" jetbrains-toolbox
+run env HOME="$temporary/home" MYUNIX_JETBRAINS_TOOLBOX_ARCHIVE="$temporary/root-toolbox.tar.gz" MYUNIX_JETBRAINS_TOOLBOX_ROOT="$temporary/home/.local/opt/jetbrains-toolbox-root" MYUNIX_JETBRAINS_TOOLBOX_BIN="$temporary/home/.local/bin/jetbrains-toolbox-root" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/jetbrains-toolbox/install.sh'; install_jetbrains_toolbox; test -x '$temporary/home/.local/bin/jetbrains-toolbox-root'"
+assert_status 0
+
 mkdir -p "$temporary/unsafe"
 printf '%s\n' 'payload' > "$temporary/unsafe/payload"
 tar -czf "$temporary/unsafe.tar.gz" -C "$temporary/unsafe" payload
