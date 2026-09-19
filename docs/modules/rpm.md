@@ -1,6 +1,6 @@
 # Direct RPM applications
 
-`apps.tsv` manages optional applications distributed as RPMs, such as QQ or WeChat when their publishers provide an official Linux RPM and a matching SHA-256 checksum. `--all` installs every valid optional record; guided installation asks before each optional record.
+`apps.tsv` manages optional applications distributed as RPMs, such as QQ or WeChat when their publishers provide an official Linux RPM and a matching SHA-256 checksum. `--all` installs every valid optional record; guided installation asks before each optional record. Each record is checked with `rpm -q` before downloading, so rerunning the installer skips applications that are already installed.
 
 Each non-comment line has seven `|`-separated fields:
 

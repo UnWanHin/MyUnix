@@ -8,6 +8,10 @@ install_rpm_record() {
   [[ "$url" =~ ^https:// ]] || die "RPM URL for $name must use HTTPS"
   [[ "$expected_sha" =~ ^[[:xdigit:]]{64}$ ]] || die "RPM checksum for $name is invalid"
   [[ "$verify_command" == rpm ]] || die "Unsupported RPM verifier for $name"
+  if "$verify_command" -q "$verify_argument" >/dev/null 2>&1; then
+    info "$name already installed; skipping download"
+    return 0
+  fi
 
   tmp="$(mktemp -d)"
   package="$tmp/$id.rpm"
