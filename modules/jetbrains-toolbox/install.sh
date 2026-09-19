@@ -26,10 +26,10 @@ install_jetbrains_toolbox_desktop_entry() {
   desktop_target="$desktop_dir/jetbrains-toolbox.desktop"
   mkdir -p "$desktop_dir"
   desktop_source="$(find "$target" -type f -name jetbrains-toolbox.desktop -print -quit)"
+  icon_path="$(find "$target" -type f \( -name toolbox.svg -o -name toolbox.png \) -print -quit)"
   if [[ -n "$desktop_source" ]]; then
     cp -f "$desktop_source" "$desktop_target"
   else
-    icon_path="$(find "$target" -type f \( -name toolbox.svg -o -name toolbox.png \) -print -quit)"
     {
       printf '%s\n' '[Desktop Entry]' 'Name=JetBrains Toolbox' 'Type=Application'
       printf 'Exec=%s %%u\n' "$bin_link"
@@ -38,6 +38,13 @@ install_jetbrains_toolbox_desktop_entry() {
     } > "$desktop_target"
   fi
   sed -i -E "s|^Exec=.*|Exec=$bin_link %u|" "$desktop_target"
+  if [[ -n "$icon_path" ]]; then
+    if grep -q '^Icon=' "$desktop_target"; then
+      sed -i -E "s|^Icon=.*|Icon=$icon_path|" "$desktop_target"
+    else
+      printf 'Icon=%s\n' "$icon_path" >> "$desktop_target"
+    fi
+  fi
   chmod 0644 "$desktop_target"
   if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database "$desktop_dir" >/dev/null 2>&1 || true

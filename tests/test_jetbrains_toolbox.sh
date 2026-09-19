@@ -9,9 +9,11 @@ trap 'rm -rf -- "$temporary"' EXIT
 mkdir -p "$temporary/source/jetbrains-toolbox-1.0"
 printf '%s\n' '#!/usr/bin/env bash' 'printf "JetBrains Toolbox test\\n"' > "$temporary/source/jetbrains-toolbox-1.0/jetbrains-toolbox"
 chmod 0755 "$temporary/source/jetbrains-toolbox-1.0/jetbrains-toolbox"
+printf '%s\n' '<svg xmlns="http://www.w3.org/2000/svg"></svg>' > "$temporary/source/jetbrains-toolbox-1.0/toolbox.svg"
+printf '%s\n' '[Desktop Entry]' 'Name=JetBrains Toolbox' 'Exec=/old/path/jetbrains-toolbox %u' 'Icon=jetbrains-toolbox' > "$temporary/source/jetbrains-toolbox-1.0/jetbrains-toolbox.desktop"
 tar -czf "$temporary/toolbox.tar.gz" -C "$temporary/source" jetbrains-toolbox-1.0
 
-run env HOME="$temporary/home" MYUNIX_JETBRAINS_TOOLBOX_ARCHIVE="$temporary/toolbox.tar.gz" MYUNIX_JETBRAINS_TOOLBOX_ROOT="$temporary/home/.local/opt/jetbrains-toolbox" MYUNIX_JETBRAINS_TOOLBOX_BIN="$temporary/home/.local/bin/jetbrains-toolbox" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/jetbrains-toolbox/install.sh'; wrapper() { install_jetbrains_toolbox; rm -f '$temporary/toolbox.tar.gz'; install_jetbrains_toolbox; }; wrapper; test -x '$temporary/home/.local/bin/jetbrains-toolbox'; grep -Fqx 'Exec=$temporary/home/.local/bin/jetbrains-toolbox %u' '$temporary/home/.local/share/applications/jetbrains-toolbox.desktop'; cat '$temporary/home/.local/opt/jetbrains-toolbox/.myunix-managed'"
+run env HOME="$temporary/home" MYUNIX_JETBRAINS_TOOLBOX_ARCHIVE="$temporary/toolbox.tar.gz" MYUNIX_JETBRAINS_TOOLBOX_ROOT="$temporary/home/.local/opt/jetbrains-toolbox" MYUNIX_JETBRAINS_TOOLBOX_BIN="$temporary/home/.local/bin/jetbrains-toolbox" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/jetbrains-toolbox/install.sh'; wrapper() { install_jetbrains_toolbox; rm -f '$temporary/toolbox.tar.gz'; install_jetbrains_toolbox; }; wrapper; test -x '$temporary/home/.local/bin/jetbrains-toolbox'; grep -Fqx 'Exec=$temporary/home/.local/bin/jetbrains-toolbox %u' '$temporary/home/.local/share/applications/jetbrains-toolbox.desktop'; grep -Fqx 'Icon=$temporary/home/.local/opt/jetbrains-toolbox/toolbox.svg' '$temporary/home/.local/share/applications/jetbrains-toolbox.desktop'; cat '$temporary/home/.local/opt/jetbrains-toolbox/.myunix-managed'"
 assert_status 0
 assert_output_contains 'Managed by MyUnix'
 
