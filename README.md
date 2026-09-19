@@ -24,6 +24,7 @@ portable changes into the owning manifest before committing.
 ./scripts/myunix install --module input-method
 ./scripts/myunix install --module niri-dms
 ./scripts/myunix install --module shell-config
+./scripts/myunix install --module zsh-personalization
 ./scripts/myunix install --module phone-connect
 ./scripts/myunix install --module portal-login
 ./scripts/myunix install --module time-sync
@@ -42,7 +43,9 @@ confirm. One-click installs the complete Fedora workstation baseline, the curate
 Pinyin, synchronized [Niri + DMS](docs/modules/niri-dms.md) settings and
 hotkeys, the full [Development Toolchain](docs/modules/development-toolchain.md),
 the global [Codex SuperBullet](docs/modules/codex-super-bullet.md) mode, and
-[Steam](docs/modules/steam.md) from RPM Fusion. Custom installation first
+[Steam](docs/modules/steam.md) from RPM Fusion. It also restores the portable
+shared shell fragments and pinned [Zsh personalization](docs/modules/zsh-personalization.md).
+Custom installation first
 configures input methods, then offers optional Steam, Niri + DMS, and
 Development Toolchain screens. `--all` is the noninteractive equivalent of
 one-click. Niri is installed alongside GNOME; the [greeter
@@ -111,7 +114,7 @@ authentication. Run `super-bullet run` for an interactive Luna session,
 the mode for the current conversation/turn and `开启 SuperBullet` to re-enable
 it. The launcher prints an active marker only for phases it really invokes.
 
-After installing or importing input methods, log out and back in to let the active GNOME or Niri session reload its input-method services. The optional [shared shell configuration](docs/modules/shell-config.md) module manages portable Bash/Zsh settings through `~/.config/.sysrc` without mixing them into Niri's KDL configuration. [Phone Connect](docs/modules/phone-connect.md) recreates KDE Connect software and Niri startup without exporting paired-phone data.
+After installing or importing input methods, log out and back in to let the active GNOME or Niri session reload its input-method services. The optional [shared shell configuration](docs/modules/shell-config.md) and [Zsh personalization](docs/modules/zsh-personalization.md) modules manage portable shell settings without mixing them into Niri's KDL configuration. [Phone Connect](docs/modules/phone-connect.md) recreates KDE Connect software and Niri startup without exporting paired-phone data.
 
 For a navigable overview of the migration system, open this repository as an
 Obsidian vault and start at the [Obsidian migration graph](docs/obsidian/README.md).

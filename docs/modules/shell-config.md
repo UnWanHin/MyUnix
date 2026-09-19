@@ -80,7 +80,9 @@ project contents or account data.
 ## Boundaries and recovery
 
 Oh My Zsh, Powerlevel10k, Zsh plugins, Bash completion, and NVM remain in
-their shell-specific rc files. Niri is separate: its configuration and Wayland
+their shell-specific rc files. The separate
+[Zsh personalization](zsh-personalization.md) module manages only the reviewed
+Oh My Zsh block and pinned public sources. Niri is separate: its configuration and Wayland
 input-method environment are KDL files under `~/.config/niri/`, managed by the
 Niri + DMS module rather than `.sysrc`.
 

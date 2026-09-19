@@ -93,7 +93,7 @@ printf '%s\n' 'font_size 12' > "$temporary_export/home/.config/kitty/kitty.conf"
 printf '%s\n' 'background #000000' > "$temporary_export/home/.config/kitty/dank-theme.conf"
 printf '%s\n' 'tab_bar_style powerline' > "$temporary_export/home/.config/kitty/dank-tabs.conf"
 kitty_target="$temporary_export/kitty-target"
-run env HOME="$temporary_export/home" MYUNIX_NIRI_DMS_CONFIG_TARGET="$temporary_export/target" MYUNIX_KITTY_CONFIG_SOURCE="$kitty_target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/export.sh'; export_niri_dms"
+run env HOME="$temporary_export/home" MYUNIX_NIRI_DMS_CONFIG_TARGET="$temporary_export/target" MYUNIX_DMS_PLUGIN_LOCK_TARGET="$temporary_export/plugin-lock.json" MYUNIX_DMS_PLUGIN_SETTINGS_TARGET="$temporary_export/plugin-settings.json" MYUNIX_KITTY_CONFIG_SOURCE="$kitty_target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/export.sh'; export_niri_dms"
 assert_status 0
 [[ -f "$temporary_export/target/config.kdl" ]] || {
   printf '%s\n' 'Expected Niri config to be exported to the requested target' >&2
@@ -138,7 +138,7 @@ for kitty_file in kitty.conf dank-theme.conf dank-tabs.conf; do
   }
 done
 rm "$temporary_export/home/.config/niri/myunix/touchpad-bind.kdl"
-run env HOME="$temporary_export/home" MYUNIX_NIRI_DMS_CONFIG_TARGET="$temporary_export/target" MYUNIX_KITTY_CONFIG_SOURCE="$kitty_target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/export.sh'; export_niri_dms; test ! -e '$temporary_export/target/myunix/touchpad-bind.kdl'"
+run env HOME="$temporary_export/home" MYUNIX_NIRI_DMS_CONFIG_TARGET="$temporary_export/target" MYUNIX_DMS_PLUGIN_LOCK_TARGET="$temporary_export/plugin-lock.json" MYUNIX_DMS_PLUGIN_SETTINGS_TARGET="$temporary_export/plugin-settings.json" MYUNIX_KITTY_CONFIG_SOURCE="$kitty_target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/export.sh'; export_niri_dms; test ! -e '$temporary_export/target/myunix/touchpad-bind.kdl'"
 assert_status 0
 
 temporary_touchpad="$(mktemp -d)"
@@ -269,6 +269,20 @@ find "$temporary_personalization/backups" -type f -name DankMaterialShell-settin
   exit 1
 }
 
+missing_settings="$temporary_personalization/missing/DankMaterialShell/settings.json"
+mkdir -p "$temporary_personalization/missing-categories"
+printf '%s\n' '{"barConfigs":[{"id":"default","autoHide":false}]}' > "$temporary_personalization/missing-categories/bar.json"
+for category in appearance dock frame time-weather; do
+  printf '%s\n' '{}' > "$temporary_personalization/missing-categories/$category.json"
+done
+run env MYUNIX_DMS_SETTINGS_FILE="$missing_settings" MYUNIX_DMS_PERSONALIZATION_SOURCE="$temporary_personalization/missing-categories" MYUNIX_DMS_BACKUP_DIR="$temporary_personalization/missing-backups" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; import_dms_personalization; cat '$missing_settings'"
+assert_status 0
+assert_output_contains '"autoHide": false'
+[[ ! -e "$temporary_personalization/missing-backups" ]] || {
+  printf '%s\n' 'A new DMS settings file must not create a backup' >&2
+  exit 1
+}
+
 printf '%s\n' '{"wifiNetworkPins":{"private":"network"}}' > "$category_target/bar.json"
 run env MYUNIX_DMS_SETTINGS_FILE="$settings" MYUNIX_DMS_PERSONALIZATION_SOURCE="$category_target" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; import_dms_personalization"
 assert_status 2
@@ -300,6 +314,7 @@ mkdir -p "$temporary_plugins/plugins"
 run env DMS_PLUGIN_LOG="$temporary_plugins/plugins.log" MYUNIX_DMS_PLUGIN_METADATA_DIR="$temporary_plugins/plugins" bash -c '
   dms() { printf "%s\n" "$*" >> "$DMS_PLUGIN_LOG"; }
   timeout() { shift 2; "$@"; }
+  timeout() { shift 2; "$@"; }
   source "'"$PROJECT_ROOT"'/scripts/lib/core.sh"
   source "'"$PROJECT_ROOT"'/scripts/lib/manifest.sh"
   source "'"$PROJECT_ROOT"'/modules/dnf/install.sh"
@@ -311,6 +326,34 @@ assert_status 0
 assert_output_contains 'plugins install dankActions'
 assert_output_contains 'plugins install dankGifSearch'
 assert_output_contains 'plugins install dankKDEConnect'
+
+temporary_plugin_lock="$(mktemp -d)"
+printf '%s\n' '{"lockfileVersion":1,"plugins":{}}' > "$temporary_plugin_lock/plugins.lock.json"
+run env DMS_PLUGIN_LOG="$temporary_plugin_lock/plugins.log" MYUNIX_DMS_PLUGIN_LOCK_FILE="$temporary_plugin_lock/plugins.lock.json" bash -c '
+  dms() { printf "%s\n" "$*" >> "$DMS_PLUGIN_LOG"; }
+  timeout() { shift 2; "$@"; }
+  source "'$PROJECT_ROOT'/scripts/lib/core.sh"
+  source "'$PROJECT_ROOT'/scripts/lib/network.sh"
+  source "'$PROJECT_ROOT'/modules/niri-dms/install.sh"
+  restore_niri_dms_plugin_lock
+  cat "$DMS_PLUGIN_LOG"
+'
+assert_status 0
+assert_output_contains "plugins restore $temporary_plugin_lock/plugins.lock.json"
+
+plugin_settings="$temporary_plugin_lock/plugin_settings.json"
+plugin_settings_source="$temporary_plugin_lock/plugin-settings.json"
+printf '%s\n' '{"dankActions":{"enabled":true,"variants":[{"id":"public-action","clickCommand":"nm-connection-editor"}]}}' > "$plugin_settings_source"
+printf '%s\n' '{"dankKDEConnect":{"enabled":true,"selectedDeviceId":"private-device"},"unrelated":{"preserve":true}}' > "$plugin_settings"
+run env MYUNIX_DMS_PLUGIN_SETTINGS_FILE="$plugin_settings" MYUNIX_DMS_PLUGIN_SETTINGS_SOURCE="$plugin_settings_source" MYUNIX_DMS_BACKUP_DIR="$temporary_plugin_lock/backups" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; import_dms_plugin_settings; cat '$plugin_settings'"
+assert_status 0
+assert_output_contains 'public-action'
+assert_output_contains 'private-device'
+assert_output_contains '"preserve": true'
+find "$temporary_plugin_lock/backups" -type f -name DankMaterialShell-plugin-settings.json -print -quit | grep -q . || {
+  printf '%s\n' 'Expected DMS plugin settings backup' >&2
+  exit 1
+}
 
 temporary_existing_plugin="$(mktemp -d)"
 mkdir -p "$temporary_existing_plugin/plugins"

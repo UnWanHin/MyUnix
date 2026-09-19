@@ -22,6 +22,8 @@ source "$ROOT/modules/niri-dms-greeter/install.sh"
 source "$ROOT/modules/niri-dms-greeter/rollback.sh"
 source "$ROOT/modules/shell-config/install.sh"
 source "$ROOT/modules/shell-config/export.sh"
+source "$ROOT/modules/zsh-personalization/install.sh"
+source "$ROOT/modules/zsh-personalization/export.sh"
 source "$ROOT/modules/phone-connect/install.sh"
 source "$ROOT/modules/phone-connect/export.sh"
 source "$ROOT/modules/portal-login/install.sh"
@@ -85,6 +87,7 @@ run_module() {
     niri-dms) install_niri_dms || status=1 ;;
     niri-dms-greeter) install_niri_dms_greeter || status=1 ;;
     shell-config) install_shell_config || status=1 ;;
+    zsh-personalization) install_zsh_personalization || status=1 ;;
     phone-connect) install_phone_connect || status=1 ;;
     portal-login) install_portal_login || status=1 ;;
     steam) install_steam || status=1 ;;
@@ -179,7 +182,7 @@ run_selected_modules() {
 run_all_install() {
   export MYUNIX_INSTALL_MODE=all
   export MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=1
-  run_selected_modules bootstrap dnf time-sync rpm gnome input-method niri-dms development-toolchain codex-fedora codex-super-bullet steam
+  run_selected_modules bootstrap dnf time-sync rpm gnome input-method niri-dms shell-config zsh-personalization development-toolchain codex-fedora codex-super-bullet steam
 }
 
 choose_custom_input_methods() {
@@ -247,7 +250,7 @@ run_custom_install() {
   choose_custom_desktop_applications && install_steam=1 || true
   choose_custom_niri_dms && install_niri_dms=1 || true
   choose_custom_development_toolchain && install_toolchain=1 || true
-  run_selected_modules bootstrap dnf time-sync rpm gnome input-method codex-super-bullet
+  run_selected_modules bootstrap dnf time-sync rpm gnome input-method shell-config zsh-personalization codex-super-bullet
   ((install_steam == 0)) || run_selected_modules steam
   ((install_niri_dms == 0)) || run_selected_modules niri-dms
   ((install_toolchain == 0)) || run_selected_modules development-toolchain
@@ -259,6 +262,7 @@ run_export() {
   export_input_methods
   export_niri_dms
   export_shell_config
+  export_zsh_personalization
   export_phone_connect
   export_userinstalled_dnf_candidates
   export_enabled_dnf_repositories

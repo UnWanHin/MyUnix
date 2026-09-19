@@ -56,11 +56,17 @@ export_dms_personalization() {
 }
 
 import_dms_personalization() {
-  local settings source category category_file temporary backup_dir backup_created=0
+  local settings source category category_file temporary backup_dir backup_created=0 settings_existed=0
   settings="$(dms_settings_file)"
   source="$(dms_personalization_source_dir)"
-  [[ -f "$settings" && -d "$source" ]] || return 0
+  [[ -d "$source" ]] || return 0
   require_command jq
+  if [[ -f "$settings" ]]; then
+    settings_existed=1
+  else
+    install -d -m 0700 "$(dirname "$settings")"
+    printf '%s\n' '{}' | install -m 0600 /dev/stdin "$settings"
+  fi
   while IFS= read -r category; do
     category_file="$source/$category.json"
     [[ -f "$category_file" ]] || continue
@@ -72,7 +78,7 @@ import_dms_personalization() {
       rm -f "$temporary"
       continue
     fi
-    if ((backup_created == 0)); then
+    if ((settings_existed == 1 && backup_created == 0)); then
       backup_dir="${MYUNIX_DMS_BACKUP_DIR:-$HOME/.local/state/myunix/backups/niri-dms/$(date +%Y%m%d-%H%M%S)}"
       mkdir -p "$backup_dir"
       cp -a "$settings" "$backup_dir/DankMaterialShell-settings.json"

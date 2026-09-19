@@ -8,8 +8,11 @@ and 44 only. Its complete package registry is `modules/niri-dms/packages.txt`;
 after enabling the COPRs, the module verifies that every entry resolves through
 DNF before it begins installation. The reviewed DMS plugin IDs in
 `modules/niri-dms/plugins.txt` are then recreated through `dms plugins install`;
-existing plugin metadata is detected so rerunning the module does not reinstall
-them. Plugin settings themselves are deliberately not exported.
+when `config/dms/plugins.lock.json` is present, `dms plugins restore` pins the
+managed plugin revisions instead. Existing plugin metadata is detected so
+rerunning the module remains idempotent. `config/dms/plugin-settings.json`
+contains only the reviewed public `dankActions` section; KDE Connect pairing
+identity and all other plugin state remain local.
 
 The installer also enables the packaged user-level `dms.service` with
 `systemctl --user enable dms.service`. This starts the DMS bar and UI with the
@@ -112,8 +115,11 @@ Public DMS preferences are kept separately from Niri KDL in
 
 `./scripts/myunix export` regenerates only these category files from the live
 DMS settings. The Niri+DMS installer shallow-merges only their allowlisted
-keys into an existing `~/.config/DankMaterialShell/settings.json`, preserving
-unknown local keys. It does not restart DMS automatically; log out/in or run
+keys into `~/.config/DankMaterialShell/settings.json`, preserving unknown local
+keys. On a new machine it creates a private empty JSON object first, so the
+bar is not skipped before DMS generates its settings file. Existing files are
+backed up before an effective change; a newly created file has no prior state
+to back up. It does not restart DMS automatically; log out/in or run
 `dms restart` when you deliberately want imported appearance changes applied.
 
 Kitty is synchronized through a separate public allowlist under
@@ -130,7 +136,9 @@ layout or black screen on another machine. DMS's generated `dms/input.kdl` is
 also excluded because it is not referenced by the public config; touchpad
 behavior is carried by the portable `myunix/touchpad.kdl` fragment.
 
-The sync excludes plugin settings and metadata, paired phones, Wi-Fi,
+The sync excludes plugin metadata and paired-device identities, while the
+reviewed `dankActions` object is synchronized separately. It also excludes
+Wi-Fi,
 Bluetooth and audio-device pins, output/display profiles, wallpaper and custom
 paths, commands, usage histories, notification data, greeter settings, caches
 and generated files. A bar widget ID such as `dankKDEConnect` is only a public

@@ -1,0 +1,20 @@
+{
+  "lockfileVersion": 1,
+  "plugins": {
+    "dankActions": {
+      "repo": "https://github.com/AvengeMedia/dms-plugins",
+      "path": "DankActions",
+      "commit": "ec1685daf791c5c9d30fd0f3bd7aeafcb063dddd"
+    },
+    "dankGifSearch": {
+      "repo": "https://github.com/AvengeMedia/dms-plugins",
+      "path": "DankGifSearch",
+      "commit": "ec1685daf791c5c9d30fd0f3bd7aeafcb063dddd"
+    },
+    "dankKDEConnect": {
+      "repo": "https://github.com/AvengeMedia/dms-plugins",
+      "path": "DankKDEConnect",
+      "commit": "ec1685daf791c5c9d30fd0f3bd7aeafcb063dddd"
+    }
+  }
+}

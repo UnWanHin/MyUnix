@@ -64,6 +64,8 @@ assert_output_contains 'input:1:1'
 assert_output_contains 'module:steam'
 assert_output_contains 'module:time-sync'
 assert_output_contains 'module:niri-dms'
+assert_output_contains 'module:shell-config'
+assert_output_contains 'module:zsh-personalization'
 assert_output_contains 'module:development-toolchain'
 assert_output_contains 'module:codex-fedora'
 

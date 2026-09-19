@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../../scripts/lib/network.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/lib/personalization.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/lib/plugins.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/lib/kitty.sh"
 
 fedora_release() { printf '%s\n' "${MYUNIX_FEDORA_RELEASE:-$(rpm -E %fedora)}"; }
@@ -160,12 +161,17 @@ install_niri_dms() {
   verify_dnf_manifest_available "$module_dir/packages.txt" || return $?
   install_dnf_manifest "$module_dir/packages.txt" || return $?
   enable_dms_user_service || return $?
-  install_niri_dms_plugins "$module_dir/plugins.txt" || return $?
+  if [[ -f "$(dms_plugin_lock_source)" ]]; then
+    restore_niri_dms_plugin_lock || return $?
+  else
+    install_niri_dms_plugins "$module_dir/plugins.txt" || return $?
+  fi
   import_niri_dms_config || return $?
   import_kitty_config || return $?
   install_niri_dms_touchpad_toggle || return $?
   configure_niri_dms_touchpad_toggle_binding || return $?
   configure_niri_fcitx_session || return $?
   import_dms_personalization
+  import_dms_plugin_settings
   info 'Niri + DMS installed. Run the input-method module, then log out and select Niri from the login-session chooser.'
 }

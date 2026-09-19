@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib/personalization.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/lib/plugins.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/lib/kitty.sh"
 
 export_niri_dms() {
@@ -35,6 +36,8 @@ export_niri_dms() {
     rm -f "$target/myunix/touchpad-bind.kdl"
   fi
   export_dms_personalization
+  export_dms_plugin_lock
+  export_dms_plugin_settings
   export_kitty_config
   info 'Niri and DMS configuration exported'
 }
