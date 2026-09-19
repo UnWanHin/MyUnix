@@ -34,6 +34,7 @@ flowchart TD
   Demand --> Portal[[Portal Login]]
   Demand --> Shell[[Shared shell config]]
   Demand --> Zsh[[Zsh personalization]]
+  Demand --> Toolbox[[JetBrains Toolbox]]
   Demand --> Box[[Distrobox / Ubuntu 22]]
   Demand --> Greeter[[Guarded greeter replacement]]
 
@@ -80,6 +81,7 @@ GNOME 會保留；Niri 是並存的登入 session。[[session]] 記錄輸入法�
 | 手機配對 | [[../modules/phone-connect|Phone Connect]] |
 | Bash/Zsh 共用設定 | [[../modules/shell-config|Shared shell config]] |
 | Oh My Zsh、Powerlevel10k、Zsh plugins | [[../modules/zsh-personalization|Zsh personalization]] |
+| JetBrains Toolbox | [[../modules/jetbrains-toolbox|JetBrains Toolbox]] |
 | Ubuntu container | [[../modules/distrobox|Distrobox]] |
 | Fedora development toolchain and native Codex CLI | [[../modules/development-toolchain|Development Toolchain]]、[[../modules/codex-fedora|Fedora native Codex]] |
 | Personal Niri/DMS shortcuts | [[../modules/niri-dms|Niri + DMS shortcut reference]] |

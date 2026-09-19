@@ -62,12 +62,28 @@ run bash -c '
 assert_status 0
 assert_output_contains 'input:1:1'
 assert_output_contains 'module:steam'
+
 assert_output_contains 'module:time-sync'
 assert_output_contains 'module:niri-dms'
 assert_output_contains 'module:shell-config'
 assert_output_contains 'module:zsh-personalization'
 assert_output_contains 'module:development-toolchain'
 assert_output_contains 'module:codex-fedora'
+
+run bash -c '
+  export MYUNIX_SOURCE_ONLY=1 MYUNIX_UI_TEST_MODE=1
+  source "'"$PROJECT_ROOT"'/scripts/myunix"
+  ui_choose_many() {
+    case "$1" in
+      "Choose input methods") printf "0\n" ;;
+      "Optional desktop applications") printf "1\n" ;;
+    esac
+  }
+  run_module() { printf "module:%s\n" "$1"; return 0; }
+  run_custom_install
+'
+assert_status 0
+assert_output_contains 'module:jetbrains-toolbox'
 
 run env MYUNIX_SOURCE_ONLY=1 MYUNIX_TEST_MODE=fedora MYUNIX_STATE_DIR="$temporary/state" bash -c '
   source "'"$PROJECT_ROOT"'/scripts/myunix"

@@ -1,0 +1,30 @@
+# JetBrains Toolbox
+
+JetBrains Toolbox is an optional user-level desktop application. It is not the
+same as Fedora's `toolbox` container command.
+
+In guided installation, open **Custom installation → Optional desktop
+applications** and select **JetBrains Toolbox**. It can also be installed
+directly:
+
+```bash
+./scripts/myunix install --module jetbrains-toolbox
+```
+
+The module downloads JetBrains' official HTTPS Linux archive, rejects unsafe
+archive paths, installs it under `~/.local/opt/jetbrains-toolbox`, and creates
+`~/.local/bin/jetbrains-toolbox`. It does not use `sudo` or install IDEs for
+you. Start Toolbox once, sign in if needed, and install CLion/PyCharm/IDEA
+from Toolbox.
+
+After installing an IDE, use the synchronized `jet` command. It rescans
+Toolbox launchers on every invocation, so newly installed or removed IDEs are
+picked up automatically:
+
+```bash
+jet .
+jetcode .
+```
+
+The Toolbox binary itself is installed locally and is not copied into Git;
+only the installer behavior and `jet` shell function are synchronized.

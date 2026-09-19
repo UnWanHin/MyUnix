@@ -25,6 +25,7 @@ portable changes into the owning manifest before committing.
 ./scripts/myunix install --module niri-dms
 ./scripts/myunix install --module shell-config
 ./scripts/myunix install --module zsh-personalization
+./scripts/myunix install --module jetbrains-toolbox
 ./scripts/myunix install --module phone-connect
 ./scripts/myunix install --module portal-login
 ./scripts/myunix install --module time-sync

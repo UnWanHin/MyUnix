@@ -15,6 +15,7 @@ desktop settings and exported state from overwriting one another.
 | niri-dms | default one-click Niri/DMS session, reviewed plugin IDs, KDL hotkeys, `Mod+F8` touchpad shortcut and categorized public personalization; custom install can opt out | [[../modules/niri-dms|niri dms]] |
 | shell-config | Bash/Zsh common `.sysrc` fragments | [[../modules/shell-config|shell config]] |
 | zsh-personalization | Pinned Oh My Zsh, Powerlevel10k and public Zsh plugins | [[../modules/zsh-personalization|zsh personalization]] |
+| jetbrains-toolbox | Optional official user-level JetBrains Toolbox installer | [[../modules/jetbrains-toolbox|JetBrains Toolbox]] |
 | phone-connect | KDE Connect package, firewall gate and Niri fragment | [[../modules/phone-connect|phone connect]] |
 | portal-login | generic captive-portal launcher for Niri/DMS | [[../modules/portal-login|portal login]] |
 | development-toolchain | complete one-click Fedora compiler/runtime baseline, also available as a separate module | [[../modules/development-toolchain|development toolchain]] |
