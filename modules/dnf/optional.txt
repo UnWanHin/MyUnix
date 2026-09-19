@@ -1,3 +1,5 @@
-# Selected only during guided installation.
+# Installed automatically by --all; guided/custom flows may select them.
 ffmpeg
 vlc
+obs-studio
+libreoffice

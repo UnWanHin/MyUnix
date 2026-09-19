@@ -64,8 +64,13 @@ install_rpm_manifest() {
   validate_rpm_manifest "$manifest" || die "Invalid RPM manifest: $manifest"
   while IFS='|' read -r id name url sha selection verify_command verify_argument; do
     is_comment_or_blank "$id" && continue
-    [[ "$selection" == default || "$mode" == guided ]] || continue
-    [[ "$selection" == default ]] || prompt_optional_app "$id" "$name" || { info "Skip $name"; continue; }
+    case "$mode" in
+      all) ;;
+      guided)
+        [[ "$selection" == default ]] || prompt_optional_app "$id" "$name" || { info "Skip $name"; continue; }
+        ;;
+      *) [[ "$selection" == default ]] || continue ;;
+    esac
     install_rpm_record "$id" "$name" "$url" "$sha" "$selection" "$verify_command" "$verify_argument"
   done < "$manifest"
 }
@@ -77,8 +82,14 @@ run_module() {
     dnf)
       install_dnf_manifest "$ROOT/modules/dnf/core.txt" || status=1
       ((status != 0)) || install_dnf_portable_profile || status=1
-      if ((status == 0)) && [[ "${MYUNIX_INSTALL_MODE:-all}" == guided ]]; then
-        install_optional_dnf_manifest "$ROOT/modules/dnf/optional.txt" || status=1
+      if ((status == 0)); then
+        case "${MYUNIX_INSTALL_MODE:-all}" in
+          guided) install_optional_dnf_manifest "$ROOT/modules/dnf/optional.txt" || status=1 ;;
+          all)
+            verify_dnf_manifest_available "$ROOT/modules/dnf/optional.txt" || status=1
+            ((status != 0)) || install_dnf_manifest "$ROOT/modules/dnf/optional.txt" || status=1
+            ;;
+        esac
       fi
       ;;
     time-sync) install_time_sync || status=1 ;;
@@ -184,7 +195,7 @@ run_selected_modules() {
 run_all_install() {
   export MYUNIX_INSTALL_MODE=all
   export MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=1
-  run_selected_modules bootstrap dnf time-sync rpm gnome input-method niri-dms shell-config zsh-personalization development-toolchain codex-fedora codex-super-bullet steam
+  run_selected_modules bootstrap dnf time-sync rpm gnome input-method niri-dms shell-config zsh-personalization development-toolchain codex-fedora codex-super-bullet jetbrains-toolbox steam
 }
 
 choose_custom_input_methods() {

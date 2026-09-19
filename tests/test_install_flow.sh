@@ -62,13 +62,38 @@ run bash -c '
 assert_status 0
 assert_output_contains 'input:1:1'
 assert_output_contains 'module:steam'
-
+assert_output_contains 'module:jetbrains-toolbox'
 assert_output_contains 'module:time-sync'
 assert_output_contains 'module:niri-dms'
 assert_output_contains 'module:shell-config'
 assert_output_contains 'module:zsh-personalization'
 assert_output_contains 'module:development-toolchain'
 assert_output_contains 'module:codex-fedora'
+
+run bash -c '
+  export MYUNIX_SOURCE_ONLY=1 MYUNIX_INSTALL_MODE=all MYUNIX_STATE_DIR="'"$temporary"'/dnf-state"
+  source "'"$PROJECT_ROOT"'/scripts/myunix"
+  install_dnf_manifest() { printf "dnf-manifest:%s\n" "$1"; }
+  install_dnf_portable_profile() { printf "portable-profile\n"; }
+  verify_dnf_manifest_available() { printf "verify:%s\n" "$1"; }
+  run_module dnf
+'
+assert_status 0
+assert_output_contains 'dnf-manifest:'"$PROJECT_ROOT"'/modules/dnf/optional.txt'
+
+run bash -c '
+  export MYUNIX_SOURCE_ONLY=1 MYUNIX_STATE_DIR="'"$temporary"'/rpm-state"
+  source "'"$PROJECT_ROOT"'/scripts/myunix"
+  install_rpm_record() { printf "rpm:%s:%s\n" "$1" "$2"; }
+  prompt_optional_app() { printf "unexpected-prompt:%s\n" "$1" >&2; return 1; }
+  install_rpm_manifest all
+'
+assert_status 0
+assert_output_contains 'rpm:tabby:Tabby'
+[[ "$OUTPUT" != *'unexpected-prompt:'* ]] || {
+  printf 'Unexpected optional RPM prompt in --all output:\n%s\n' "$OUTPUT" >&2
+  exit 1
+}
 
 run bash -c '
   export MYUNIX_SOURCE_ONLY=1 MYUNIX_UI_TEST_MODE=1

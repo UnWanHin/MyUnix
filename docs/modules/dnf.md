@@ -3,9 +3,11 @@
 `core.txt` contains the small repeatable base. `portable.txt` is the curated
 workstation profile installed by `--all` and the one-click menu. It restores
 the normal command-line tools plus ChatGPT desktop, VS Code and GitHub CLI
-without copying any account state. `optional.txt` records reviewed packages
-such as VLC and FFmpeg; custom installation does not currently prompt for
-them. Keep one package name per line; comments begin with `#`.
+without copying any account state. `optional.txt` records reviewed desktop
+packages: FFmpeg, VLC, OBS Studio and LibreOffice. `--all` installs every
+package in this file; guided installation asks about each one, while custom
+installation leaves them unselected unless the DNF module is run separately.
+Keep one package name per line; comments begin with `#`.
 
 `sources.tsv` is the source registry. `profile` entries are enabled before
 `portable.txt` is resolved. It uses RPM Fusion plus signed repository templates

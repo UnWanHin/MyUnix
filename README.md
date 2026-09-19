@@ -46,6 +46,8 @@ hotkeys, the full [Development Toolchain](docs/modules/development-toolchain.md)
 the global [Codex SuperBullet](docs/modules/codex-super-bullet.md) mode, and
 [Steam](docs/modules/steam.md) from RPM Fusion. It also restores the portable
 shared shell fragments and pinned [Zsh personalization](docs/modules/zsh-personalization.md).
+The complete `--all` path also installs the reviewed VLC, OBS Studio,
+LibreOffice, Tabby, WeChat, FlClash and JetBrains Toolbox entries.
 Custom installation first
 configures input methods, then offers optional Steam, Niri + DMS, and
 Development Toolchain screens. `--all` is the noninteractive equivalent of

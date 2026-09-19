@@ -20,6 +20,8 @@ validate_rpm_manifest "$PROJECT_ROOT/modules/rpm/apps.tsv"
 
 tabby_record='tabby|Tabby|https://github.com/Eugeny/tabby/releases/download/v1.0.235/tabby-1.0.235-linux-x64.rpm|0dd56a3c2a43547e5ae23cd87a8a205b3b91d3bf6685cd8e380c79cf1154a0c9|optional|rpm|tabby-terminal'
 grep -Fqx -- "$tabby_record" "$PROJECT_ROOT/modules/rpm/apps.tsv"
+grep -Fxq obs-studio "$PROJECT_ROOT/modules/dnf/optional.txt"
+grep -Fxq libreoffice "$PROJECT_ROOT/modules/dnf/optional.txt"
 grep -Fq -- 'https://data.services.jetbrains.com/products/download?code=TBA&platform=linux' "$PROJECT_ROOT/modules/jetbrains-toolbox/install.sh" || {
   printf 'Expected official JetBrains Toolbox download URL\n' >&2
   exit 1
