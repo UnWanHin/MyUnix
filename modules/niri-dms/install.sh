@@ -74,6 +74,11 @@ install_niri_dms_plugins() {
   done < "$manifest"
 }
 
+enable_dms_user_service() {
+  require_command systemctl
+  systemctl --user enable dms.service
+}
+
 import_niri_dms_config() {
   local module_dir source target backup_dir file
   module_dir="$(niri_dms_dir)"
@@ -154,6 +159,7 @@ install_niri_dms() {
   install_dnf_sources_for_scope niri-dms || return $?
   verify_dnf_manifest_available "$module_dir/packages.txt" || return $?
   install_dnf_manifest "$module_dir/packages.txt" || return $?
+  enable_dms_user_service || return $?
   install_niri_dms_plugins "$module_dir/plugins.txt" || return $?
   import_niri_dms_config || return $?
   import_kitty_config || return $?

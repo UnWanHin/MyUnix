@@ -11,6 +11,12 @@ DNF before it begins installation. The reviewed DMS plugin IDs in
 existing plugin metadata is detected so rerunning the module does not reinstall
 them. Plugin settings themselves are deliberately not exported.
 
+The installer also enables the packaged user-level `dms.service` with
+`systemctl --user enable dms.service`. This starts the DMS bar and UI with the
+Niri graphical session; it does not replace GDM or change the display manager.
+If DMS is missing after an earlier installation, run that command once and
+log out/in again.
+
 Run the input-method module before using Chinese input. The Niri module imports the reviewed Niri/DMS `.kdl` files from `modules/niri-dms/config/niri/`, backing up any existing `config.kdl` and `dms/` directory below `~/.local/state/myunix/backups/niri-dms/`. It then configures the Niri session to start Fcitx5 and exports `XMODIFIERS=@im=fcitx`, `QT_IM_MODULE=fcitx`, and `QT_IM_MODULES=wayland;fcitx`. It deliberately does not globally set `GTK_IM_MODULE`; native GTK Wayland applications use Niri's text-input-v3 route.
 
 Rerun the module safely after DMS creates `~/.config/niri/config.kdl`:

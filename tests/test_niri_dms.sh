@@ -8,6 +8,15 @@ run env MYUNIX_FEDORA_RELEASE=42 bash -c "source '$PROJECT_ROOT/scripts/lib/core
 assert_status 2
 assert_output_contains 'DMS is supported only on Fedora 43 or 44'
 
+run bash -c '
+  systemctl() { printf "systemctl %s\\n" "$*"; }
+  source "'$PROJECT_ROOT'/scripts/lib/core.sh"
+  source "'$PROJECT_ROOT'/modules/niri-dms/install.sh"
+  enable_dms_user_service
+'
+assert_status 0
+assert_output_contains 'systemctl --user enable dms.service'
+
 temporary="$(mktemp)"
 printf '%s\n' \
   'environment {' \
