@@ -63,6 +63,7 @@ assert_status 0
 assert_output_contains 'input:1:1'
 assert_output_contains 'module:steam'
 assert_output_contains 'module:time-sync'
+assert_output_contains 'module:niri-dms'
 
 run env MYUNIX_SOURCE_ONLY=1 MYUNIX_TEST_MODE=fedora MYUNIX_STATE_DIR="$temporary/state" bash -c '
   source "'"$PROJECT_ROOT"'/scripts/myunix"

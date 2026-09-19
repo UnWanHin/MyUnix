@@ -1,6 +1,15 @@
 # Niri + DMS
 
-The Niri + DMS module is optional and keeps GNOME installed. It uses the documented Fedora COPR package route for Fedora 43 and 44 only. Its complete package registry is `modules/niri-dms/packages.txt`; after enabling the two COPRs, the module verifies that every entry resolves through DNF before it begins installation. The reviewed DMS plugin IDs in `modules/niri-dms/plugins.txt` are then recreated through `dms plugins install`; existing plugin metadata is detected so rerunning the module does not reinstall them. Plugin settings themselves are deliberately not exported.
+The Niri + DMS module keeps GNOME installed and is included in one-click
+installation so the synchronized desktop, DMS personalization and hotkeys are
+restored on a replacement Fedora computer. Custom installation still lets the
+user opt out. It uses the documented Fedora COPR package route for Fedora 43
+and 44 only. Its complete package registry is `modules/niri-dms/packages.txt`;
+after enabling the COPRs, the module verifies that every entry resolves through
+DNF before it begins installation. The reviewed DMS plugin IDs in
+`modules/niri-dms/plugins.txt` are then recreated through `dms plugins install`;
+existing plugin metadata is detected so rerunning the module does not reinstall
+them. Plugin settings themselves are deliberately not exported.
 
 Run the input-method module before using Chinese input. The Niri module imports the reviewed Niri/DMS `.kdl` files from `modules/niri-dms/config/niri/`, backing up any existing `config.kdl` and `dms/` directory below `~/.local/state/myunix/backups/niri-dms/`. It then configures the Niri session to start Fcitx5 and exports `XMODIFIERS=@im=fcitx`, `QT_IM_MODULE=fcitx`, and `QT_IM_MODULES=wayland;fcitx`. It deliberately does not globally set `GTK_IM_MODULE`; native GTK Wayland applications use Niri's text-input-v3 route.
 

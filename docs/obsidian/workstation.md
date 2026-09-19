@@ -1,7 +1,7 @@
 # Fedora workstation
 
-[[MyUnix migration graph|MyUnix]] manages a Fedora workstation that keeps
-GNOME available while allowing an optional Niri + DMS session.
+[[MyUnix migration graph|MyUnix]] manages a Fedora workstation that installs
+the synchronized Niri + DMS session by default while keeping GNOME available.
 
 For an at-a-glance list of what is installed automatically versus selected
 later, open [[installation-map]].

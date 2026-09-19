@@ -176,7 +176,7 @@ run_selected_modules() {
 run_all_install() {
   export MYUNIX_INSTALL_MODE=all
   export MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=1
-  run_selected_modules bootstrap dnf time-sync rpm gnome input-method codex-super-bullet steam
+  run_selected_modules bootstrap dnf time-sync rpm gnome input-method niri-dms codex-super-bullet steam
 }
 
 choose_custom_input_methods() {

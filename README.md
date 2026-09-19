@@ -38,12 +38,14 @@ portable changes into the owning manifest before committing.
 The first menu uses `↑`/`↓` to move, `Space` to toggle a choice and `Enter` to
 confirm. One-click installs the conservative GNOME-safe baseline, the curated
 [portable DNF profile](docs/modules/dnf.md), English keyboard, Cangjie 5,
-Pinyin, the global [Codex SuperBullet](docs/modules/codex-super-bullet.md)
-mode, and [Steam](docs/modules/steam.md) from RPM Fusion. Custom installation first configures input methods, then offers
-optional Steam, Niri + DMS, and Development Toolchain screens. `--all` is the
-noninteractive equivalent of one-click. Neither path installs Niri/DMS or
-replaces the login manager; the [greeter replacement](docs/modules/niri-dms-greeter.md)
-is always a separate guarded command.
+Pinyin, synchronized [Niri + DMS](docs/modules/niri-dms.md) settings and
+hotkeys, the global [Codex SuperBullet](docs/modules/codex-super-bullet.md)
+mode, and [Steam](docs/modules/steam.md) from RPM Fusion. Custom installation
+first configures input methods, then offers optional Steam, Niri + DMS, and
+Development Toolchain screens. `--all` is the noninteractive equivalent of
+one-click. Niri is installed alongside GNOME; the [greeter
+replacement](docs/modules/niri-dms-greeter.md) remains a separate guarded
+command and is never installed automatically.
 
 The baseline also configures [system time synchronization](docs/modules/time-sync.md): it installs Fedora's
 `chrony`, enables the time service, corrects the clock, and stores the hardware clock in UTC without changing

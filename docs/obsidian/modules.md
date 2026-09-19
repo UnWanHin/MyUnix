@@ -12,7 +12,7 @@ desktop settings and exported state from overwriting one another.
 | gnome | GNOME media-key shortcuts | [[../modules/gnome|gnome]] |
 | input-method | IBus/Fcitx5 and app launch adapters | [[../modules/input-method|input method]] |
 | steam | RPM Fusion Steam plus Niri system-composer launcher | [[../modules/steam|steam]] |
-| niri-dms | optional Niri, DMS, reviewed plugin IDs, KDL session files, optional `Mod+F8` touchpad shortcut and categorized public personalization | [[../modules/niri-dms|niri dms]] |
+| niri-dms | default one-click Niri/DMS session, reviewed plugin IDs, KDL hotkeys, `Mod+F8` touchpad shortcut and categorized public personalization; custom install can opt out | [[../modules/niri-dms|niri dms]] |
 | shell-config | Bash/Zsh common `.sysrc` fragments | [[../modules/shell-config|shell config]] |
 | phone-connect | KDE Connect package, firewall gate and Niri fragment | [[../modules/phone-connect|phone connect]] |
 | portal-login | generic captive-portal launcher for Niri/DMS | [[../modules/portal-login|portal login]] |

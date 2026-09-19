@@ -1,7 +1,7 @@
 # id|kind|value|scope
 # `profile` sources are enabled by the portable DNF profile. `niri-dms` is
-# enabled only by that optional desktop module. `catalog` is a recorded source
-# that remains opt-in because no one-click package currently needs it.
+# enabled when the synchronized Niri + DMS desktop is selected by one-click or
+# custom installation. `catalog` is a recorded source that remains opt-in.
 rpmfusion|rpmfusion|-|profile
 chatgpt|repo|repos/chatgpt.repo|profile
 vscode|repo|repos/vscode.repo|profile

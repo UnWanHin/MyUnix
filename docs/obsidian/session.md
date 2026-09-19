@@ -1,8 +1,9 @@
 # Desktop sessions and shortcuts
 
-[[workstation]] supports GNOME and an optional Niri + DMS login session.
-GNOME remains installed; enabling Niri does not replace GDM unless the guarded
-greeter module is run deliberately.
+[[workstation]] installs both GNOME and the synchronized Niri + DMS session in
+the one-click path. GNOME remains installed; Niri is selected only from the
+login-session chooser and does not replace GDM unless the guarded greeter
+module is run deliberately.
 
 ## Public configuration that migrates
 

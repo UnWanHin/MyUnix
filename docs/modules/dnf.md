@@ -9,9 +9,10 @@ them. Keep one package name per line; comments begin with `#`.
 
 `sources.tsv` is the source registry. `profile` entries are enabled before
 `portable.txt` is resolved. It uses RPM Fusion plus signed repository templates
-for ChatGPT and VS Code. `niri-dms` entries are enabled only by the optional
-Niri + DMS module; this keeps its COPRs out of a GNOME-only installation while
-making the exact DMS Git and Niri sources reproducible. `catalog` entries, such
+for ChatGPT and VS Code. `niri-dms` entries are enabled whenever the
+synchronized Niri + DMS desktop is selected: by default in one-click, or
+explicitly in custom installation. This makes the exact DMS Git and Niri
+sources reproducible. `catalog` entries, such
 as Google Chrome and the historical PyCharm COPR, are recorded but deliberately
 not enabled by one-click installation because no profile package requires them.
 

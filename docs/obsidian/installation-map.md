@@ -21,11 +21,12 @@ flowchart TD
   Base --> Time[[System time sync]]
   Base --> GNOME[[GNOME shortcuts]]
   Base --> Input[English + Cangjie 5 + Pinyin]
+  Base --> Niri[[Niri + DMS + synchronized hotkeys]]
   Base --> Steam[[Steam + Niri compatibility launcher]]
 
   Select --> InputChoice[[Input methods]]
   Select --> SteamChoice[[Steam]]
-  Select --> Niri[[Niri + DMS]]
+  Select --> NiriChoice[[Niri + DMS opt-out / touchpad choice]]
   Select --> Toolchain[[Development Toolchain]]
 
   Demand --> RPM[[Direct RPM registry]]
@@ -51,6 +52,7 @@ flowchart TD
 - [[../modules/time-sync|System time sync]]，保留新電腦既有時區
 - [[../modules/gnome|GNOME shortcuts]]
 - [[../modules/input-method|English、Cangjie 5、Pinyin]]
+- [[../modules/niri-dms|Niri + DMS]]，含同步的 DMS hotkeys 與個人化設定；GNOME 保留可登入
 - [[../modules/steam|Steam]]，含 Niri 的 `-system-composer` 相容啟動器
 
 [[../modules/rpm|Direct RPM registry]] 會一起驗證 manifest，但 WeChat、
