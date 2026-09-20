@@ -65,7 +65,7 @@ FlClash 等下載型應用維持為明確管理的選用項，不在基線中偷
 自訂安裝讓你先選擇輸入法，然後依序選擇：
 
 - [[../modules/steam|Steam]]
-- [[../modules/niri-dms|Niri + DMS]]，可附加 `Mod+F8` touchpad toggle
+- [[../modules/niri-dms|Niri + DMS]]，一鍵安裝預設包含 `Mod+F8` touchpad toggle；自訂安裝可選擇
 - [[../modules/development-toolchain|Development Toolchain]] 的元件與系統／使用者層範圍
 
 GNOME 會保留；Niri 是並存的登入 session。[[session]] 記錄輸入法、

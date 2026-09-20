@@ -77,11 +77,12 @@ locally, run `./scripts/myunix export` and review the resulting public diff
 before committing it to the migration source.
 
 The installed user command `~/.local/bin/niri-touchpad-toggle` toggles every
-Niri touchpad. In `./scripts/myunix install --guided`, select **Niri + DMS**
-under optional desktop modules, then choose whether to add its touchpad-toggle
-personalization. If selected, MyUnix creates a `Mod+F8` binding; if not, it
-does not reserve a key. You can alternatively bind the command yourself in the
-DMS Keybinds UI. It switches the public fragment
+Niri touchpad. The one-click `./scripts/myunix install --all` profile enables
+its `Mod+F8` binding automatically. In `./scripts/myunix install --guided`,
+select **Niri + DMS** under optional desktop modules, then choose whether to
+add its touchpad-toggle personalization. If selected, MyUnix creates a
+`Mod+F8` binding; if not, it does not reserve a key. You can alternatively bind
+the command yourself in the DMS Keybinds UI. It switches the public fragment
 `~/.config/niri/myunix/touchpad.kdl` between enabled and `off`, then reloads
 Niri and shows a desktop notification when available. Its binding uses
 `repeat=false`, and the helper holds a user-state lock, so a held key or rapid

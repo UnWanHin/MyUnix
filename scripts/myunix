@@ -196,6 +196,9 @@ run_selected_modules() {
 run_all_install() {
   export MYUNIX_INSTALL_MODE=all
   export MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=1
+  # The portable one-click profile includes the documented Mod+F8 touchpad
+  # toggle. Custom installs can still opt out explicitly.
+  export MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=1
   run_selected_modules bootstrap dnf time-sync rpm gnome input-method niri-dms shell-config zsh-personalization development-toolchain codex-fedora codex-super-bullet jetbrains-toolbox steam
 }
 

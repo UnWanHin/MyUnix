@@ -80,6 +80,12 @@ assert_output_contains 'repeat=false'
 run env HOME="$temporary_binding/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_binding/home/.config/niri" MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=0 bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_touchpad_toggle_binding; test ! -e \"\$MYUNIX_NIRI_CONFIG_DIR/myunix/touchpad-bind.kdl\""
 assert_status 0
 
+temporary_default_binding="$(mktemp -d)"
+run env HOME="$temporary_default_binding/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_default_binding/home/.config/niri" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_touchpad_toggle_binding; cat \"\$MYUNIX_NIRI_CONFIG_DIR/myunix/touchpad-bind.kdl\""
+assert_status 0
+assert_output_contains 'Mod+F8'
+assert_output_contains 'niri-touchpad-toggle'
+
 temporary_export="$(mktemp -d)"
 mkdir -p "$temporary_export/home/.config/niri" "$temporary_export/target"
 cp -a "$PROJECT_ROOT/modules/niri-dms/config/niri/." "$temporary_export/home/.config/niri/"

@@ -10,7 +10,7 @@ module is run deliberately.
 - GNOME custom shortcuts exported from the media-keys dconf subtree.
 - Niri `config.kdl` plus reviewed DMS `*.kdl`, including `dms/binds.kdl` for
   shortcuts.
-- The public Niri touchpad preference fragment and its optional `Mod+F8` toggle helper;
+- The public Niri touchpad preference fragment and its `Mod+F8` toggle helper;
   this applies to all touchpads in Niri because Niri does not yet expose
   per-device touchpad configuration.
 - Allowlisted DMS personalization split into bar, dock, appearance, frame and

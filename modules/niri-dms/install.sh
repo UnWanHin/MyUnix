@@ -34,15 +34,16 @@ install_niri_dms_touchpad_toggle() {
 
 configure_niri_dms_touchpad_toggle_binding() {
   local config_dir binding_file temporary
-  case "${MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE:-}" in
-    '') return 0 ;;
+  # `--all` sets this explicitly. Keep direct module installs useful too:
+  # the documented shortcut is enabled unless the caller explicitly opts out.
+  case "${MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE:-1}" in
     0|1) ;;
     *) die 'MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE must be 0 or 1' ;;
   esac
 
   config_dir="${MYUNIX_NIRI_CONFIG_DIR:-$HOME/.config/niri}"
   binding_file="$config_dir/myunix/touchpad-bind.kdl"
-  if [[ "$MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE" == 0 ]]; then
+  if [[ "${MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE:-1}" == 0 ]]; then
     rm -f "$binding_file"
     return 0
   fi
