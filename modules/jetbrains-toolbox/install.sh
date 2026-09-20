@@ -29,6 +29,7 @@ install_jetbrains_toolbox_desktop_entry() {
   icon_path="$(find "$target" -type f \( -name toolbox.svg -o -name toolbox.png \) -print -quit)"
   if [[ -n "$desktop_source" ]]; then
     cp -f "$desktop_source" "$desktop_target"
+    info "Registered DMS desktop entry: $desktop_target"
   else
     {
       printf '%s\n' '[Desktop Entry]' 'Name=JetBrains Toolbox' 'Type=Application'
@@ -36,6 +37,7 @@ install_jetbrains_toolbox_desktop_entry() {
       [[ -n "$icon_path" ]] && printf 'Icon=%s\n' "$icon_path"
       printf '%s\n' 'Categories=Development;' 'Terminal=false' 'StartupNotify=true'
     } > "$desktop_target"
+    info "Created DMS desktop entry: $desktop_target"
   fi
   sed -i -E "s|^Exec=.*|Exec=$bin_link %u|" "$desktop_target"
   if [[ -n "$icon_path" ]]; then
@@ -44,10 +46,16 @@ install_jetbrains_toolbox_desktop_entry() {
     else
       printf 'Icon=%s\n' "$icon_path" >> "$desktop_target"
     fi
+    info "Updated DMS icon: $icon_path"
+  else
+    info 'Toolbox archive has no icon; DMS will use its fallback icon'
   fi
   chmod 0644 "$desktop_target"
   if command -v update-desktop-database >/dev/null 2>&1; then
-    update-desktop-database "$desktop_dir" >/dev/null 2>&1 || true
+    update-desktop-database "$desktop_dir"
+    info 'Refreshed user desktop application database'
+  else
+    info 'Desktop application database tool is unavailable; restart DMS to reload the entry'
   fi
 }
 

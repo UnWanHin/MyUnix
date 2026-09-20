@@ -16,6 +16,9 @@ tar -czf "$temporary/toolbox.tar.gz" -C "$temporary/source" jetbrains-toolbox-1.
 run env HOME="$temporary/home" MYUNIX_JETBRAINS_TOOLBOX_ARCHIVE="$temporary/toolbox.tar.gz" MYUNIX_JETBRAINS_TOOLBOX_ROOT="$temporary/home/.local/opt/jetbrains-toolbox" MYUNIX_JETBRAINS_TOOLBOX_BIN="$temporary/home/.local/bin/jetbrains-toolbox" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/jetbrains-toolbox/install.sh'; wrapper() { install_jetbrains_toolbox; rm -f '$temporary/toolbox.tar.gz'; install_jetbrains_toolbox; }; wrapper; test -x '$temporary/home/.local/bin/jetbrains-toolbox'; grep -Fqx 'Exec=$temporary/home/.local/bin/jetbrains-toolbox %u' '$temporary/home/.local/share/applications/jetbrains-toolbox.desktop'; grep -Fqx 'Icon=$temporary/home/.local/opt/jetbrains-toolbox/toolbox.svg' '$temporary/home/.local/share/applications/jetbrains-toolbox.desktop'; cat '$temporary/home/.local/opt/jetbrains-toolbox/.myunix-managed'"
 assert_status 0
 assert_output_contains 'Managed by MyUnix'
+assert_output_contains 'Registered DMS desktop entry:'
+assert_output_contains 'Updated DMS icon:'
+assert_output_contains 'Refreshed user desktop application database'
 
 mkdir -p "$temporary/root"
 printf '%s\n' '#!/usr/bin/env bash' 'printf "JetBrains Toolbox root test\n"' > "$temporary/root/jetbrains-toolbox"
