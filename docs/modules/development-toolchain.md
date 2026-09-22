@@ -78,3 +78,10 @@ sudo dnf reinstall java-latest-openjdk-headless java-latest-openjdk-devel
 Anaconda is the only upstream archive left in this module. It is fetched over
 HTTPS into a temporary directory and never retained in Git. The module never
 touches `~/temp`.
+
+For confirmation-gated repair, choose **Development tools → Development
+toolchain** in `./scripts/myunix fix`. `MYUNIX_TOOLCHAIN_COMPONENTS` is
+normalized once for the selected repair; diagnosis, plan, installation, and
+verification use that same set. For example,
+`MYUNIX_TOOLCHAIN_COMPONENTS=cmake ./scripts/myunix fix` does not diagnose or
+require Anaconda. `MYUNIX_TOOLCHAIN_SCOPE` retains its existing scope rules.

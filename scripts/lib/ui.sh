@@ -7,7 +7,9 @@ set -Eeuo pipefail
 
 ui_is_interactive() {
   [[ "${MYUNIX_UI_TEST_MODE:-}" == 1 ]] && return 0
-  [[ -t 0 && -t 1 ]]
+  # stdout carries the selected value and may be a command-substitution pipe.
+  # Input and the rendering stream must still be attached to the terminal.
+  [[ -t 0 && -t 2 ]]
 }
 
 ui_require_interactive() {
@@ -37,7 +39,7 @@ ui_read_key() {
   local key rest
   IFS= read -rsn1 key || return 1
   case "$key" in
-    $'\n'|$'\r') printf 'enter\n' ;;
+    ''|$'\n'|$'\r') printf 'enter\n' ;;
     ' ') printf 'space\n' ;;
     $'\003') return 130 ;;
     $'\e')

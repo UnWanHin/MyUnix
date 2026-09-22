@@ -22,8 +22,8 @@ log out/in again.
 
 The interactive `./scripts/myunix fix` menu keeps session repairs separate
 from application repairs. Input-method repairs do not rewrite Niri config;
-use the Niri + DMS category when a MyUnix-owned Fcitx5 startup fragment or
-session binding needs attention. Every repair shows its diagnosis and plan
+use **Niri + DMS session → Niri configuration validation** when Fcitx5
+startup/environment or a managed session binding needs attention. Every repair shows its diagnosis and plan
 before confirmation.
 
 The Niri + DMS repair entries are confirmation-gated and scoped to the public
@@ -33,17 +33,27 @@ session integration:
   exact active config path when available and reports the complete command
   output under a labeled diagnostic. Its repair first restores absent,
   independent MyUnix-owned touchpad/helper/binding files; only after that
-  exact config validates may it add the managed include lines. An invalid user
-  `config.kdl` is never replaced or rewritten.
+  exact config validates may it prepare managed include lines and restore
+  the Fcitx5 startup/environment through the Niri module helper. It validates
+  that exact candidate in the same directory before replacing the config,
+  and backs up changed managed files under `~/.local/state/myunix/backups/`.
+  An invalid user config is never replaced or rewritten. `niri` must be
+  available to validate both the original and candidate configuration.
 - **DMS user service** checks `systemctl --user is-enabled` and
   `systemctl --user is-active`, then enables and starts the existing
   `dms.service` only after confirmation. It never uses `sudo` or reinstalls
   DMS.
 - **Niri touchpad toggle** restores only the managed
-  `~/.local/bin/niri-touchpad-toggle` helper, its `Mod+F8` binding, and the
-  two MyUnix include lines. It does not change mouse or trackpoint settings;
-  when Niri is running it opportunistically requests
-  `niri msg action load-config-file`.
+  `~/.local/bin/niri-touchpad-toggle` helper, `myunix/touchpad.kdl`, its
+  `Mod+F8` binding, and the two MyUnix include lines. Both original and exact
+  candidate config must validate before replacement; mouse and trackpoint
+  settings remain untouched. Verification validates the resulting config,
+  not just file presence. When `NIRI_SOCKET` identifies a running session,
+  `niri msg action load-config-file` must succeed or the repair reports failure.
+
+`MYUNIX_NIRI_CONFIG` selects the exact config file and its directory owns the
+managed fragments, even when a different `MYUNIX_NIRI_CONFIG_DIR` is set.
+Without that file override, `MYUNIX_NIRI_CONFIG_DIR/config.kdl` is used.
 
 These repairs do not read or modify credentials, subscriptions, browser
 profiles, DMS private state, or other application-owned configuration. If the

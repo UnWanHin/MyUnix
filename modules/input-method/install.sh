@@ -170,7 +170,7 @@ render_input_method_launcher() {
 }
 
 install_input_method_app_overrides() {
-  local profiles target_dir id desktop_file profile source_kind source_dir source_launcher target_launcher temporary
+  local wanted_id=${1:-} profiles target_dir id desktop_file profile source_kind source_dir source_launcher target_launcher temporary
   local -A seen_desktop_files=()
   profiles="$(input_method_app_profiles_path)"
   [[ -f "$profiles" ]] || die "Missing input-method application profiles: $profiles"
@@ -178,6 +178,7 @@ install_input_method_app_overrides() {
 
   while IFS='|' read -r id desktop_file profile source_kind; do
     [[ -z "$id" || "$id" == \#* ]] && continue
+    [[ -z "$wanted_id" || "$id" == "$wanted_id" ]] || continue
     source_kind=${source_kind:-system}
     while IFS= read -r source_dir; do
       [[ -n "$source_dir" ]] || continue
@@ -243,7 +244,7 @@ import_fcitx5_public_config() {
 }
 
 install_input_methods() {
-  local cangjie=${1:-1} pinyin=${2:-1} manifest
+  local cangjie=${1:-1} pinyin=${2:-1} application=${3:-} manifest
   manifest="$(mktemp)"
   if ! input_method_resolve_packages "$cangjie" "$pinyin" > "$manifest"; then
     rm -f "$manifest"
@@ -259,7 +260,7 @@ install_input_methods() {
     rm -f "$manifest"
     return 1
   fi
-  if ! install_input_method_app_overrides; then
+  if ! install_input_method_app_overrides "$application"; then
     rm -f "$manifest"
     return 1
   fi

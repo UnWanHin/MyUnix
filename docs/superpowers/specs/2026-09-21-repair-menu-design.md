@@ -66,8 +66,8 @@ The initial repair records are:
 
 | Category | ID | Diagnosis and repair boundary |
 | --- | --- | --- |
-| Input method and application compatibility | `wechat-cangjie` | Check Fcitx5, the Cangjie engine, WeChat launcher override and Niri Fcitx session configuration; restore only the input-method configuration and WeChat adapter. |
-| Niri + DMS session | `niri-config` | Validate the active Niri config; do not silently rewrite an invalid user config. The repair report provides the exact validation output and only restores MyUnix-owned fragments when they are absent. |
+| Input method and application compatibility | `wechat-cangjie` | Check Fcitx5, the Cangjie engine and installed RPM/Flatpak WeChat launcher overrides; restore public input-method configuration and only WeChat adapters, not QQ. Fcitx Niri session repair belongs to `niri-config`. |
+| Niri + DMS session | `niri-config` | Validate the exact active Niri config and candidate before replacement; do not rewrite invalid user config. Report validation output, restore missing MyUnix fragments, and repair Fcitx startup/environment through the Niri owner helper. |
 | Niri + DMS session | `dms-service` | Check the user DMS service and enable/start it when absent or inactive. |
 | Niri + DMS session | `touchpad-toggle` | Check the MyUnix touchpad helper, `Mod+F8` binding, and Niri config include; restore only those MyUnix-owned files and reload the config. |
 | Desktop application integration | `jetbrains-toolbox` | Check the user-level Toolbox launcher and `.desktop` entry; restore desktop registration and icon metadata without reinstalling an already usable Toolbox archive. |

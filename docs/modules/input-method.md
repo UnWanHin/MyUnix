@@ -28,7 +28,7 @@ MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=0 ./scripts/myunix install --module i
 
 Some proprietary desktop clients use a toolkit-specific input-method path even inside a correct Niri/Fcitx5 session. The module manages reviewed user launcher overrides below `~/.local/share/applications/`; it never edits distributor files below `/usr/share/applications/` or Flatpak export directories.
 
-- **WeChat** uses the `qt-fcitx` profile, which launches it with Fcitx Qt variables including `QT_IM_MODULES=fcitx`. The allowlist supports the RPM launcher `/usr/share/applications/wechat.desktop` and the Flatpak launcher `com.tencent.WeChat.desktop`; Flatpak sources are discovered from the standard per-user and system export directories, and each discovered variant receives a matching user override.
+- **WeChat** uses the `qt-fcitx` profile, which launches it with Fcitx Qt variables including `QT_IM_MODULES=fcitx`. The allowlist supports the RPM launcher `/usr/share/applications/wechat.desktop` and the Flatpak launcher `com.tencent.WeChat.desktop`; Flatpak sources are discovered from the standard per-user and system export directories, and each discovered variant receives a matching user override. RPM and Flatpak variants may coexist. For the same Flatpak desktop filename the user export takes precedence, then `/var/lib/flatpak/exports/share/applications`, then `/usr/share/flatpak/exports/share/applications`.
 - **QQ** uses the `electron-wayland-ime` profile, which keeps Electron's Wayland auto-selection and adds `--enable-wayland-ime`.
 
 Only applications listed in `modules/input-method/app-profiles.tsv` receive an override. Native Wayland GTK applications remain untouched, and MyUnix does not globally force `GTK_IM_MODULE`. If an application is installed after the input-method module, rerun:
@@ -45,6 +45,10 @@ Run `./scripts/myunix fix` and choose **Input method and application
 compatibility → WeChat / Cangjie compatibility** when the public Fcitx5
 profile or an installed WeChat launcher override is missing. The repair
 detects the installed RPM or Flatpak launcher variant, is confirmation-gated,
-uses this module's installer, and never touches WeChat login data. Log out and
-back in after applying it; Niri session configuration is diagnosed and repaired
-separately by the Niri + DMS module.
+uses this module's installer with an explicit `wechat` application filter,
+and never touches QQ launchers or WeChat login data. It stops on package or
+configuration installation failure; verification repeats every diagnosed
+prerequisite, including Fcitx5 and Cangjie packages. The unfiltered normal
+input-method installation still installs all allowlisted adapters.
+Log out and back in after applying it; use **Niri + DMS session → Niri
+configuration validation** separately to repair Fcitx5 startup/environment.

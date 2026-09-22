@@ -33,7 +33,13 @@ jetcode .
 The Toolbox binary itself is installed locally and is not copied into Git;
 only the installer behavior and `jet` shell function are synchronized.
 
-If the user-level launcher drifts, rerun the module to regenerate its desktop
-entry and icon metadata. The interactive `./scripts/myunix fix` command is
-confirmation-gated for bounded desktop integration repairs; it never scans
-Toolbox account data or IDE caches.
+For a missing or stale desktop entry/icon, choose **Desktop application
+integration → JetBrains Toolbox desktop integration** in
+`./scripts/myunix fix`. It checks the managed archive marker, executable
+launcher symlink, desktop command, and archive icon path. After confirmation,
+it backs up an existing desktop entry below
+`~/.local/state/myunix/backups/jetbrains-toolbox/`, regenerates registration,
+and refreshes the desktop database. It never downloads/reinstalls Toolbox,
+launches it, or scans account data or IDE caches. If the managed launcher is
+unusable or missing, it stops and directs you to the explicit installer.
+No logout is needed; refresh DMS if its application cache is stale.

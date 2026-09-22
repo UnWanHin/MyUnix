@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 source "$(dirname "$0")/test_helper.bash"
+unset NIRI_SOCKET
 
 temporary_dir="$(mktemp -d)"
 trap 'rm -rf -- "$temporary_dir"' EXIT
@@ -78,7 +79,9 @@ run env MYUNIX_SOURCE_ONLY=1 MYUNIX_UI_TEST_MODE=1 MYUNIX_FIX_TEST_CONFIRM=y FIX
   source "'$PROJECT_ROOT'/scripts/myunix"
   fixture_category="${FIX_CATEGORY_LABELS[0]}"
   fix_register_repair fixture "$fixture_category" "Fixture repair"
-  fix_choose_category() { printf "%s\n" "$fixture_category"; }
+  fix_choose_category() {
+    if [[ -e "$FIX_MARKER" ]]; then printf "exit\n"; else printf "%s\n" "$fixture_category"; fi
+  }
   fix_choose_repair() {
     [[ "$1" == "$fixture_category" ]] || return 1
     printf "%s\n" fixture
@@ -131,6 +134,7 @@ run env HOME="$repair_home" XDG_DATA_HOME="$repair_home/.local/share" MYUNIX_TES
 development-toolchain
 dms-service
 flclash-launcher
+jetbrains-toolbox
 niri-config
 portal-login
 touchpad-toggle
@@ -172,6 +176,7 @@ run env \
   MYUNIX_NIRI_CONFIG_DIR="$niri_repair_home/.config/niri" \
   MYUNIX_NIRI_DMS_BIN_DIR="$niri_repair_home/.local/bin" \
   NIRI_TRACE="$niri_trace" \
+  NIRI_SOCKET=fixture \
   MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
     source "'$PROJECT_ROOT'/scripts/myunix"
     niri() {
@@ -201,12 +206,13 @@ run env \
   MYUNIX_NIRI_CONFIG_DIR="$valid_niri_home/.config/niri" \
   MYUNIX_NIRI_DMS_BIN_DIR="$valid_niri_home/.local/bin" \
   NIRI_TRACE="$niri_config_trace" \
+  NIRI_SOCKET=fixture \
   MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
     source "'$PROJECT_ROOT'/scripts/myunix"
     niri() {
       printf "niri %s\\n" "$*" >> "$NIRI_TRACE"
       if [[ "${1:-}" == validate ]]; then
-        [[ "${2:-}" == --config && "${3:-}" == "$HOME/.config/niri/config.kdl" ]] || return 2
+        [[ "${2:-}" == --config && "${3:-}" == "$HOME/.config/niri/config.kdl"* ]] || return 2
         printf "%s\\n" "validation output from exact config"
       fi
       [[ "${1:-}" == validate ]] && return 0
@@ -368,6 +374,7 @@ run env \
     install_input_methods() {
       mkdir -p "$HOME/.config/fcitx5"
       printf "%s\\n" Name=cangjie5 > "$HOME/.config/fcitx5/profile"
+      install_input_method_app_overrides "$3"
     }
     ! fix_diagnose_wechat_cangjie
     fix_run_selected wechat-cangjie
@@ -419,13 +426,13 @@ assert_status 0
 run env HOME="$repair_home" XDG_DATA_HOME="$repair_home/.local/share" MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
   source "'$PROJECT_ROOT'/scripts/myunix"
   calls=()
-  install_input_methods() { calls+=(input-methods); }
+  install_input_methods() { calls+=("input-methods:$*"); }
   install_input_method_app_overrides() { calls+=(app-overrides); }
   install_portal_login() { calls+=(portal-login); }
   install_codex_fedora() { calls+=(codex-fedora); }
   install_development_toolchain() { calls+=(development-toolchain); }
   fix_apply_wechat_cangjie
-  test "${calls[*]}" = "input-methods app-overrides"
+  test "${calls[*]}" = "input-methods:1 1 wechat"
 '
 assert_status 0
 

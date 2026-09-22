@@ -76,7 +76,8 @@ fix_repair_note() {
 
 fix_choose_category() {
   local choice
-  choice="$(ui_choose_one 'MyUnix repair' "${FIX_CATEGORY_LABELS[@]}")" || return $?
+  choice="$(ui_choose_one 'MyUnix repair' "${FIX_CATEGORY_LABELS[@]}" 'Exit')" || return $?
+  [[ "$choice" != "${#FIX_CATEGORY_LABELS[@]}" ]] || { printf 'exit\n'; return 0; }
   [[ "$choice" =~ ^[0-9]+$ && "$choice" -lt "${#FIX_CATEGORY_LABELS[@]}" ]] || {
     printf 'ERROR: Invalid repair category selection: %s\n' "$choice" >&2
     return 2
@@ -100,7 +101,8 @@ fix_choose_repair() {
     return 1
   fi
 
-  choice="$(ui_choose_one "$category" "${repair_labels[@]}")" || return $?
+  choice="$(ui_choose_one "$category" "${repair_labels[@]}" 'Back to categories')" || return $?
+  [[ "$choice" != "${#repair_ids[@]}" ]] || { printf 'back\n'; return 0; }
   [[ "$choice" =~ ^[0-9]+$ && "$choice" -lt "${#repair_ids[@]}" ]] || {
     printf 'ERROR: Invalid repair selection: %s\n' "$choice" >&2
     return 2
@@ -110,11 +112,19 @@ fix_choose_repair() {
 
 fix_run_selected() {
   local repair_id=$1 label diagnosis_output plan_output candidate
+  # Dynamic scope keeps one normalized selection for all four repair phases,
+  # including diagnosis/plan captured in subshells.
+  local FIX_TOOLCHAIN_COMPONENTS=''
   local function_suffix=${repair_id//-/_}
   local diagnose_fn="fix_diagnose_$function_suffix"
   local plan_fn="fix_plan_$function_suffix"
   local apply_fn="fix_apply_$function_suffix"
   local verify_fn="fix_verify_$function_suffix"
+
+  if [[ "$repair_id" == development-toolchain ]]; then
+    development_toolchain_validate_scope "${MYUNIX_TOOLCHAIN_SCOPE:-system}" || return $?
+    FIX_TOOLCHAIN_COMPONENTS="$(development_toolchain_normalize_components "${MYUNIX_TOOLCHAIN_COMPONENTS:-}")" || return $?
+  fi
 
   if ! declare -F "$diagnose_fn" >/dev/null 2>&1; then
     printf 'ERROR: Repair has no diagnosis function: %s\n' "$repair_id" >&2
@@ -171,11 +181,15 @@ fix_run_selected() {
 }
 
 run_fix() {
-  local category repair_id
+  local category repair_id result=0
   ui_require_interactive repair || return $?
-  category="$(fix_choose_category)" || return $?
-  repair_id="$(fix_choose_repair "$category")" || return $?
-  fix_run_selected "$repair_id"
+  while :; do
+    category="$(fix_choose_category)" || return $?
+    [[ "$category" != exit ]] || return "$result"
+    repair_id="$(fix_choose_repair "$category")" || return $?
+    [[ "$repair_id" != back ]] || continue
+    fix_run_selected "$repair_id" || result=$?
+  done
 }
 
 fix_wechat_fcitx_profile_path() {
@@ -256,27 +270,18 @@ fix_diagnose_wechat_cangjie() {
 fix_plan_wechat_cangjie() {
   cat <<'EOF'
 Install the Cangjie Fcitx5 packages and regenerate the public Fcitx5 profile, then install managed WeChat launcher overrides for each installed RPM or Flatpak launcher variant.
-No Niri configuration is diagnosed or rewritten by this repair; use the Niri + DMS module for a missing session fragment.
+Only WeChat application adapters are selected; QQ launchers are not changed.
+No Niri configuration is diagnosed or rewritten by this repair; choose Niri + DMS session → Niri configuration validation for Fcitx5 startup/environment repair.
 Log out and back in to reload Fcitx5 and application environment variables.
 EOF
 }
 
 fix_apply_wechat_cangjie() {
-  install_input_methods 1 "${MYUNIX_INPUT_PINYIN:-1}"
-  install_input_method_app_overrides
+  install_input_methods 1 "${MYUNIX_INPUT_PINYIN:-1}" wechat
 }
 
 fix_verify_wechat_cangjie() {
-  local profile variants desktop_file source_launcher launcher
-  profile="$(fix_wechat_fcitx_profile_path)"
-  [[ -f "$profile" ]] && grep -Fqx 'Name=cangjie5' "$profile" || return 1
-  variants="$(fix_wechat_installed_launcher_variants)"
-  [[ -n "$variants" ]] || return 1
-  while IFS='|' read -r desktop_file source_launcher _; do
-    [[ -n "$desktop_file" && -n "$source_launcher" ]] || continue
-    launcher="$(fix_wechat_launcher_override_path "$desktop_file")"
-    [[ -f "$launcher" ]] || return 1
-  done <<< "$variants"
+  fix_diagnose_wechat_cangjie >/dev/null
 }
 
 fix_niri_config_path() {
@@ -284,11 +289,11 @@ fix_niri_config_path() {
 }
 
 fix_niri_config_dir() {
-  printf '%s\n' "${MYUNIX_NIRI_CONFIG_DIR:-$(dirname "$(fix_niri_config_path)")}"
+  dirname "$(fix_niri_config_path)"
 }
 
 fix_niri_touchpad_fragment_path() {
-  printf '%s\n' "${MYUNIX_NIRI_TOUCHPAD_STATE_FILE:-$(fix_niri_config_dir)/myunix/touchpad.kdl}"
+  printf '%s\n' "$(fix_niri_config_dir)/myunix/touchpad.kdl"
 }
 
 fix_niri_touchpad_binding_path() {
@@ -323,33 +328,72 @@ fix_niri_config_backup_dir() {
 }
 
 fix_niri_restore_missing_includes() {
-  local config=${1:-$(fix_niri_config_path)} temporary backup_dir changed=0
+  local config=${1:-$(fix_niri_config_path)} repair_fcitx=${2:-0} temporary
   [[ -f "$config" ]] || return 1
 
   temporary="$(mktemp "${config}.myunix.XXXXXX")"
-  cp -a "$config" "$temporary" || {
+  # Copy bytes, not a symlink: editing a symlink candidate would edit the
+  # original target before validation and violate the preservation boundary.
+  cp -p "$config" "$temporary" || {
     rm -f "$temporary"
     return 1
   }
   if ! fix_niri_include_present "$temporary" touchpad; then
     printf '\n%s\n' 'include "myunix/touchpad.kdl"' >> "$temporary"
-    changed=1
   fi
   if ! fix_niri_include_present "$temporary" binding; then
     printf '\n%s\n' 'include optional=true "myunix/touchpad-bind.kdl"' >> "$temporary"
-    changed=1
   fi
-  if ((changed == 1)); then
-    backup_dir="$(fix_niri_config_backup_dir)"
-    mkdir -p "$backup_dir"
-    cp -a "$config" "$backup_dir/config.kdl" || {
+  if [[ "$repair_fcitx" == 1 ]] && ! fix_niri_fcitx_is_healthy "$temporary"; then
+    if ! grep -Eq '^[[:space:]]*environment[[:space:]]*\{[[:space:]]*$' "$temporary"; then
+      printf '\nenvironment {\n}\n' >> "$temporary"
+    fi
+    if ! MYUNIX_NIRI_CONFIG="$temporary" configure_niri_fcitx_session; then
       rm -f "$temporary"
       return 1
-    }
-    mv "$temporary" "$config"
+    fi
+  fi
+  # Validate the exact bytes we will install, in the same directory so all
+  # relative include paths resolve exactly as they will in the active file.
+  if ! fix_niri_validate_config "$temporary"; then
+    rm -f "$temporary"
+    return 1
+  fi
+  if ! cmp -s "$temporary" "$config"; then
+    fix_niri_backup_file "$config" || { rm -f "$temporary"; return 1; }
+    mv "$temporary" "$config" || return $?
   else
     rm -f "$temporary"
   fi
+}
+
+fix_niri_backup_file() {
+  local source=$1 target
+  [[ -e "$source" ]] || return 0
+  target="$(fix_niri_config_backup_dir)/$(basename "$source")"
+  [[ ! -e "$target" ]] || return 0
+  mkdir -p "$(dirname "$target")" && cp -a "$source" "$target"
+}
+
+fix_niri_validate_config() {
+  local config=$1 output
+  command -v niri >/dev/null 2>&1 || {
+    printf 'Niri validation unavailable; config is unchanged. Install niri first.\n' >&2
+    return 1
+  }
+  if ! output="$(niri validate --config "$config" 2>&1)"; then
+    printf 'Niri config is invalid; leaving the user config unchanged.\n%s\n' "$output" >&2
+    return 1
+  fi
+}
+
+fix_niri_fcitx_is_healthy() {
+  local config=${1:-$(fix_niri_config_path)}
+  [[ -f "$config" ]] \
+    && grep -Eq '^[[:space:]]*spawn-at-startup "fcitx5" "-d"[[:space:]]*$' "$config" \
+    && grep -Eq '^[[:space:]]*XMODIFIERS "@im=fcitx"[[:space:]]*$' "$config" \
+    && grep -Eq '^[[:space:]]*QT_IM_MODULE "fcitx"[[:space:]]*$' "$config" \
+    && grep -Eq '^[[:space:]]*QT_IM_MODULES "wayland;fcitx"[[:space:]]*$' "$config"
 }
 
 fix_niri_restore_touchpad_fragment() {
@@ -362,6 +406,7 @@ fix_niri_restore_touchpad_fragment() {
     return 1
   }
   mkdir -p "$(dirname "$target")"
+  fix_niri_backup_file "$target" || return $?
   cp -a "$source" "$target"
 }
 
@@ -373,6 +418,7 @@ fix_niri_restore_toggle_helper() {
     printf '%s\n' 'Niri touchpad helper installer is unavailable.' >&2
     return 1
   }
+  fix_niri_backup_file "$target" || return $?
   install_niri_dms_touchpad_toggle
 }
 
@@ -390,12 +436,19 @@ fix_niri_restore_toggle_binding() {
     printf '%s\n' 'Niri touchpad binding helper is unavailable.' >&2
     return 1
   }
-  MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=1 configure_niri_dms_touchpad_toggle_binding
+  fix_niri_backup_file "$(fix_niri_touchpad_binding_path)" || return $?
+  MYUNIX_NIRI_CONFIG_DIR="$(fix_niri_config_dir)" MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=1 configure_niri_dms_touchpad_toggle_binding
 }
 
 fix_reload_niri_if_running() {
-  command -v niri >/dev/null 2>&1 || return 0
-  niri msg action load-config-file >/dev/null 2>&1 || true
+  if [[ -z "${NIRI_SOCKET:-}" ]]; then
+    printf 'Niri session is not running; reload the repaired config in the next session.\n'
+    return 0
+  fi
+  niri msg action load-config-file >/dev/null 2>&1 || {
+    printf 'Niri reload failed; the validated files are saved, but the running session was not updated.\n' >&2
+    return 1
+  }
 }
 
 fix_diagnose_niri_config() {
@@ -422,6 +475,7 @@ fix_diagnose_niri_config() {
     fi
   else
     printf '%s\n' '  - Niri validation: unavailable (niri command missing)'
+    missing=1
   fi
 
   for fragment in touchpad binding; do
@@ -444,12 +498,19 @@ fix_diagnose_niri_config() {
     printf '%s\n' "  - MyUnix touchpad binding: missing ($(fix_niri_touchpad_binding_path))"
     missing=1
   fi
+  if fix_niri_fcitx_is_healthy "$config"; then
+    printf '%s\n' '  - Niri Fcitx5 startup and environment: present'
+  else
+    printf '%s\n' '  - Niri Fcitx5 startup or environment: missing'
+    missing=1
+  fi
   return "$missing"
 }
 
 fix_plan_niri_config() {
   cat <<'EOF'
-Validate the active Niri configuration and restore only missing MyUnix-owned touchpad fragments, binding, and include lines.
+Validate the active Niri configuration and restore missing MyUnix-owned touchpad fragments, binding, include lines, and Fcitx5 startup/environment via the Niri module helper.
+Validate the exact candidate before replacing the config; back up any changed managed file under ~/.local/state/myunix/backups/.
 An invalid user config is reported with its validation output and is never replaced or rewritten by this repair.
 No mouse settings, DMS private state, credentials, or session profiles are changed.
 Reload Niri manually if the session is not running while the repair is applied.
@@ -457,18 +518,18 @@ EOF
 }
 
 fix_apply_niri_config() {
-  local config validation_output
+  fix_apply_niri_managed_config 1
+}
+
+fix_apply_niri_managed_config() {
+  local repair_fcitx=${1:-0} config
   config="$(fix_niri_config_path)"
   [[ -f "$config" ]] || return 1
   fix_niri_restore_touchpad_fragment || return $?
   fix_niri_restore_toggle_helper || return $?
   fix_niri_restore_toggle_binding || return $?
-  if command -v niri >/dev/null 2>&1 && ! validation_output="$(niri validate --config "$config" 2>&1)"; then
-    printf '%s\n' 'Niri config is invalid; leaving the user config unchanged.' >&2
-    [[ -z "$validation_output" ]] || printf '%s\n' "$validation_output" >&2
-    return 1
-  fi
-  fix_niri_restore_missing_includes || return $?
+  fix_niri_validate_config "$config" || return $?
+  fix_niri_restore_missing_includes "$config" "$repair_fcitx" || return $?
   fix_reload_niri_if_running
 }
 
@@ -549,26 +610,67 @@ fix_diagnose_touchpad_toggle() {
     printf '%s\n' "  - Niri Mod+F8 binding: missing or incomplete ($binding)"
     missing=1
   fi
+  if [[ -s "$(fix_niri_touchpad_fragment_path)" ]]; then
+    printf '%s\n' '  - Niri touchpad fragment: present'
+  else
+    printf '%s\n' '  - Niri touchpad fragment: missing'
+    missing=1
+  fi
+  if ! fix_niri_validate_config "$config"; then
+    missing=1
+  fi
   return "$missing"
 }
 
 fix_plan_touchpad_toggle() {
   cat <<'EOF'
-Restore only the MyUnix Niri touchpad helper, Mod+F8 binding, and their managed config include lines.
+Restore only the MyUnix Niri touchpad fragment, helper, Mod+F8 binding, and their managed config include lines.
+Validate the original and exact candidate config before replacement; keep invalid user config unchanged and back up changed managed files under ~/.local/state/myunix/backups/.
 The repair does not alter mouse or trackpoint settings, DMS private state, credentials, or application profiles.
-When Niri is running it will opportunistically request `niri msg action load-config-file`; otherwise reload Niri in the next session.
+When Niri is running request `niri msg action load-config-file`; a reload failure is reported as a failed repair. Otherwise reload Niri in the next session.
 EOF
 }
 
 fix_apply_touchpad_toggle() {
-  fix_niri_restore_toggle_helper || return $?
-  fix_niri_restore_toggle_binding || return $?
-  fix_niri_restore_missing_includes || return $?
-  fix_reload_niri_if_running
+  fix_apply_niri_managed_config 0
 }
 
 fix_verify_touchpad_toggle() {
   fix_diagnose_touchpad_toggle >/dev/null
+}
+
+fix_diagnose_jetbrains_toolbox() {
+  local missing=0
+  if jetbrains_toolbox_managed_launcher_is_usable; then
+    printf '  - MyUnix-managed Toolbox launcher: usable\n'
+  else
+    printf '  - MyUnix-managed Toolbox launcher: missing or unusable\n'
+    missing=1
+  fi
+  if jetbrains_toolbox_desktop_entry_is_healthy; then
+    printf '  - Toolbox desktop entry and icon integration: present\n'
+  else
+    printf '  - Toolbox desktop entry or icon integration: missing or stale\n'
+    missing=1
+  fi
+  return "$missing"
+}
+
+fix_plan_jetbrains_toolbox() {
+  cat <<'EOF'
+If the existing MyUnix-managed Toolbox launcher is usable, restore only its user desktop entry and archive icon metadata and refresh the desktop database.
+Back up an existing launcher entry under ~/.local/state/myunix/backups/jetbrains-toolbox/ before replacement.
+Do not download or reinstall Toolbox, start it, or inspect account data or IDE caches. If the managed launcher is unusable, stop and use the explicit installer separately.
+No logout is required; refresh DMS if its launcher cache is stale.
+EOF
+}
+
+fix_apply_jetbrains_toolbox() {
+  repair_jetbrains_toolbox_desktop_entry
+}
+
+fix_verify_jetbrains_toolbox() {
+  jetbrains_toolbox_desktop_entry_is_healthy
 }
 
 fix_flclash_desktop_entry_path() {
@@ -724,15 +826,16 @@ fix_toolchain_component_commands() {
 }
 
 fix_toolchain_component_names() {
-  if declare -F development_toolchain_component_names >/dev/null 2>&1; then
-    development_toolchain_component_names
+  if [[ -n "${FIX_TOOLCHAIN_COMPONENTS:-}" ]]; then
+    printf '%s\n' "$FIX_TOOLCHAIN_COMPONENTS"
   else
-    printf '%s\n' build-tools jdk cmake ninja rust python anaconda node go gcc clang
+    development_toolchain_normalize_components "${MYUNIX_TOOLCHAIN_COMPONENTS:-}"
   fi
 }
 
 fix_diagnose_development_toolchain() {
-  local missing=0 component command_name all_present
+  local missing=0 component command_name all_present components
+  components="$(fix_toolchain_component_names)" || return $?
   while IFS= read -r component; do
     all_present=1
     while IFS= read -r command_name; do
@@ -746,20 +849,23 @@ fix_diagnose_development_toolchain() {
     else
       printf '%s\n' "  - $component: missing one or more commands"
     fi
-  done < <(fix_toolchain_component_names)
+  done <<< "$components"
   return "$missing"
 }
 
 fix_plan_development_toolchain() {
   local scope=${MYUNIX_TOOLCHAIN_SCOPE:-system}
-  local components=${MYUNIX_TOOLCHAIN_COMPONENTS:-all registered components}
+  local components
+  components="$(fix_toolchain_component_names | paste -sd, -)" || return $?
   printf 'Install or refresh the managed development-toolchain components (%s scope: %s) using the existing toolchain installer.\n' "$components" "$scope"
   printf '%s\n' 'Only the selected toolchain packages and their managed shell fragment are changed; no unrelated user configuration is scanned.'
   printf '%s\n' 'No logout is required; start a new shell if shell configuration or PATH changes are reported.'
 }
 
 fix_apply_development_toolchain() {
-  install_development_toolchain "${MYUNIX_TOOLCHAIN_SCOPE:-system}" "${MYUNIX_TOOLCHAIN_COMPONENTS:-}"
+  local components
+  components="$(fix_toolchain_component_names | paste -sd, -)" || return $?
+  install_development_toolchain "${MYUNIX_TOOLCHAIN_SCOPE:-system}" "$components"
 }
 
 fix_verify_development_toolchain() {
@@ -787,6 +893,11 @@ if [[ -z "${FIX_REPAIR_CATEGORY_MAP[wechat-cangjie]:-}" ]]; then
     "${FIX_CATEGORY_LABELS[1]}" \
     'Niri touchpad toggle' \
     'Restore the MyUnix helper, Mod+F8 binding and managed includes; reload Niri when running.'
+  fix_register_repair \
+    jetbrains-toolbox \
+    "${FIX_CATEGORY_LABELS[2]}" \
+    'JetBrains Toolbox desktop integration' \
+    'Restore only desktop registration for an existing usable managed launcher; never download or reinstall.'
   fix_register_repair \
     flclash-launcher \
     "${FIX_CATEGORY_LABELS[2]}" \
