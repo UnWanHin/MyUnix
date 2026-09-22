@@ -154,6 +154,9 @@ printf '%s\n' \
   '  mouse {' \
   '    accel-speed 0.2' \
   '  }' \
+  '  trackpoint {' \
+  '    accel-speed 0.4' \
+  '  }' \
   '}' \
   'include "myunix/touchpad.kdl"' \
   'include optional=true "myunix/touchpad-bind.kdl"' \
@@ -178,6 +181,8 @@ run env \
     test -s "$HOME/.config/niri/myunix/touchpad-bind.kdl"
     test -x "$HOME/.local/bin/niri-touchpad-toggle"
     grep -Fq "accel-speed 0.2" "$HOME/.config/niri/config.kdl"
+    grep -Fq "trackpoint {" "$HOME/.config/niri/config.kdl"
+    grep -Fq "accel-speed 0.4" "$HOME/.config/niri/config.kdl"
     fix_verify_touchpad_toggle
     grep -Fqx "niri msg action load-config-file" "$NIRI_TRACE"
   '
@@ -196,6 +201,11 @@ run env \
     source "'$PROJECT_ROOT'/scripts/myunix"
     niri() {
       printf "niri %s\\n" "$*" >> "$NIRI_TRACE"
+      if [[ "${1:-}" == validate ]]; then
+        [[ "${2:-}" == --config && "${3:-}" == "$HOME/.config/niri/config.kdl" ]] || return 2
+        printf "%s\\n" "validation output from exact config"
+      fi
+      [[ "${1:-}" == validate ]] && return 0
       return 0
     }
     fix_apply_niri_config
@@ -205,6 +215,9 @@ run env \
     test -s "$HOME/.config/niri/myunix/touchpad.kdl"
     test -s "$HOME/.config/niri/myunix/touchpad-bind.kdl"
     grep -Fqx "niri msg action load-config-file" "$NIRI_TRACE"
+    diagnosis="$(fix_diagnose_niri_config || true)"
+    [[ "$diagnosis" == *"Niri validation output:"* ]]
+    [[ "$diagnosis" == *"validation output from exact config"* ]]
     fix_verify_niri_config
   '
 assert_status 0
@@ -220,15 +233,59 @@ run env \
   MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
     source "'$PROJECT_ROOT'/scripts/myunix"
     niri() {
-      [[ "$*" == "validate" ]] || return 2
-      printf "%s\\n" "invalid config" >&2
+      [[ "${1:-}" == validate && "${2:-}" == --config && "${3:-}" == "$HOME/.config/niri/config.kdl" ]] || return 2
+      printf "%s\\n" "failure stdout"
+      printf "%s\\n" "failure stderr" >&2
       return 1
     }
     output="$(fix_diagnose_niri_config || true)"
-    [[ "$output" == *"invalid"* ]]
+    [[ "$output" == *"Niri validation output:"* ]]
+    [[ "$output" == *"failure stdout"* ]]
+    [[ "$output" == *"failure stderr"* ]]
     ! fix_diagnose_niri_config >/dev/null
     ! fix_apply_niri_config
     cmp -s "$HOME/.config/niri/config.kdl" "'$invalid_niri_before'"
+  '
+assert_status 0
+
+real_niri_repair_home="$temporary_dir/real-niri-repair-home"
+mkdir -p "$real_niri_repair_home/.config/niri/myunix"
+printf '%s\n' \
+  'environment {' \
+  '  XDG_CURRENT_DESKTOP "niri"' \
+  '}' \
+  'include "myunix/touchpad.kdl"' \
+  > "$real_niri_repair_home/.config/niri/config.kdl"
+run env \
+  HOME="$real_niri_repair_home" \
+  MYUNIX_NIRI_CONFIG_DIR="$real_niri_repair_home/.config/niri" \
+  MYUNIX_NIRI_DMS_BIN_DIR="$real_niri_repair_home/.local/bin" \
+  MYUNIX_NIRI_REPAIR_BACKUP_DIR="$real_niri_repair_home/repair-backup" \
+  MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
+    source "'$PROJECT_ROOT'/scripts/myunix"
+    fix_apply_niri_config
+    test -s "$HOME/.config/niri/myunix/touchpad.kdl"
+    test -s "$HOME/.config/niri/myunix/touchpad-bind.kdl"
+    grep -Fqx "include \"myunix/touchpad.kdl\"" "$HOME/.config/niri/config.kdl"
+    grep -Fqx "include optional=true \"myunix/touchpad-bind.kdl\"" "$HOME/.config/niri/config.kdl"
+  '
+assert_status 0
+
+custom_niri_home="$temporary_dir/custom-niri-home"
+custom_niri_config="$temporary_dir/custom-niri-config.kdl"
+mkdir -p "$custom_niri_home/.config/niri"
+printf '%s\n' 'environment {' '  XDG_CURRENT_DESKTOP "niri"' '}' '//' > "$custom_niri_home/.config/niri/config.kdl"
+printf '%s\n' 'this is not valid KDL' > "$custom_niri_config"
+custom_niri_before="$temporary_dir/custom-niri.before"
+cp "$custom_niri_config" "$custom_niri_before"
+run env \
+  HOME="$custom_niri_home" \
+  MYUNIX_NIRI_CONFIG="$custom_niri_config" \
+  MYUNIX_NIRI_DMS_BIN_DIR="$custom_niri_home/.local/bin" \
+  MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
+    source "'$PROJECT_ROOT'/scripts/myunix"
+    ! fix_apply_niri_config
+    cmp -s "$MYUNIX_NIRI_CONFIG" "'$custom_niri_before'"
   '
 assert_status 0
 

@@ -29,10 +29,12 @@ before confirmation.
 The Niri + DMS repair entries are confirmation-gated and scoped to the public
 session integration:
 
-- **Niri configuration validation** runs `niri validate` when available and
-  reports its output. An invalid user `config.kdl` is never replaced; only
-  absent MyUnix-owned touchpad fragments, binding, and include lines may be
-  restored.
+- **Niri configuration validation** runs `niri validate --config` against the
+  exact active config path when available and reports the complete command
+  output under a labeled diagnostic. Its repair first restores absent,
+  independent MyUnix-owned touchpad/helper/binding files; only after that
+  exact config validates may it add the managed include lines. An invalid user
+  `config.kdl` is never replaced or rewritten.
 - **DMS user service** checks `systemctl --user is-enabled` and
   `systemctl --user is-active`, then enables and starts the existing
   `dms.service` only after confirmation. It never uses `sudo` or reinstalls

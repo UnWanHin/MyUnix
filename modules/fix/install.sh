@@ -410,10 +410,13 @@ fix_diagnose_niri_config() {
   fi
 
   if command -v niri >/dev/null 2>&1; then
-    if validation_output="$(niri validate 2>&1)"; then
+    if validation_output="$(niri validate --config "$config" 2>&1)"; then
       printf '%s\n' '  - Niri validation: valid'
+      printf '%s\n' '  - Niri validation output:'
+      printf '%s\n' "$validation_output"
     else
       printf '%s\n' '  - Niri validation: invalid'
+      printf '%s\n' '  - Niri validation output:'
       [[ -z "$validation_output" ]] || printf '%s\n' "$validation_output"
       missing=1
     fi
@@ -457,13 +460,14 @@ fix_apply_niri_config() {
   local config validation_output
   config="$(fix_niri_config_path)"
   [[ -f "$config" ]] || return 1
-  if command -v niri >/dev/null 2>&1 && ! validation_output="$(niri validate 2>&1)"; then
+  fix_niri_restore_touchpad_fragment || return $?
+  fix_niri_restore_toggle_helper || return $?
+  fix_niri_restore_toggle_binding || return $?
+  if command -v niri >/dev/null 2>&1 && ! validation_output="$(niri validate --config "$config" 2>&1)"; then
     printf '%s\n' 'Niri config is invalid; leaving the user config unchanged.' >&2
     [[ -z "$validation_output" ]] || printf '%s\n' "$validation_output" >&2
     return 1
   fi
-  fix_niri_restore_touchpad_fragment || return $?
-  fix_niri_restore_toggle_binding || return $?
   fix_niri_restore_missing_includes || return $?
   fix_reload_niri_if_running
 }
