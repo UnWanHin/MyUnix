@@ -338,7 +338,7 @@ case "${1:-}" in
   install) shift; run_install "$@" ;;
   export) run_export ;;
   retry) run_retry ;;
-  fix) run_fix ;;
+  fix) [[ "$#" == 1 ]] || die 'Usage: myunix fix'; run_fix ;;
   rollback) [[ "${2:-}" == niri-dms-greeter && -n "${3:-}" ]] || die 'Usage: myunix rollback niri-dms-greeter <backup-path>'; rollback_niri_dms_greeter "$3" ;;
   *) die 'Usage: myunix {doctor|install|export|retry|fix|rollback}' ;;
 esac

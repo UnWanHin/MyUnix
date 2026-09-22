@@ -19,7 +19,7 @@ declare -A FIX_REPAIR_NOTE_MAP=()
 
 fix_register_repair() {
   local repair_id=$1 category=$2 label=$3 note=${4:-}
-  local registered_id
+  local registered_id valid_category=0
 
   [[ -n "$repair_id" && "$repair_id" =~ ^[a-z0-9][a-z0-9-]*$ ]] || {
     printf 'ERROR: Invalid repair identifier: %s\n' "$repair_id" >&2
@@ -27,6 +27,16 @@ fix_register_repair() {
   }
   [[ -n "$category" && -n "$label" ]] || {
     printf 'ERROR: Repair registration requires a category and label: %s\n' "$repair_id" >&2
+    return 2
+  }
+  for registered_id in "${FIX_CATEGORY_LABELS[@]}"; do
+    if [[ "$registered_id" == "$category" ]]; then
+      valid_category=1
+      break
+    fi
+  done
+  ((valid_category == 1)) || {
+    printf 'ERROR: Invalid repair category for %s: %s\n' "$repair_id" "$category" >&2
     return 2
   }
   for registered_id in "${FIX_REPAIR_ID_LIST[@]}"; do

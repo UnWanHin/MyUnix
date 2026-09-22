@@ -73,3 +73,46 @@ run env MYUNIX_SOURCE_ONLY=1 bash -c "
   declare -F run_fix >/dev/null
 "
 assert_status 0
+
+run env MYUNIX_SOURCE_ONLY=1 MYUNIX_UI_TEST_MODE=1 MYUNIX_FIX_TEST_CONFIRM=y FIX_MARKER="$temporary_dir/cli-applied" bash -c '
+  source "'$PROJECT_ROOT'/scripts/myunix"
+  fixture_category="${FIX_CATEGORY_LABELS[0]}"
+  fix_register_repair fixture "$fixture_category" "Fixture repair"
+  fix_choose_category() { printf "%s\n" "$fixture_category"; }
+  fix_choose_repair() {
+    [[ "$1" == "$fixture_category" ]] || return 1
+    printf "%s\n" fixture
+  }
+  fix_diagnose_fixture() {
+    printf "%s\n" "fixture is out of date"
+    return 1
+  }
+  fix_plan_fixture() { printf "%s\n" "write the fixture marker"; }
+  fix_apply_fixture() { : > "$FIX_MARKER"; }
+  fix_verify_fixture() { test -e "$FIX_MARKER"; }
+  run_fix
+  test -e "$FIX_MARKER"
+'
+assert_status 0
+assert_output_contains 'repaired and verified'
+
+run env MYUNIX_UI_TEST_MODE=0 "$PROJECT_ROOT/scripts/myunix" fix
+assert_status 2
+assert_output_contains 'Interactive repair requires a terminal'
+
+run "$PROJECT_ROOT/scripts/myunix" fix --all
+assert_status 2
+assert_output_contains 'Usage: myunix fix'
+
+run "$PROJECT_ROOT/scripts/myunix" fix unexpected
+assert_status 2
+assert_output_contains 'Usage: myunix fix'
+
+run bash -c '
+  source "'$PROJECT_ROOT'/scripts/lib/core.sh"
+  source "'$PROJECT_ROOT'/scripts/lib/ui.sh"
+  source "'$PROJECT_ROOT'/modules/fix/install.sh"
+  fix_register_repair invalid "Unknown category" "Invalid repair"
+'
+assert_status 2
+assert_output_contains 'Invalid repair category'
