@@ -279,6 +279,294 @@ fix_verify_wechat_cangjie() {
   done <<< "$variants"
 }
 
+fix_niri_config_path() {
+  printf '%s\n' "${MYUNIX_NIRI_CONFIG:-${MYUNIX_NIRI_CONFIG_DIR:-$HOME/.config/niri}/config.kdl}"
+}
+
+fix_niri_config_dir() {
+  printf '%s\n' "${MYUNIX_NIRI_CONFIG_DIR:-$(dirname "$(fix_niri_config_path)")}"
+}
+
+fix_niri_touchpad_fragment_path() {
+  printf '%s\n' "${MYUNIX_NIRI_TOUCHPAD_STATE_FILE:-$(fix_niri_config_dir)/myunix/touchpad.kdl}"
+}
+
+fix_niri_touchpad_binding_path() {
+  printf '%s\n' "$(fix_niri_config_dir)/myunix/touchpad-bind.kdl"
+}
+
+fix_niri_toggle_helper_path() {
+  printf '%s\n' "${MYUNIX_NIRI_DMS_BIN_DIR:-$HOME/.local/bin}/niri-touchpad-toggle"
+}
+
+fix_niri_module_touchpad_fragment_path() {
+  printf '%s\n' "${MYUNIX_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/modules/niri-dms/config/niri/myunix/touchpad.kdl"
+}
+
+fix_niri_include_present() {
+  local config=$1 fragment=$2
+  case "$fragment" in
+    touchpad)
+      grep -Eq '^[[:space:]]*include[[:space:]]+"myunix/touchpad\.kdl"([[:space:]]|$)' "$config"
+      ;;
+    binding)
+      grep -Eq '^[[:space:]]*include[[:space:]]+optional[[:space:]]*=[[:space:]]*true[[:space:]]+"myunix/touchpad-bind\.kdl"([[:space:]]|$)' "$config"
+      ;;
+    *)
+      return 2
+      ;;
+  esac
+}
+
+fix_niri_config_backup_dir() {
+  printf '%s\n' "${MYUNIX_NIRI_REPAIR_BACKUP_DIR:-$HOME/.local/state/myunix/backups/niri-dms-repair/$(date +%Y%m%d-%H%M%S)}"
+}
+
+fix_niri_restore_missing_includes() {
+  local config=${1:-$(fix_niri_config_path)} temporary backup_dir changed=0
+  [[ -f "$config" ]] || return 1
+
+  temporary="$(mktemp "${config}.myunix.XXXXXX")"
+  cp -a "$config" "$temporary" || {
+    rm -f "$temporary"
+    return 1
+  }
+  if ! fix_niri_include_present "$temporary" touchpad; then
+    printf '\n%s\n' 'include "myunix/touchpad.kdl"' >> "$temporary"
+    changed=1
+  fi
+  if ! fix_niri_include_present "$temporary" binding; then
+    printf '\n%s\n' 'include optional=true "myunix/touchpad-bind.kdl"' >> "$temporary"
+    changed=1
+  fi
+  if ((changed == 1)); then
+    backup_dir="$(fix_niri_config_backup_dir)"
+    mkdir -p "$backup_dir"
+    cp -a "$config" "$backup_dir/config.kdl" || {
+      rm -f "$temporary"
+      return 1
+    }
+    mv "$temporary" "$config"
+  else
+    rm -f "$temporary"
+  fi
+}
+
+fix_niri_restore_touchpad_fragment() {
+  local target source
+  target="$(fix_niri_touchpad_fragment_path)"
+  [[ -s "$target" ]] && return 0
+  source="$(fix_niri_module_touchpad_fragment_path)"
+  [[ -s "$source" ]] || {
+    printf 'MyUnix Niri touchpad fragment source is unavailable: %s\n' "$source" >&2
+    return 1
+  }
+  mkdir -p "$(dirname "$target")"
+  cp -a "$source" "$target"
+}
+
+fix_niri_restore_toggle_helper() {
+  local target
+  target="$(fix_niri_toggle_helper_path)"
+  [[ -x "$target" ]] && return 0
+  declare -F install_niri_dms_touchpad_toggle >/dev/null 2>&1 || {
+    printf '%s\n' 'Niri touchpad helper installer is unavailable.' >&2
+    return 1
+  }
+  install_niri_dms_touchpad_toggle
+}
+
+fix_niri_binding_is_healthy() {
+  local binding
+  binding="$(fix_niri_touchpad_binding_path)"
+  [[ -s "$binding" ]] \
+    && grep -Fq 'Mod+F8' "$binding" \
+    && grep -Fq 'niri-touchpad-toggle' "$binding"
+}
+
+fix_niri_restore_toggle_binding() {
+  fix_niri_binding_is_healthy && return 0
+  declare -F configure_niri_dms_touchpad_toggle_binding >/dev/null 2>&1 || {
+    printf '%s\n' 'Niri touchpad binding helper is unavailable.' >&2
+    return 1
+  }
+  MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=1 configure_niri_dms_touchpad_toggle_binding
+}
+
+fix_reload_niri_if_running() {
+  command -v niri >/dev/null 2>&1 || return 0
+  niri msg action load-config-file >/dev/null 2>&1 || true
+}
+
+fix_diagnose_niri_config() {
+  local config missing=0 validation_output fragment
+  config="$(fix_niri_config_path)"
+
+  if [[ -f "$config" ]]; then
+    printf '%s\n' "  - Niri config: present ($config)"
+  else
+    printf '%s\n' "  - Niri config: missing ($config)"
+    return 1
+  fi
+
+  if command -v niri >/dev/null 2>&1; then
+    if validation_output="$(niri validate 2>&1)"; then
+      printf '%s\n' '  - Niri validation: valid'
+    else
+      printf '%s\n' '  - Niri validation: invalid'
+      [[ -z "$validation_output" ]] || printf '%s\n' "$validation_output"
+      missing=1
+    fi
+  else
+    printf '%s\n' '  - Niri validation: unavailable (niri command missing)'
+  fi
+
+  for fragment in touchpad binding; do
+    if fix_niri_include_present "$config" "$fragment"; then
+      printf '%s\n' "  - MyUnix $fragment include: present"
+    else
+      printf '%s\n' "  - MyUnix $fragment include: missing"
+      missing=1
+    fi
+  done
+  if [[ -s "$(fix_niri_touchpad_fragment_path)" ]]; then
+    printf '%s\n' "  - MyUnix touchpad fragment: present ($(fix_niri_touchpad_fragment_path))"
+  else
+    printf '%s\n' "  - MyUnix touchpad fragment: missing ($(fix_niri_touchpad_fragment_path))"
+    missing=1
+  fi
+  if [[ -s "$(fix_niri_touchpad_binding_path)" ]]; then
+    printf '%s\n' "  - MyUnix touchpad binding: present ($(fix_niri_touchpad_binding_path))"
+  else
+    printf '%s\n' "  - MyUnix touchpad binding: missing ($(fix_niri_touchpad_binding_path))"
+    missing=1
+  fi
+  return "$missing"
+}
+
+fix_plan_niri_config() {
+  cat <<'EOF'
+Validate the active Niri configuration and restore only missing MyUnix-owned touchpad fragments, binding, and include lines.
+An invalid user config is reported with its validation output and is never replaced or rewritten by this repair.
+No mouse settings, DMS private state, credentials, or session profiles are changed.
+Reload Niri manually if the session is not running while the repair is applied.
+EOF
+}
+
+fix_apply_niri_config() {
+  local config validation_output
+  config="$(fix_niri_config_path)"
+  [[ -f "$config" ]] || return 1
+  if command -v niri >/dev/null 2>&1 && ! validation_output="$(niri validate 2>&1)"; then
+    printf '%s\n' 'Niri config is invalid; leaving the user config unchanged.' >&2
+    [[ -z "$validation_output" ]] || printf '%s\n' "$validation_output" >&2
+    return 1
+  fi
+  fix_niri_restore_touchpad_fragment || return $?
+  fix_niri_restore_toggle_binding || return $?
+  fix_niri_restore_missing_includes || return $?
+  fix_reload_niri_if_running
+}
+
+fix_verify_niri_config() {
+  fix_diagnose_niri_config >/dev/null
+}
+
+fix_diagnose_dms_service() {
+  local missing=0
+  if ! command -v systemctl >/dev/null 2>&1; then
+    printf '%s\n' '  - systemctl: missing'
+    return 1
+  fi
+  if systemctl --user is-enabled dms.service >/dev/null 2>&1; then
+    printf '%s\n' '  - dms.service: enabled'
+  else
+    printf '%s\n' '  - dms.service: disabled or unavailable'
+    missing=1
+  fi
+  if systemctl --user is-active dms.service >/dev/null 2>&1; then
+    printf '%s\n' '  - dms.service: active'
+  else
+    printf '%s\n' '  - dms.service: inactive or unavailable'
+    missing=1
+  fi
+  return "$missing"
+}
+
+fix_plan_dms_service() {
+  cat <<'EOF'
+Enable the existing user-level dms.service and start it for the current desktop user.
+This repair uses systemctl --user only, never sudo, and does not reinstall DMS or change private DMS state.
+Log out and back in if the service needs to be picked up by a new session.
+EOF
+}
+
+fix_apply_dms_service() {
+  declare -F enable_dms_user_service >/dev/null 2>&1 || {
+    printf '%s\n' 'DMS user-service helper is unavailable.' >&2
+    return 1
+  }
+  enable_dms_user_service || return $?
+  systemctl --user start dms.service
+}
+
+fix_verify_dms_service() {
+  systemctl --user is-enabled dms.service >/dev/null 2>&1 \
+    && systemctl --user is-active dms.service >/dev/null 2>&1
+}
+
+fix_diagnose_touchpad_toggle() {
+  local missing=0 config helper binding
+  config="$(fix_niri_config_path)"
+  helper="$(fix_niri_toggle_helper_path)"
+  binding="$(fix_niri_touchpad_binding_path)"
+
+  if [[ -x "$helper" ]]; then
+    printf '%s\n' "  - Niri touchpad helper: present ($helper)"
+  else
+    printf '%s\n' "  - Niri touchpad helper: missing ($helper)"
+    missing=1
+  fi
+  if [[ -f "$config" ]] && fix_niri_include_present "$config" touchpad; then
+    printf '%s\n' '  - Niri touchpad include: present'
+  else
+    printf '%s\n' '  - Niri touchpad include: missing'
+    missing=1
+  fi
+  if [[ -f "$config" ]] && fix_niri_include_present "$config" binding; then
+    printf '%s\n' '  - Niri touchpad binding include: present'
+  else
+    printf '%s\n' '  - Niri touchpad binding include: missing'
+    missing=1
+  fi
+  if fix_niri_binding_is_healthy; then
+    printf '%s\n' "  - Niri Mod+F8 binding: present ($binding)"
+  else
+    printf '%s\n' "  - Niri Mod+F8 binding: missing or incomplete ($binding)"
+    missing=1
+  fi
+  return "$missing"
+}
+
+fix_plan_touchpad_toggle() {
+  cat <<'EOF'
+Restore only the MyUnix Niri touchpad helper, Mod+F8 binding, and their managed config include lines.
+The repair does not alter mouse or trackpoint settings, DMS private state, credentials, or application profiles.
+When Niri is running it will opportunistically request `niri msg action load-config-file`; otherwise reload Niri in the next session.
+EOF
+}
+
+fix_apply_touchpad_toggle() {
+  fix_niri_restore_toggle_helper || return $?
+  fix_niri_restore_toggle_binding || return $?
+  fix_niri_restore_missing_includes || return $?
+  fix_reload_niri_if_running
+}
+
+fix_verify_touchpad_toggle() {
+  fix_diagnose_touchpad_toggle >/dev/null
+}
+
 fix_flclash_desktop_entry_path() {
   if declare -F flclash_desktop_entry_path >/dev/null 2>&1; then
     flclash_desktop_entry_path
@@ -480,6 +768,21 @@ if [[ -z "${FIX_REPAIR_CATEGORY_MAP[wechat-cangjie]:-}" ]]; then
     "${FIX_CATEGORY_LABELS[0]}" \
     'WeChat / Cangjie compatibility' \
     'Log out and back in after applying the public Fcitx5 and launcher repair.'
+  fix_register_repair \
+    niri-config \
+    "${FIX_CATEGORY_LABELS[1]}" \
+    'Niri configuration validation' \
+    'Invalid user configuration is reported without replacement; only missing MyUnix-owned fragments are restored.'
+  fix_register_repair \
+    dms-service \
+    "${FIX_CATEGORY_LABELS[1]}" \
+    'DMS user service' \
+    'Enable and start dms.service for the current desktop user after confirmation.'
+  fix_register_repair \
+    touchpad-toggle \
+    "${FIX_CATEGORY_LABELS[1]}" \
+    'Niri touchpad toggle' \
+    'Restore the MyUnix helper, Mod+F8 binding and managed includes; reload Niri when running.'
   fix_register_repair \
     flclash-launcher \
     "${FIX_CATEGORY_LABELS[2]}" \

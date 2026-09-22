@@ -26,6 +26,27 @@ use the Niri + DMS category when a MyUnix-owned Fcitx5 startup fragment or
 session binding needs attention. Every repair shows its diagnosis and plan
 before confirmation.
 
+The Niri + DMS repair entries are confirmation-gated and scoped to the public
+session integration:
+
+- **Niri configuration validation** runs `niri validate` when available and
+  reports its output. An invalid user `config.kdl` is never replaced; only
+  absent MyUnix-owned touchpad fragments, binding, and include lines may be
+  restored.
+- **DMS user service** checks `systemctl --user is-enabled` and
+  `systemctl --user is-active`, then enables and starts the existing
+  `dms.service` only after confirmation. It never uses `sudo` or reinstalls
+  DMS.
+- **Niri touchpad toggle** restores only the managed
+  `~/.local/bin/niri-touchpad-toggle` helper, its `Mod+F8` binding, and the
+  two MyUnix include lines. It does not change mouse or trackpoint settings;
+  when Niri is running it opportunistically requests
+  `niri msg action load-config-file`.
+
+These repairs do not read or modify credentials, subscriptions, browser
+profiles, DMS private state, or other application-owned configuration. If the
+session is not running, log out and back in after applying a session repair.
+
 Run the input-method module before using Chinese input. The Niri module imports the reviewed Niri/DMS `.kdl` files from `modules/niri-dms/config/niri/`, backing up any existing `config.kdl` and `dms/` directory below `~/.local/state/myunix/backups/niri-dms/`. It then configures the Niri session to start Fcitx5 and exports `XMODIFIERS=@im=fcitx`, `QT_IM_MODULE=fcitx`, and `QT_IM_MODULES=wayland;fcitx`. It deliberately does not globally set `GTK_IM_MODULE`; native GTK Wayland applications use Niri's text-input-v3 route.
 
 Rerun the module safely after DMS creates `~/.config/niri/config.kdl`:

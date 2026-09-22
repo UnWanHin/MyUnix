@@ -125,8 +125,11 @@ run env HOME="$repair_home" XDG_DATA_HOME="$repair_home/.local/share" MYUNIX_TES
   source '$PROJECT_ROOT/scripts/myunix'
   expected='codex-fedora
 development-toolchain
+dms-service
 flclash-launcher
+niri-config
 portal-login
+touchpad-toggle
 wechat-cangjie'
   actual=\"\$(fix_repair_ids | sort)\"
   test \"\$actual\" = \"\$expected\"
@@ -142,6 +145,142 @@ wechat-cangjie'
   test ! -e \"\$HOME/.local/share/applications/wechat.desktop\"
 "
 assert_status 0
+
+niri_repair_home="$temporary_dir/niri-repair-home"
+niri_trace="$temporary_dir/niri.trace"
+mkdir -p "$niri_repair_home/.config/niri/myunix"
+printf '%s\n' \
+  'input {' \
+  '  mouse {' \
+  '    accel-speed 0.2' \
+  '  }' \
+  '}' \
+  'include "myunix/touchpad.kdl"' \
+  'include optional=true "myunix/touchpad-bind.kdl"' \
+  > "$niri_repair_home/.config/niri/config.kdl"
+cp "$PROJECT_ROOT/modules/niri-dms/config/niri/myunix/touchpad.kdl" \
+  "$niri_repair_home/.config/niri/myunix/touchpad.kdl"
+run env \
+  HOME="$niri_repair_home" \
+  MYUNIX_NIRI_CONFIG_DIR="$niri_repair_home/.config/niri" \
+  MYUNIX_NIRI_DMS_BIN_DIR="$niri_repair_home/.local/bin" \
+  NIRI_TRACE="$niri_trace" \
+  MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
+    source "'$PROJECT_ROOT'/scripts/myunix"
+    niri() {
+      printf "niri %s\\n" "$*" >> "$NIRI_TRACE"
+      return 0
+    }
+    output="$(fix_diagnose_touchpad_toggle || true)"
+    [[ "$output" == *"binding"* && "$output" == *"missing"* ]]
+    test ! -e "$HOME/.config/niri/myunix/touchpad-bind.kdl"
+    fix_apply_touchpad_toggle
+    test -s "$HOME/.config/niri/myunix/touchpad-bind.kdl"
+    test -x "$HOME/.local/bin/niri-touchpad-toggle"
+    grep -Fq "accel-speed 0.2" "$HOME/.config/niri/config.kdl"
+    fix_verify_touchpad_toggle
+    grep -Fqx "niri msg action load-config-file" "$NIRI_TRACE"
+  '
+assert_status 0
+
+valid_niri_home="$temporary_dir/valid-niri-home"
+niri_config_trace="$temporary_dir/niri-config.trace"
+mkdir -p "$valid_niri_home/.config/niri"
+printf '%s\n' 'environment {' '  XDG_CURRENT_DESKTOP "niri"' '}' '//' > "$valid_niri_home/.config/niri/config.kdl"
+run env \
+  HOME="$valid_niri_home" \
+  MYUNIX_NIRI_CONFIG_DIR="$valid_niri_home/.config/niri" \
+  MYUNIX_NIRI_DMS_BIN_DIR="$valid_niri_home/.local/bin" \
+  NIRI_TRACE="$niri_config_trace" \
+  MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
+    source "'$PROJECT_ROOT'/scripts/myunix"
+    niri() {
+      printf "niri %s\\n" "$*" >> "$NIRI_TRACE"
+      return 0
+    }
+    fix_apply_niri_config
+    grep -Fq "XDG_CURRENT_DESKTOP \"niri\"" "$HOME/.config/niri/config.kdl"
+    grep -Fqx "include \"myunix/touchpad.kdl\"" "$HOME/.config/niri/config.kdl"
+    grep -Fqx "include optional=true \"myunix/touchpad-bind.kdl\"" "$HOME/.config/niri/config.kdl"
+    test -s "$HOME/.config/niri/myunix/touchpad.kdl"
+    test -s "$HOME/.config/niri/myunix/touchpad-bind.kdl"
+    grep -Fqx "niri msg action load-config-file" "$NIRI_TRACE"
+    fix_verify_niri_config
+  '
+assert_status 0
+
+invalid_niri_home="$temporary_dir/invalid-niri-home"
+mkdir -p "$invalid_niri_home/.config/niri"
+printf '%s\n' 'this is not valid KDL' > "$invalid_niri_home/.config/niri/config.kdl"
+invalid_niri_before="$temporary_dir/invalid-niri.before"
+cp "$invalid_niri_home/.config/niri/config.kdl" "$invalid_niri_before"
+run env \
+  HOME="$invalid_niri_home" \
+  MYUNIX_NIRI_CONFIG_DIR="$invalid_niri_home/.config/niri" \
+  MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
+    source "'$PROJECT_ROOT'/scripts/myunix"
+    niri() {
+      [[ "$*" == "validate" ]] || return 2
+      printf "%s\\n" "invalid config" >&2
+      return 1
+    }
+    output="$(fix_diagnose_niri_config || true)"
+    [[ "$output" == *"invalid"* ]]
+    ! fix_diagnose_niri_config >/dev/null
+    ! fix_apply_niri_config
+    cmp -s "$HOME/.config/niri/config.kdl" "'$invalid_niri_before'"
+  '
+assert_status 0
+
+dms_service_trace="$temporary_dir/dms-service.trace"
+run env \
+  HOME="$repair_home" \
+  DMS_SERVICE_TRACE="$dms_service_trace" \
+  MYUNIX_FIX_TEST_CONFIRM=n \
+  MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
+    source "'$PROJECT_ROOT'/scripts/myunix"
+    systemctl() {
+      printf "systemctl %s\\n" "$*" >> "$DMS_SERVICE_TRACE"
+      return 1
+    }
+    enable_dms_user_service() {
+      printf "%s\\n" enable >> "$DMS_SERVICE_TRACE"
+    }
+    fix_run_selected dms-service
+    ! grep -Fqx enable "$DMS_SERVICE_TRACE"
+    ! grep -Fq -- "--user start dms.service" "$DMS_SERVICE_TRACE"
+  '
+assert_status 0
+assert_output_contains 'cancelled'
+
+run env \
+  HOME="$repair_home" \
+  DMS_SERVICE_TRACE="$dms_service_trace" \
+  MYUNIX_FIX_TEST_CONFIRM=y \
+  MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
+    source "'$PROJECT_ROOT'/scripts/myunix"
+    : > "$DMS_SERVICE_TRACE"
+    dms_enabled=0
+    dms_active=0
+    systemctl() {
+      printf "systemctl %s\\n" "$*" >> "$DMS_SERVICE_TRACE"
+      case "$*" in
+        "--user is-enabled dms.service") [[ "$dms_enabled" == 1 ]] ;;
+        "--user is-active dms.service") [[ "$dms_active" == 1 ]] ;;
+        "--user start dms.service") dms_enabled=1; dms_active=1 ;;
+        *) return 2 ;;
+      esac
+    }
+    enable_dms_user_service() {
+      dms_enabled=1
+      printf "%s\\n" enable >> "$DMS_SERVICE_TRACE"
+    }
+    fix_run_selected dms-service
+    grep -Fqx enable "$DMS_SERVICE_TRACE"
+    grep -Fqx "systemctl --user start dms.service" "$DMS_SERVICE_TRACE"
+  '
+assert_status 0
+assert_output_contains 'repaired and verified'
 
 flatpak_repair_dir="$temporary_dir/flatpak-repair"
 mkdir -p "$flatpak_repair_dir/user-export" "$flatpak_repair_dir/system-export"
