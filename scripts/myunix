@@ -7,6 +7,7 @@ source "$ROOT/scripts/lib/manifest.sh"
 source "$ROOT/scripts/lib/state.sh"
 source "$ROOT/scripts/lib/ui.sh"
 source "$ROOT/scripts/lib/network.sh"
+source "$ROOT/modules/fix/install.sh"
 source "$ROOT/modules/bootstrap/install.sh"
 source "$ROOT/modules/dnf/install.sh"
 source "$ROOT/modules/dnf/export.sh"
@@ -337,6 +338,7 @@ case "${1:-}" in
   install) shift; run_install "$@" ;;
   export) run_export ;;
   retry) run_retry ;;
+  fix) run_fix ;;
   rollback) [[ "${2:-}" == niri-dms-greeter && -n "${3:-}" ]] || die 'Usage: myunix rollback niri-dms-greeter <backup-path>'; rollback_niri_dms_greeter "$3" ;;
-  *) die 'Usage: myunix {doctor|install|export|retry|rollback}' ;;
+  *) die 'Usage: myunix {doctor|install|export|retry|fix|rollback}' ;;
 esac

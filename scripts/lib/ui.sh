@@ -11,10 +11,26 @@ ui_is_interactive() {
 }
 
 ui_require_interactive() {
+  local context=${1:-installation}
   ui_is_interactive || {
-    printf 'ERROR: Interactive installation requires a terminal. Use --all or --module instead.\n' >&2
+    if [[ "$context" == repair ]]; then
+      printf 'ERROR: Interactive repair requires a terminal.\n' >&2
+    else
+      printf 'ERROR: Interactive installation requires a terminal. Use --all or --module instead.\n' >&2
+    fi
     return 2
   }
+}
+
+ui_confirm() {
+  local prompt=$1 answer
+  if [[ -n "${MYUNIX_FIX_TEST_CONFIRM:-}" ]]; then
+    answer=$MYUNIX_FIX_TEST_CONFIRM
+  else
+    printf '%s [y/N] ' "$prompt" >&2
+    IFS= read -r answer || return 1
+  fi
+  [[ "$answer" == y || "$answer" == Y ]]
 }
 
 ui_read_key() {
