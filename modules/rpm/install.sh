@@ -38,3 +38,42 @@ prompt_optional_app() {
   read -r -p "Install ${name}? [y/N] " reply
   [[ "$reply" =~ ^[Yy]([Ee][Ss])?$ ]]
 }
+
+flclash_desktop_entry_path() {
+  printf '%s\n' "${MYUNIX_FLCLASH_DESKTOP_ENTRY:-${XDG_DATA_HOME:-$HOME/.local/share}/applications/flclash.desktop}"
+}
+
+flclash_desktop_entry_exists() {
+  local user_entry system_entry
+  user_entry="$(flclash_desktop_entry_path)"
+  [[ -f "$user_entry" ]] && return 0
+  for system_entry in \
+    "${MYUNIX_SYSTEM_APPLICATIONS_DIR:-/usr/share/applications}/flclash.desktop" \
+    "${MYUNIX_SYSTEM_APPLICATIONS_DIR:-/usr/share/applications}/FlClash.desktop"; do
+    [[ -f "$system_entry" ]] && return 0
+  done
+  return 1
+}
+
+install_flclash_desktop_entry() {
+  local target executable
+  target="$(flclash_desktop_entry_path)"
+  executable="${MYUNIX_FLCLASH_EXECUTABLE:-FlClash}"
+  mkdir -p "$(dirname "$target")"
+  cat > "$target" <<EOF
+[Desktop Entry]
+Name=FlClash
+Comment=Cross-platform proxy client
+Exec=$executable %U
+Icon=FlClash
+Terminal=false
+Type=Application
+Categories=Network;
+StartupNotify=true
+EOF
+  chmod 0644 "$target"
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "$(dirname "$target")"
+  fi
+  info "Registered FlClash desktop entry: $target"
+}

@@ -44,3 +44,11 @@ myunix-portal-login
 If it reports that no sign-in page was found, open the network's portal page
 through the normal `nm-applet` controls or report the response shape before
 adding any network-specific handling.
+
+## Repairing the integration
+
+Choose **Network and captive portal → Captive portal login integration** in
+`./scripts/myunix fix` when the managed command, Wi-Fi Login desktop entry, or
+user autostart file is missing. The repair shows its plan before confirmation,
+restores only these module-owned files, and requires a logout/login for the
+autostart entry to be loaded.

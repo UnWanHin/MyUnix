@@ -32,3 +32,8 @@ jetcode .
 
 The Toolbox binary itself is installed locally and is not copied into Git;
 only the installer behavior and `jet` shell function are synchronized.
+
+If the user-level launcher drifts, rerun the module to regenerate its desktop
+entry and icon metadata. The interactive `./scripts/myunix fix` command is
+confirmation-gated for bounded desktop integration repairs; it never scans
+Toolbox account data or IDE caches.

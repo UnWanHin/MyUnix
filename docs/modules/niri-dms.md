@@ -20,6 +20,12 @@ Niri graphical session; it does not replace GDM or change the display manager.
 If DMS is missing after an earlier installation, run that command once and
 log out/in again.
 
+The interactive `./scripts/myunix fix` menu keeps session repairs separate
+from application repairs. Input-method repairs do not rewrite Niri config;
+use the Niri + DMS category when a MyUnix-owned Fcitx5 startup fragment or
+session binding needs attention. Every repair shows its diagnosis and plan
+before confirmation.
+
 Run the input-method module before using Chinese input. The Niri module imports the reviewed Niri/DMS `.kdl` files from `modules/niri-dms/config/niri/`, backing up any existing `config.kdl` and `dms/` directory below `~/.local/state/myunix/backups/niri-dms/`. It then configures the Niri session to start Fcitx5 and exports `XMODIFIERS=@im=fcitx`, `QT_IM_MODULE=fcitx`, and `QT_IM_MODULES=wayland;fcitx`. It deliberately does not globally set `GTK_IM_MODULE`; native GTK Wayland applications use Niri's text-input-v3 route.
 
 Rerun the module safely after DMS creates `~/.config/niri/config.kdl`:

@@ -116,3 +116,96 @@ run bash -c '
 '
 assert_status 2
 assert_output_contains 'Invalid repair category'
+
+repair_home="$temporary_dir/repair-home"
+codex_trace="$temporary_dir/codex.trace"
+mkdir -p "$repair_home"
+
+run env HOME="$repair_home" XDG_DATA_HOME="$repair_home/.local/share" MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c "
+  source '$PROJECT_ROOT/scripts/myunix'
+  expected='codex-fedora
+development-toolchain
+flclash-launcher
+portal-login
+wechat-cangjie'
+  actual=\"\$(fix_repair_ids | sort)\"
+  test \"\$actual\" = \"\$expected\"
+  while IFS= read -r repair_id; do
+    suffix=\"\${repair_id//-/_}\"
+    declare -F \"fix_diagnose_\$suffix\" >/dev/null
+    declare -F \"fix_plan_\$suffix\" >/dev/null
+    declare -F \"fix_apply_\$suffix\" >/dev/null
+    declare -F \"fix_verify_\$suffix\" >/dev/null
+  done <<< \"\$actual\"
+  ! fix_diagnose_wechat_cangjie
+  test ! -e \"\$HOME/.config/fcitx5/profile\"
+  test ! -e \"\$HOME/.local/share/applications/wechat.desktop\"
+"
+assert_status 0
+
+run env HOME="$repair_home" XDG_DATA_HOME="$repair_home/.local/share" MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 MYUNIX_FIX_TEST_CONFIRM=n bash -c '
+  source "'$PROJECT_ROOT'/scripts/myunix"
+  fix_run_selected wechat-cangjie
+'
+assert_status 0
+assert_output_contains 'Plan:'
+assert_output_contains 'cancelled'
+
+run env HOME="$repair_home" XDG_DATA_HOME="$repair_home/.local/share" MYUNIX_SOURCE_ONLY=1 bash -c '
+  source "'$PROJECT_ROOT'/scripts/lib/core.sh"
+  source "'$PROJECT_ROOT'/modules/rpm/install.sh"
+  install_flclash_desktop_entry
+  launcher="${XDG_DATA_HOME:-$HOME/.local/share}/applications/flclash.desktop"
+  grep -Fqx "Name=FlClash" "$launcher"
+  grep -Fqx "Exec=FlClash %U" "$launcher"
+  test ! -e "$HOME/.config/FlClash"
+'
+assert_status 0
+
+run env HOME="$repair_home" XDG_DATA_HOME="$repair_home/.local/share" MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
+  source "'$PROJECT_ROOT'/scripts/myunix"
+  calls=()
+  install_input_methods() { calls+=(input-methods); }
+  install_input_method_app_overrides() { calls+=(app-overrides); }
+  install_portal_login() { calls+=(portal-login); }
+  install_codex_fedora() { calls+=(codex-fedora); }
+  install_development_toolchain() { calls+=(development-toolchain); }
+  fix_apply_wechat_cangjie
+  test "${calls[*]}" = "input-methods app-overrides"
+'
+assert_status 0
+
+run env HOME="$repair_home" XDG_DATA_HOME="$repair_home/.local/share" MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
+  source "'$PROJECT_ROOT'/scripts/myunix"
+  calls=()
+  rpm() { [[ "${1:-}" == -q && "${2:-}" == FlClash ]]; }
+  install_flclash_desktop_entry() {
+    calls+=(flclash-desktop)
+    mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+    : > "${XDG_DATA_HOME:-$HOME/.local/share}/applications/flclash.desktop"
+  }
+  install_rpm_record() { calls+=(rpm-reinstall); return 99; }
+  fix_apply_flclash_launcher
+  test "${calls[*]}" = "flclash-desktop"
+  test -f "${XDG_DATA_HOME:-$HOME/.local/share}/applications/flclash.desktop"
+  test ! -e "$HOME/.config/FlClash"
+'
+assert_status 0
+
+run env HOME="$repair_home" XDG_DATA_HOME="$repair_home/.local/share" MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 CODEX_TRACE="$codex_trace" bash -c '
+  source "'$PROJECT_ROOT'/scripts/myunix"
+  node() { :; }
+  npm() { :; }
+  codex() { [[ "${1:-}" != *auth* ]]; }
+  install_codex_fedora() { printf "%s\n" codex-installer; }
+  mkdir -p "$HOME/.codex"
+  printf "%s\n" '{"sentinel":"do-not-read"}' > "$HOME/.codex/auth.json"
+  exec 9>"$CODEX_TRACE"
+  export BASH_XTRACEFD=9
+  set -x
+  fix_diagnose_codex_fedora
+  fix_apply_codex_fedora
+  set +x
+  ! grep -Fq ".codex/auth.json" "$CODEX_TRACE"
+'
+assert_status 0

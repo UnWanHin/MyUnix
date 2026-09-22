@@ -38,3 +38,12 @@ Only applications listed in `modules/input-method/app-profiles.tsv` receive an o
 ```
 
 Existing user launcher overrides are backed up below `~/.local/state/myunix/backups/input-method/<timestamp>/desktop-launchers/`. The profiles and public Fcitx configuration migrate with MyUnix; chat accounts, cookies, message data, and launcher caches do not.
+
+## Repairing input compatibility
+
+Run `./scripts/myunix fix` and choose **Input method and application
+compatibility → WeChat / Cangjie compatibility** when the public Fcitx5
+profile or WeChat launcher override is missing. The repair is confirmation-
+gated, uses this module's installer, and never touches WeChat login data. Log
+out and back in after applying it; a missing Niri session fragment belongs to
+the Niri + DMS module.
