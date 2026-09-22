@@ -31,6 +31,9 @@ which installer mode exposes each capability.
 
 The Niri/DMS and Phone Connect modules cooperate through an optional Niri
 include, but Phone Connect remains the owner of its `kdeconnect.kdl` fragment.
-See [[session]] and [[recovery]].
+The interactive `./scripts/myunix fix` command owns diagnosis and
+confirmation-gated repair of managed local configuration; it does not cross
+module boundaries to restore FlClash subscriptions, login/account state, or
+secrets. See [[session]] and [[recovery]].
 
 #modules #ownership #migration

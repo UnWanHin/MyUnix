@@ -36,6 +36,7 @@ portable changes into the owning manifest before committing.
 ./scripts/myunix install --module codex-fedora
 ./scripts/myunix install --module codex-super-bullet
 ./scripts/myunix retry
+./scripts/myunix fix
 ```
 
 The first menu uses `↑`/`↓` to move, `Space` to toggle a choice and `Enter` to
@@ -87,6 +88,13 @@ download timeout. Override them only when necessary:
 MYUNIX_NETWORK_ATTEMPTS=5 MYUNIX_DNF_TIMEOUT_SECONDS=2400 ./scripts/myunix install --all
 MYUNIX_DOWNLOAD_TIMEOUT_SECONDS=900 ./scripts/myunix install --module rpm
 ```
+
+Use `./scripts/myunix fix` for interactive, confirmation-gated repair. It
+opens a category menu, diagnoses the selected repair before showing its plan,
+and asks for confirmation before making changes; this is separate from both
+installation and `./scripts/myunix retry`. Repairs are limited to the managed
+local configuration they name. In particular, the flow intentionally does
+not restore FlClash subscriptions, login/account state, or secrets.
 
 Direct RPM applications are declared in `modules/rpm/apps.tsv`. Add only official HTTPS sources with a pinned SHA-256; packages are downloaded to a temporary directory with `wget`, verified, installed through DNF, and removed. [Feishu](docs/modules/feishu.md) is documented separately because its official page issues short-lived signed RPM URLs that cannot safely live in a reusable manifest. See [module documentation](docs/modules/) for details.
 

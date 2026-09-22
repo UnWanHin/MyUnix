@@ -108,6 +108,10 @@ run "$PROJECT_ROOT/scripts/myunix" fix unexpected
 assert_status 2
 assert_output_contains 'Usage: myunix fix'
 
+run "$PROJECT_ROOT/scripts/myunix" unknown-command
+assert_status 2
+assert_output_contains 'Usage: myunix {doctor|install|export|retry|fix|rollback}'
+
 run bash -c '
   source "'$PROJECT_ROOT'/scripts/lib/core.sh"
   source "'$PROJECT_ROOT'/scripts/lib/ui.sh"
