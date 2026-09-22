@@ -182,19 +182,38 @@ fix_wechat_fcitx_profile_path() {
   printf '%s\n' "${MYUNIX_FCITX_PROFILE:-$HOME/.config/fcitx5/profile}"
 }
 
-fix_wechat_launcher_path() {
-  printf '%s\n' "${XDG_DATA_HOME:-$HOME/.local/share}/applications/wechat.desktop"
+fix_wechat_launcher_override_path() {
+  local desktop_file=$1
+  printf '%s\n' "${XDG_DATA_HOME:-$HOME/.local/share}/applications/$desktop_file"
 }
 
-fix_niri_config_path() {
-  printf '%s\n' "${MYUNIX_NIRI_CONFIG:-${MYUNIX_NIRI_CONFIG_DIR:-$HOME/.config/niri}/config.kdl}"
+fix_wechat_installed_launcher_variants() {
+  if declare -F input_method_installed_launcher_variants >/dev/null 2>&1; then
+    input_method_installed_launcher_variants wechat
+    return
+  fi
+
+  local system_dir flatpak_user_dir source_dir desktop_file
+  system_dir="${MYUNIX_SYSTEM_APPLICATIONS_DIR:-/usr/share/applications}"
+  flatpak_user_dir="${MYUNIX_FLATPAK_USER_APPLICATIONS_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/flatpak/exports/share/applications}"
+  while IFS='|' read -r source_dir desktop_file; do
+    [[ -f "$source_dir/$desktop_file" ]] || continue
+    printf '%s|%s|qt-fcitx\n' "$desktop_file" "$source_dir/$desktop_file"
+  done < <(
+    printf '%s\n' "$system_dir|wechat.desktop"
+    printf '%s\n' "$flatpak_user_dir|com.tencent.WeChat.desktop"
+    if [[ -n "${MYUNIX_FLATPAK_SYSTEM_APPLICATIONS_DIR:-}" ]]; then
+      printf '%s|%s\n' "$MYUNIX_FLATPAK_SYSTEM_APPLICATIONS_DIR" com.tencent.WeChat.desktop
+    else
+      printf '%s|%s\n' /var/lib/flatpak/exports/share/applications com.tencent.WeChat.desktop
+      printf '%s|%s\n' /usr/share/flatpak/exports/share/applications com.tencent.WeChat.desktop
+    fi
+  )
 }
 
 fix_diagnose_wechat_cangjie() {
-  local missing=0 profile launcher niri_config
+  local missing=0 profile launcher desktop_file source_launcher variants
   profile="$(fix_wechat_fcitx_profile_path)"
-  launcher="$(fix_wechat_launcher_path)"
-  niri_config="$(fix_niri_config_path)"
 
   if command -v fcitx5 >/dev/null 2>&1; then
     printf '%s\n' '  - fcitx5: installed'
@@ -214,27 +233,30 @@ fix_diagnose_wechat_cangjie() {
     printf '%s\n' "  - Fcitx5 Cangjie profile: missing ($profile)"
     missing=1
   fi
-  if [[ -f "$launcher" ]]; then
-    printf '%s\n' "  - WeChat launcher override: present ($launcher)"
-  else
-    printf '%s\n' "  - WeChat launcher override: missing ($launcher)"
+
+  variants="$(fix_wechat_installed_launcher_variants)"
+  if [[ -z "$variants" ]]; then
+    printf '%s\n' '  - WeChat launcher source: no supported RPM or Flatpak launcher installed'
     missing=1
-  fi
-  if [[ -f "$niri_config" ]] && grep -Fq 'spawn-at-startup "fcitx5" "-d"' "$niri_config" \
-    && grep -Fq 'XMODIFIERS "@im=fcitx"' "$niri_config" \
-    && grep -Fq 'QT_IM_MODULE "fcitx"' "$niri_config"; then
-    printf '%s\n' "  - Niri Fcitx session configuration: present ($niri_config)"
   else
-    printf '%s\n' "  - Niri Fcitx session configuration: missing or incomplete ($niri_config)"
-    missing=1
+    while IFS='|' read -r desktop_file source_launcher _; do
+      [[ -n "$desktop_file" && -n "$source_launcher" ]] || continue
+      launcher="$(fix_wechat_launcher_override_path "$desktop_file")"
+      if [[ -f "$launcher" ]]; then
+        printf '%s\n' "  - WeChat launcher override: present ($launcher; source $source_launcher)"
+      else
+        printf '%s\n' "  - WeChat launcher override: missing ($launcher; source $source_launcher)"
+        missing=1
+      fi
+    done <<< "$variants"
   fi
   return "$missing"
 }
 
 fix_plan_wechat_cangjie() {
   cat <<'EOF'
-Install the Cangjie Fcitx5 packages and regenerate the public Fcitx5 profile, then install the managed WeChat launcher override.
-No Niri configuration is rewritten by this repair; use the Niri + DMS module for a missing session fragment.
+Install the Cangjie Fcitx5 packages and regenerate the public Fcitx5 profile, then install managed WeChat launcher overrides for each installed RPM or Flatpak launcher variant.
+No Niri configuration is diagnosed or rewritten by this repair; use the Niri + DMS module for a missing session fragment.
 Log out and back in to reload Fcitx5 and application environment variables.
 EOF
 }
@@ -245,10 +267,16 @@ fix_apply_wechat_cangjie() {
 }
 
 fix_verify_wechat_cangjie() {
-  local profile launcher
+  local profile variants desktop_file source_launcher launcher
   profile="$(fix_wechat_fcitx_profile_path)"
-  launcher="$(fix_wechat_launcher_path)"
-  [[ -f "$profile" ]] && grep -Fqx 'Name=cangjie5' "$profile" && [[ -f "$launcher" ]]
+  [[ -f "$profile" ]] && grep -Fqx 'Name=cangjie5' "$profile" || return 1
+  variants="$(fix_wechat_installed_launcher_variants)"
+  [[ -n "$variants" ]] || return 1
+  while IFS='|' read -r desktop_file source_launcher _; do
+    [[ -n "$desktop_file" && -n "$source_launcher" ]] || continue
+    launcher="$(fix_wechat_launcher_override_path "$desktop_file")"
+    [[ -f "$launcher" ]] || return 1
+  done <<< "$variants"
 }
 
 fix_flclash_desktop_entry_path() {

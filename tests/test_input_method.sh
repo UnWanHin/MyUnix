@@ -87,3 +87,46 @@ run env \
   '
 assert_status 0
 assert_output_contains 'Input method packages installed'
+
+temporary_flatpak_user="$(mktemp -d)"
+mkdir -p \
+  "$temporary_flatpak_user/home/.local/share/flatpak/exports/share/applications" \
+  "$temporary_flatpak_user/home/.local/share/applications"
+printf '%s\n' \
+  '[Desktop Entry]' \
+  'Name=WeChat' \
+  'Exec=/app/bin/wechat %U' \
+  'Type=Application' \
+  > "$temporary_flatpak_user/home/.local/share/flatpak/exports/share/applications/com.tencent.WeChat.desktop"
+run env \
+  HOME="$temporary_flatpak_user/home" \
+  XDG_DATA_HOME="$temporary_flatpak_user/home/.local/share" \
+  MYUNIX_SYSTEM_APPLICATIONS_DIR="$temporary_flatpak_user/no-rpm" \
+  MYUNIX_FLATPAK_SYSTEM_APPLICATIONS_DIR="$temporary_flatpak_user/no-system-flatpak" \
+  bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/input-method/install.sh'; install_input_method_app_overrides"
+assert_status 0
+assert_equals \
+  'Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx /app/bin/wechat %U' \
+  "$(rg '^Exec=' "$temporary_flatpak_user/home/.local/share/applications/com.tencent.WeChat.desktop")"
+
+temporary_flatpak_system="$(mktemp -d)"
+mkdir -p \
+  "$temporary_flatpak_system/home/.local/share/applications" \
+  "$temporary_flatpak_system/var/lib/flatpak/exports/share/applications"
+printf '%s\n' \
+  '[Desktop Entry]' \
+  'Name=WeChat' \
+  'Exec=/system/app/bin/wechat %U' \
+  'Type=Application' \
+  > "$temporary_flatpak_system/var/lib/flatpak/exports/share/applications/com.tencent.WeChat.desktop"
+run env \
+  HOME="$temporary_flatpak_system/home" \
+  XDG_DATA_HOME="$temporary_flatpak_system/home/.local/share" \
+  MYUNIX_SYSTEM_APPLICATIONS_DIR="$temporary_flatpak_system/no-rpm" \
+  MYUNIX_FLATPAK_USER_APPLICATIONS_DIR="$temporary_flatpak_system/no-user-flatpak" \
+  MYUNIX_FLATPAK_SYSTEM_APPLICATIONS_DIR="$temporary_flatpak_system/var/lib/flatpak/exports/share/applications" \
+  bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/input-method/install.sh'; install_input_method_app_overrides"
+assert_status 0
+assert_equals \
+  'Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx /system/app/bin/wechat %U' \
+  "$(rg '^Exec=' "$temporary_flatpak_system/home/.local/share/applications/com.tencent.WeChat.desktop")"

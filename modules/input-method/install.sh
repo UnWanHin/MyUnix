@@ -88,6 +88,34 @@ input_method_system_applications_dir() {
   printf '%s\n' "${MYUNIX_SYSTEM_APPLICATIONS_DIR:-/usr/share/applications}"
 }
 
+input_method_flatpak_user_applications_dir() {
+  printf '%s\n' "${MYUNIX_FLATPAK_USER_APPLICATIONS_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/flatpak/exports/share/applications}"
+}
+
+input_method_flatpak_system_applications_dir() {
+  if [[ -n "${MYUNIX_FLATPAK_SYSTEM_APPLICATIONS_DIR:-}" ]]; then
+    printf '%s\n' "$MYUNIX_FLATPAK_SYSTEM_APPLICATIONS_DIR"
+  else
+    printf '%s\n' /var/lib/flatpak/exports/share/applications
+    printf '%s\n' /usr/share/flatpak/exports/share/applications
+  fi
+}
+
+input_method_launcher_source_dirs() {
+  case "${1:-}" in
+    system)
+      input_method_system_applications_dir
+      ;;
+    flatpak)
+      input_method_flatpak_user_applications_dir
+      input_method_flatpak_system_applications_dir
+      ;;
+    *)
+      die "Unknown input-method launcher source: $1"
+      ;;
+  esac
+}
+
 input_method_user_applications_dir() {
   printf '%s\n' "${XDG_DATA_HOME:-$HOME/.local/share}/applications"
 }
@@ -142,27 +170,53 @@ render_input_method_launcher() {
 }
 
 install_input_method_app_overrides() {
-  local profiles system_dir target_dir id desktop_file profile source_launcher target_launcher temporary
+  local profiles target_dir id desktop_file profile source_kind source_dir source_launcher target_launcher temporary
+  local -A seen_desktop_files=()
   profiles="$(input_method_app_profiles_path)"
   [[ -f "$profiles" ]] || die "Missing input-method application profiles: $profiles"
-  system_dir="$(input_method_system_applications_dir)"
   target_dir="$(input_method_user_applications_dir)"
 
-  while IFS='|' read -r id desktop_file profile; do
+  while IFS='|' read -r id desktop_file profile source_kind; do
     [[ -z "$id" || "$id" == \#* ]] && continue
-    source_launcher="$system_dir/$desktop_file"
-    [[ -f "$source_launcher" ]] || continue
-    target_launcher="$target_dir/$desktop_file"
-    mkdir -p "$target_dir"
-    temporary="$(mktemp "${target_launcher}.myunix.XXXXXX")"
-    render_input_method_launcher "$source_launcher" "$temporary" "$profile"
-    if [[ -f "$target_launcher" ]] && cmp -s "$temporary" "$target_launcher"; then
-      rm -f "$temporary"
-      continue
-    fi
-    backup_input_method_launcher "$target_launcher"
-    mv "$temporary" "$target_launcher"
-    info "Installed input-method launcher override for $id"
+    source_kind=${source_kind:-system}
+    while IFS= read -r source_dir; do
+      [[ -n "$source_dir" ]] || continue
+      source_launcher="$source_dir/$desktop_file"
+      [[ -f "$source_launcher" ]] || continue
+      [[ -n "${seen_desktop_files[$desktop_file]:-}" ]] && continue
+      seen_desktop_files[$desktop_file]=1
+      target_launcher="$target_dir/$desktop_file"
+      mkdir -p "$target_dir"
+      temporary="$(mktemp "${target_launcher}.myunix.XXXXXX")"
+      render_input_method_launcher "$source_launcher" "$temporary" "$profile"
+      if [[ -f "$target_launcher" ]] && cmp -s "$temporary" "$target_launcher"; then
+        rm -f "$temporary"
+        continue
+      fi
+      backup_input_method_launcher "$target_launcher"
+      mv "$temporary" "$target_launcher"
+      info "Installed input-method launcher override for $id"
+    done < <(input_method_launcher_source_dirs "$source_kind")
+  done < "$profiles"
+}
+
+input_method_installed_launcher_variants() {
+  local wanted_id=$1 profiles id desktop_file profile source_kind source_dir source_launcher
+  local -A seen_desktop_files=()
+  profiles="$(input_method_app_profiles_path)"
+  [[ -f "$profiles" ]] || die "Missing input-method application profiles: $profiles"
+
+  while IFS='|' read -r id desktop_file profile source_kind; do
+    [[ -z "$id" || "$id" == \#* || "$id" != "$wanted_id" ]] && continue
+    source_kind=${source_kind:-system}
+    while IFS= read -r source_dir; do
+      [[ -n "$source_dir" ]] || continue
+      source_launcher="$source_dir/$desktop_file"
+      [[ -f "$source_launcher" ]] || continue
+      [[ -n "${seen_desktop_files[$desktop_file]:-}" ]] && continue
+      seen_desktop_files[$desktop_file]=1
+      printf '%s|%s|%s\n' "$desktop_file" "$source_launcher" "$profile"
+    done < <(input_method_launcher_source_dirs "$source_kind")
   done < "$profiles"
 }
 

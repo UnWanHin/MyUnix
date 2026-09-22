@@ -143,6 +143,60 @@ wechat-cangjie'
 "
 assert_status 0
 
+flatpak_repair_dir="$temporary_dir/flatpak-repair"
+mkdir -p "$flatpak_repair_dir/user-export" "$flatpak_repair_dir/system-export"
+printf '%s\n' \
+  '[Desktop Entry]' \
+  'Name=WeChat' \
+  'Exec=/app/bin/wechat %U' \
+  'Type=Application' \
+  > "$flatpak_repair_dir/user-export/com.tencent.WeChat.desktop"
+run env \
+  HOME="$repair_home" \
+  XDG_DATA_HOME="$repair_home/.local/share" \
+  MYUNIX_SYSTEM_APPLICATIONS_DIR="$flatpak_repair_dir/no-rpm" \
+  MYUNIX_FLATPAK_USER_APPLICATIONS_DIR="$flatpak_repair_dir/user-export" \
+  MYUNIX_FLATPAK_SYSTEM_APPLICATIONS_DIR="$flatpak_repair_dir/system-export" \
+  MYUNIX_FIX_TEST_CONFIRM=y \
+  MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
+    source "'$PROJECT_ROOT'/scripts/myunix"
+    fcitx5() { :; }
+    rpm() {
+      [[ "${1:-}" == -q && ( "${2:-}" == fcitx5-chinese-addons || "${2:-}" == fcitx5-table-extra ) ]]
+    }
+    mkdir -p "$HOME/.config/fcitx5"
+    install_input_methods() {
+      mkdir -p "$HOME/.config/fcitx5"
+      printf "%s\\n" Name=cangjie5 > "$HOME/.config/fcitx5/profile"
+    }
+    ! fix_diagnose_wechat_cangjie
+    fix_run_selected wechat-cangjie
+    test -f "$HOME/.local/share/applications/com.tencent.WeChat.desktop"
+    grep -Fqx "Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx /app/bin/wechat %U" "$HOME/.local/share/applications/com.tencent.WeChat.desktop"
+    fix_verify_wechat_cangjie
+  '
+assert_status 0
+assert_output_contains 'repaired and verified'
+
+run env \
+  HOME="$repair_home" \
+  XDG_DATA_HOME="$repair_home/.local/share" \
+  MYUNIX_SYSTEM_APPLICATIONS_DIR="$flatpak_repair_dir/no-rpm" \
+  MYUNIX_FLATPAK_USER_APPLICATIONS_DIR="$flatpak_repair_dir/user-export" \
+  MYUNIX_FLATPAK_SYSTEM_APPLICATIONS_DIR="$flatpak_repair_dir/system-export" \
+  MYUNIX_NIRI_CONFIG="$flatpak_repair_dir/missing-niri-config" \
+  MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 bash -c '
+    source "'$PROJECT_ROOT'/scripts/myunix"
+    fcitx5() { :; }
+    rpm() {
+      [[ "${1:-}" == -q && ( "${2:-}" == fcitx5-chinese-addons || "${2:-}" == fcitx5-table-extra ) ]]
+    }
+    output="$(fix_diagnose_wechat_cangjie || true)"
+    [[ "$output" != *Niri* ]]
+    [[ "$output" != *niri* ]]
+  '
+assert_status 0
+
 run env HOME="$repair_home" XDG_DATA_HOME="$repair_home/.local/share" MYUNIX_TEST_MODE=fedora MYUNIX_SOURCE_ONLY=1 MYUNIX_FIX_TEST_CONFIRM=n bash -c '
   source "'$PROJECT_ROOT'/scripts/myunix"
   fix_run_selected wechat-cangjie

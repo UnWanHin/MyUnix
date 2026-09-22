@@ -26,9 +26,9 @@ MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=0 ./scripts/myunix install --module i
 
 ## Application compatibility launchers
 
-Some proprietary desktop clients use a toolkit-specific input-method path even inside a correct Niri/Fcitx5 session. The module manages reviewed user launcher overrides below `~/.local/share/applications/`; it never edits distributor files below `/usr/share/applications/`.
+Some proprietary desktop clients use a toolkit-specific input-method path even inside a correct Niri/Fcitx5 session. The module manages reviewed user launcher overrides below `~/.local/share/applications/`; it never edits distributor files below `/usr/share/applications/` or Flatpak export directories.
 
-- **WeChat** uses the `qt-fcitx` profile, which launches it with Fcitx Qt variables including `QT_IM_MODULES=fcitx`.
+- **WeChat** uses the `qt-fcitx` profile, which launches it with Fcitx Qt variables including `QT_IM_MODULES=fcitx`. The allowlist supports the RPM launcher `/usr/share/applications/wechat.desktop` and the Flatpak launcher `com.tencent.WeChat.desktop`; Flatpak sources are discovered from the standard per-user and system export directories, and each discovered variant receives a matching user override.
 - **QQ** uses the `electron-wayland-ime` profile, which keeps Electron's Wayland auto-selection and adds `--enable-wayland-ime`.
 
 Only applications listed in `modules/input-method/app-profiles.tsv` receive an override. Native Wayland GTK applications remain untouched, and MyUnix does not globally force `GTK_IM_MODULE`. If an application is installed after the input-method module, rerun:
@@ -43,7 +43,8 @@ Existing user launcher overrides are backed up below `~/.local/state/myunix/back
 
 Run `./scripts/myunix fix` and choose **Input method and application
 compatibility → WeChat / Cangjie compatibility** when the public Fcitx5
-profile or WeChat launcher override is missing. The repair is confirmation-
-gated, uses this module's installer, and never touches WeChat login data. Log
-out and back in after applying it; a missing Niri session fragment belongs to
-the Niri + DMS module.
+profile or an installed WeChat launcher override is missing. The repair
+detects the installed RPM or Flatpak launcher variant, is confirmation-gated,
+uses this module's installer, and never touches WeChat login data. Log out and
+back in after applying it; Niri session configuration is diagnosed and repaired
+separately by the Niri + DMS module.
