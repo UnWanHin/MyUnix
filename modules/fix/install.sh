@@ -189,7 +189,15 @@ run_fix() {
     repair_id="$(fix_choose_repair "$category")" || return $?
     [[ "$repair_id" != back ]] || continue
     fix_run_selected "$repair_id" || result=$?
+    fix_acknowledge_result || return $?
   done
+}
+
+fix_acknowledge_result() {
+  local _answer
+  printf '\nPress Enter to return to categories. ' >&2
+  IFS= read -rs _answer || return $?
+  printf '\n' >&2
 }
 
 fix_wechat_fcitx_profile_path() {
@@ -226,7 +234,7 @@ fix_wechat_installed_launcher_variants() {
 }
 
 fix_diagnose_wechat_cangjie() {
-  local missing=0 profile launcher desktop_file source_launcher variants
+  local missing=0 profile launcher desktop_file source_launcher launcher_profile variants
   profile="$(fix_wechat_fcitx_profile_path)"
 
   if command -v fcitx5 >/dev/null 2>&1; then
@@ -253,13 +261,13 @@ fix_diagnose_wechat_cangjie() {
     printf '%s\n' '  - WeChat launcher source: no supported RPM or Flatpak launcher installed'
     missing=1
   else
-    while IFS='|' read -r desktop_file source_launcher _; do
+    while IFS='|' read -r desktop_file source_launcher launcher_profile; do
       [[ -n "$desktop_file" && -n "$source_launcher" ]] || continue
       launcher="$(fix_wechat_launcher_override_path "$desktop_file")"
-      if [[ -f "$launcher" ]]; then
+      if input_method_launcher_override_is_healthy "$source_launcher" "$launcher" "$launcher_profile"; then
         printf '%s\n' "  - WeChat launcher override: present ($launcher; source $source_launcher)"
       else
-        printf '%s\n' "  - WeChat launcher override: missing ($launcher; source $source_launcher)"
+        printf '%s\n' "  - WeChat launcher override: missing or stale Fcitx Exec command ($launcher; source $source_launcher)"
         missing=1
       fi
     done <<< "$variants"
@@ -513,12 +521,15 @@ Validate the active Niri configuration and restore missing MyUnix-owned touchpad
 Validate the exact candidate before replacing the config; back up any changed managed file under ~/.local/state/myunix/backups/.
 An invalid user config is reported with its validation output and is never replaced or rewritten by this repair.
 No mouse settings, DMS private state, credentials, or session profiles are changed.
-Reload Niri manually if the session is not running while the repair is applied.
+Fcitx5 startup takes effect on the next Niri login; a config reload does not start Fcitx5.
+Log out and back in, or start Fcitx5 separately with `fcitx5 -d` for the current session. Restart applications to pick up repaired environment settings.
 EOF
 }
 
 fix_apply_niri_config() {
-  fix_apply_niri_managed_config 1
+  fix_apply_niri_managed_config 1 || return $?
+  printf '%s\n' 'Fcitx5 startup takes effect on the next Niri login; a config reload does not start Fcitx5.'
+  printf '%s\n' 'Log out and back in, or start Fcitx5 separately with `fcitx5 -d` for the current session. Restart applications to pick up repaired environment settings.'
 }
 
 fix_apply_niri_managed_config() {
@@ -760,6 +771,7 @@ fix_diagnose_portal_login() {
 fix_plan_portal_login() {
   cat <<'EOF'
 Install the managed NetworkManager applet package and restore the portal-login command, Wi-Fi Login desktop entry, and user autostart entry.
+Back up changed existing managed files under ~/.local/state/myunix/backups/portal-login/ before replacement; leave unchanged files alone.
 The repair does not save or change Wi-Fi credentials or captive-portal account data.
 Log out and back in so the user autostart entry is loaded.
 EOF

@@ -43,12 +43,15 @@ Existing user launcher overrides are backed up below `~/.local/state/myunix/back
 
 Run `./scripts/myunix fix` and choose **Input method and application
 compatibility → WeChat / Cangjie compatibility** when the public Fcitx5
-profile or an installed WeChat launcher override is missing. The repair
+profile or an installed WeChat launcher override is missing or stale. The repair
 detects the installed RPM or Flatpak launcher variant, is confirmation-gated,
 uses this module's installer with an explicit `wechat` application filter,
 and never touches QQ launchers or WeChat login data. It stops on package or
-configuration installation failure; verification repeats every diagnosed
-prerequisite, including Fcitx5 and Cangjie packages. The unfiltered normal
+configuration installation failure, including launcher rendering, backup,
+or replacement errors; it does not report an unsuccessful override as installed.
+Verification repeats every diagnosed prerequisite, including Fcitx5 and Cangjie
+packages, and compares every discovered launcher's `Exec=` commands with the
+rendered Fcitx override for that source. The unfiltered normal
 input-method installation still installs all allowlisted adapters.
 Log out and back in after applying it; use **Niri + DMS session → Niri
 configuration validation** separately to repair Fcitx5 startup/environment.

@@ -125,7 +125,14 @@ Apply this repair? [y/N]
 The menu uses the repository's existing arrow-key selector. Confirmation is a
 separate `y/N` prompt, defaulting to no. The final line identifies one of:
 `repaired and verified`, `diagnosis clean; no change needed`, `cancelled`, or
-`repair failed`, plus a concise next step.
+`repair failed`, plus a concise next step. Each result remains visible until
+the user presses Enter; acknowledgement input is not echoed or returned as a
+selector value. The explicit Back and Exit entries remain available.
+
+Fcitx5 startup repaired by `niri-config` takes effect on the next Niri login;
+a config reload does not rerun `spawn-at-startup`. An existing session needs
+a logout/login, or a separate `fcitx5 -d` start and application restarts for
+the repaired environment.
 
 ## Testing and Verification
 

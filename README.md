@@ -95,7 +95,8 @@ and asks for confirmation before making changes; this is separate from both
 installation and `./scripts/myunix retry`. Repairs are limited to the managed
 local configuration they name. In particular, the flow intentionally does
 not restore FlClash subscriptions, login/account state, or secrets.
-After cancellation or a result, the menu returns to categories. Choose
+After cancellation or any result (including failure), press Enter to return
+to categories; the result and next steps stay visible until then. Choose
 **Back to categories** in an item menu or **Exit** in the category menu.
 
 Direct RPM applications are declared in `modules/rpm/apps.tsv`. Add only official HTTPS sources with a pinned SHA-256; packages are downloaded to a temporary directory with `wget`, verified, installed through DNF, and removed. [Feishu](docs/modules/feishu.md) is documented separately because its official page issues short-lived signed RPM URLs that cannot safely live in a reusable manifest. See [module documentation](docs/modules/) for details.

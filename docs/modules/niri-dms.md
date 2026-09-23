@@ -23,8 +23,9 @@ log out/in again.
 The interactive `./scripts/myunix fix` menu keeps session repairs separate
 from application repairs. Input-method repairs do not rewrite Niri config;
 use **Niri + DMS session → Niri configuration validation** when Fcitx5
-startup/environment or a managed session binding needs attention. Every repair shows its diagnosis and plan
-before confirmation.
+startup/environment or a managed session binding needs attention. Every repair
+shows its diagnosis and plan before confirmation, and waits for Enter after
+reporting the result.
 
 The Niri + DMS repair entries are confirmation-gated and scoped to the public
 session integration:
@@ -39,6 +40,10 @@ session integration:
   and backs up changed managed files under `~/.local/state/myunix/backups/`.
   An invalid user config is never replaced or rewritten. `niri` must be
   available to validate both the original and candidate configuration.
+  Fcitx5 startup takes effect on the next Niri login; reloading the config does
+  not run `spawn-at-startup`. In an existing session, log out and back in, or
+  start Fcitx5 separately with `fcitx5 -d` and restart applications to pick up
+  repaired environment settings.
 - **DMS user service** checks `systemctl --user is-enabled` and
   `systemctl --user is-active`, then enables and starts the existing
   `dms.service` only after confirmation. It never uses `sudo` or reinstalls

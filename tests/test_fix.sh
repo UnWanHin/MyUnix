@@ -93,11 +93,12 @@ run env MYUNIX_SOURCE_ONLY=1 MYUNIX_UI_TEST_MODE=1 MYUNIX_FIX_TEST_CONFIRM=y FIX
   fix_plan_fixture() { printf "%s\n" "write the fixture marker"; }
   fix_apply_fixture() { : > "$FIX_MARKER"; }
   fix_verify_fixture() { test -e "$FIX_MARKER"; }
-  run_fix
+  run_fix <<< "acknowledgement-input-must-not-escape"
   test -e "$FIX_MARKER"
 '
 assert_status 0
 assert_output_contains 'repaired and verified'
+[[ "$OUTPUT" != *'acknowledgement-input-must-not-escape'* ]] || exit 1
 
 run env MYUNIX_UI_TEST_MODE=0 "$PROJECT_ROOT/scripts/myunix" fix
 assert_status 2

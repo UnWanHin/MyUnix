@@ -132,12 +132,12 @@ backup_input_method_launcher() {
   [[ -e "$launcher" ]] || return 0
   backup="$(input_method_launcher_backup_dir)/$(basename "$launcher")"
   [[ -e "$backup" ]] && return 0
-  mkdir -p "$(dirname "$backup")"
+  mkdir -p "$(dirname "$backup")" || return $?
   cp -a "$launcher" "$backup"
 }
 
-render_input_method_launcher() {
-  local source_launcher=$1 target_launcher=$2 profile=$3 temporary prefix electron_flag
+input_method_launcher_content() {
+  local source_launcher=$1 profile=$2 prefix electron_flag
   case "$profile" in
     qt-fcitx)
       prefix='env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx '
@@ -150,7 +150,6 @@ render_input_method_launcher() {
     *) die "Unknown input-method application profile: $profile" ;;
   esac
 
-  temporary="$(mktemp "${target_launcher}.myunix.XXXXXX")"
   awk -v prefix="$prefix" -v electron_flag="$electron_flag" '
     /^Exec=/ {
       command_line = substr($0, 6)
@@ -165,12 +164,34 @@ render_input_method_launcher() {
       next
     }
     { print }
-  ' "$source_launcher" > "$temporary"
-  mv "$temporary" "$target_launcher"
+  ' "$source_launcher"
+}
+
+render_input_method_launcher() {
+  local source_launcher=$1 target_launcher=$2 profile=$3 temporary status
+  temporary="$(mktemp "${target_launcher}.myunix.XXXXXX")" || return $?
+  input_method_launcher_content "$source_launcher" "$profile" > "$temporary" || {
+    status=$?
+    rm -f "$temporary"
+    return "$status"
+  }
+  mv "$temporary" "$target_launcher" || {
+    status=$?
+    rm -f "$temporary"
+    return "$status"
+  }
+}
+
+input_method_launcher_override_is_healthy() {
+  local source_launcher=$1 target_launcher=$2 profile=$3 expected actual
+  [[ -f "$target_launcher" ]] || return 1
+  expected="$(input_method_launcher_content "$source_launcher" "$profile" | grep '^Exec=')" || return $?
+  actual="$(grep '^Exec=' "$target_launcher")" || return $?
+  [[ "$actual" == "$expected" ]]
 }
 
 install_input_method_app_overrides() {
-  local wanted_id=${1:-} profiles target_dir id desktop_file profile source_kind source_dir source_launcher target_launcher temporary
+  local wanted_id=${1:-} profiles target_dir id desktop_file profile source_kind source_dir source_launcher target_launcher temporary status
   local -A seen_desktop_files=()
   profiles="$(input_method_app_profiles_path)"
   [[ -f "$profiles" ]] || die "Missing input-method application profiles: $profiles"
@@ -187,15 +208,27 @@ install_input_method_app_overrides() {
       [[ -n "${seen_desktop_files[$desktop_file]:-}" ]] && continue
       seen_desktop_files[$desktop_file]=1
       target_launcher="$target_dir/$desktop_file"
-      mkdir -p "$target_dir"
-      temporary="$(mktemp "${target_launcher}.myunix.XXXXXX")"
-      render_input_method_launcher "$source_launcher" "$temporary" "$profile"
+      mkdir -p "$target_dir" || return $?
+      temporary="$(mktemp "${target_launcher}.myunix.XXXXXX")" || return $?
+      render_input_method_launcher "$source_launcher" "$temporary" "$profile" || {
+        status=$?
+        rm -f "$temporary"
+        return "$status"
+      }
       if [[ -f "$target_launcher" ]] && cmp -s "$temporary" "$target_launcher"; then
         rm -f "$temporary"
         continue
       fi
-      backup_input_method_launcher "$target_launcher"
-      mv "$temporary" "$target_launcher"
+      backup_input_method_launcher "$target_launcher" || {
+        status=$?
+        rm -f "$temporary"
+        return "$status"
+      }
+      mv "$temporary" "$target_launcher" || {
+        status=$?
+        rm -f "$temporary"
+        return "$status"
+      }
       info "Installed input-method launcher override for $id"
     done < <(input_method_launcher_source_dirs "$source_kind")
   done < "$profiles"

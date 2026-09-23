@@ -51,4 +51,9 @@ Choose **Network and captive portal → Captive portal login integration** in
 `./scripts/myunix fix` when the managed command, Wi-Fi Login desktop entry, or
 user autostart file is missing. The repair shows its plan before confirmation,
 restores only these module-owned files, and requires a logout/login for the
-autostart entry to be loaded.
+autostart entry to be loaded. The owner installer backs up each changed
+existing file under `~/.local/state/myunix/backups/portal-login/` before
+replacement, including customized siblings of a missing file. Files whose
+contents and permissions already match are left untouched. A file-copy,
+backup, replacement, or package failure stops installation without reporting
+success. No network credentials or captive-portal account data are backed up.

@@ -67,6 +67,10 @@ registration helpers. Implement `run_fix` to call `ui_require_interactive`,
 select category then repair, render the diagnostic and plan text, call
 `ui_confirm`, then invoke only the selected repair and verifier. A clean
 diagnostic must print `diagnosis clean; no change needed` and skip confirmation.
+After every selected repair result, including failure, wait for a silent Enter
+acknowledgement before redrawing categories. Keep Back and Exit and do not
+return acknowledgement input as a captured selector value. Exercise this flow
+on a real PTY for success, clean diagnosis, cancellation, and failures.
 
 Add this helper to `scripts/lib/ui.sh`:
 
@@ -215,6 +219,10 @@ fragments separately. `dms-service` checks `systemctl --user is-enabled` and
 `is-active`, then invokes `enable_dms_user_service` plus a start only after
 confirmation. `touchpad-toggle` checks the helper, include and binding; its
 repair recreates only the helper/binding and asks Niri to reload when running.
+Fcitx5 startup restored by `niri-config` takes effect on the next Niri login;
+reloading config does not rerun `spawn-at-startup`. Both the plan and applied
+result must tell an existing-session user to log out/in, or start `fcitx5 -d`
+separately and restart applications for repaired environment settings.
 
 - [ ] **Step 4: Run Niri-focused tests and validation**
 

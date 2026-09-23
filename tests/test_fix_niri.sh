@@ -76,5 +76,18 @@ for scenario in missing-fragment invalid-config invalid-candidate invalid-candid
     esac
   '
   assert_status 0
+  if [[ "$scenario" == fcitx-session ]]; then
+    assert_output_contains 'next Niri login'
+    assert_output_contains 'config reload does not start Fcitx5'
+    assert_output_contains 'Log out and back in'
+    assert_output_contains 'fcitx5 -d'
+  fi
   printf 'PASS: Niri repair %s\n' "$scenario"
 done
+
+run bash -c 'source "'"$PROJECT_ROOT"'/modules/fix/install.sh"; fix_plan_niri_config'
+assert_status 0
+assert_output_contains 'next Niri login'
+assert_output_contains 'config reload does not start Fcitx5'
+assert_output_contains 'Log out and back in'
+assert_output_contains 'fcitx5 -d'
