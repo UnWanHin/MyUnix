@@ -132,3 +132,7 @@ After installing or importing input methods, log out and back in to let the acti
 
 For a navigable overview of the migration system, open this repository as an
 Obsidian vault and start at the [Obsidian migration graph](docs/obsidian/README.md).
+
+For handing the setup to another Fedora machine and bringing reviewed changes
+back later, follow the [cross-device handoff](docs/cross-device-handoff.md)
+runbook.

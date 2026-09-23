@@ -21,5 +21,6 @@ Start with [[workstation]].
 - [[modules]] — module ownership and source manifests.
 - [[session]] — GNOME/Niri/DMS/Fcitx session boundaries.
 - [[recovery]] — export, restore and diagnosis commands.
+- [[../cross-device-handoff|Cross-device handoff]] — two-way transfer between Fedora machines.
 
 #myunix #fedora #migration #obsidian

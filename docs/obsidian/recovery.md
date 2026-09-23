@@ -28,4 +28,7 @@ For phone support, run the separate [[../modules/phone-connect|Phone Connect]]
 module and pair the phone again on the new computer. For the layout and
 shortcut boundaries, see [[session]] and [[modules]].
 
+For the complete two-way workflow between the current and a replacement
+machine, see [[../cross-device-handoff|Cross-device handoff]].
+
 #recovery #export #install #doctor
