@@ -243,6 +243,7 @@ java-25-openjdk-devel
 json-devel
 kbd
 kbd-legacy
+kde-connect
 kdeconnectd
 kernel
 kernel-core

@@ -1,2 +1,4 @@
 # KDE Connect service for DMS Phone Connect on Fedora.
 kdeconnectd
+kde-connect
+fuse-sshfs

@@ -13,7 +13,6 @@ build-tools|package|sqlite-devel
 build-tools|package|libasan
 build-tools|package|libubsan
 build-tools|package|neovim
-build-tools|package|tmux
 build-tools|package|ShellCheck
 build-tools|package|curl
 build-tools|package|wget2-wget

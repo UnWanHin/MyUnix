@@ -19,6 +19,7 @@ desktop settings and exported state from overwriting one another.
 | phone-connect | KDE Connect package, firewall gate and Niri fragment | [[../modules/phone-connect|phone connect]] |
 | portal-login | generic captive-portal launcher for Niri/DMS | [[../modules/portal-login|portal login]] |
 | development-toolchain | complete one-click Fedora compiler/runtime baseline, also available as a separate module | [[../modules/development-toolchain|development toolchain]] |
+| terminal-tools | Optional Fedora CLI productivity tools, Zsh integrations and checksum-pinned lazydocker | [[../modules/terminal-tools|terminal tools]] |
 | distrobox | container tooling for Ubuntu and other distributions | [[../modules/distrobox|distrobox]] |
 | codex-super-bullet | global user-level Codex Luna/Sol execution policy and launcher | [[../modules/codex-super-bullet|codex super bullet]] |
 | codex-fedora | Fedora-native Node/npm runtime and official `@openai/codex` CLI; one-click default, authentication stays local | [[../modules/codex-fedora|Fedora native Codex]] |

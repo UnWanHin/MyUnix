@@ -6,11 +6,12 @@ source "$(dirname "$0")/test_helper.bash"
 module_dir="$PROJECT_ROOT/modules/codex-super-bullet"
 launcher="$module_dir/bin/super-bullet"
 profile="$module_dir/config/super-bullet.config.toml"
+runtime_profile="$module_dir/config/super-bullet.runtime.toml"
 agents="$module_dir/config/AGENTS.md"
 skill="$module_dir/config/skills/super-bullet/SKILL.md"
 installer="$module_dir/install.sh"
 
-for required_file in "$launcher" "$profile" "$agents" "$skill" "$installer"; do
+for required_file in "$launcher" "$profile" "$runtime_profile" "$agents" "$skill" "$installer"; do
   run test -f "$required_file"
   assert_status 0
 done
@@ -27,6 +28,8 @@ assert_status 0
 run grep -F 'model_reasoning_effort = "max"' "$profile"
 assert_status 0
 run grep -F 'multi_agent = true' "$profile"
+assert_status 0
+run grep -F 'sol_model = "gpt-5.6-sol"' "$runtime_profile"
 assert_status 0
 
 run grep -F '关闭 SuperBullet' "$agents"
@@ -85,6 +88,8 @@ assert_status 0
 run test -f "$fake_home/AGENTS.md"
 assert_status 0
 run test -f "$fake_home/super-bullet.config.toml"
+assert_status 0
+run test -f "$fake_home/super-bullet.runtime.toml"
 assert_status 0
 run test -f "$fake_home/skills/super-bullet/SKILL.md"
 assert_status 0
@@ -188,5 +193,39 @@ assert_output_contains "--base $before_commit"
 run env FAKE_CODEX_LOG="$fake_log" MYUNIX_CODEX_BIN="$fake_bin/codex" "$fake_bin/super-bullet" --help
 assert_status 0
 assert_output_contains 'super-bullet run'
+
+run env MYUNIX_CODEX_HOME="$fake_home" XDG_STATE_HOME="$fake_state" MYUNIX_CODEX_BIN="$fake_bin/codex" "$fake_bin/super-bullet" config set sol-model gpt-6-astra
+assert_status 0
+run env MYUNIX_CODEX_HOME="$fake_home" XDG_STATE_HOME="$fake_state" MYUNIX_CODEX_BIN="$fake_bin/codex" "$fake_bin/super-bullet" config show
+assert_status 0
+assert_output_contains 'sol_model=gpt-6-astra'
+run env MYUNIX_CODEX_HOME="$fake_home" XDG_STATE_HOME="$fake_state" FAKE_CODEX_LOG="$fake_log" MYUNIX_CODEX_BIN="$fake_bin/codex" "$fake_bin/super-bullet" exec --luna-model gpt-6-sol --sol-model gpt-6-astra 'temporary model override'
+assert_status 0
+run tail -n 2 "$fake_log"
+assert_status 0
+assert_output_contains 'gpt-6-sol'
+assert_output_contains 'gpt-6-astra'
+
+: > "$fake_log"
+run env FAKE_CODEX_LOG="$fake_log" MYUNIX_CODEX_BIN="$fake_bin/codex" "$fake_bin/super-bullet" exec --luna-model 'not a valid model' 'invalid model'
+assert_status 2
+assert_output_contains 'invalid model name'
+assert_equals '0' "$(wc -l < "$fake_log" | tr -d ' ')"
+
+run env MYUNIX_SUPER_BULLET_LUNA_EFFORT=invalid FAKE_CODEX_LOG="$fake_log" MYUNIX_CODEX_BIN="$fake_bin/codex" "$fake_bin/super-bullet" exec 'invalid environment override'
+assert_status 2
+assert_output_contains 'reasoning effort must be low, medium, high, xhigh, or max'
+assert_equals '0' "$(wc -l < "$fake_log" | tr -d ' ')"
+
+run env MYUNIX_SUPER_BULLET_SOL_MODEL='not a valid model' FAKE_CODEX_LOG="$fake_log" MYUNIX_CODEX_BIN="$fake_bin/codex" "$fake_bin/super-bullet" exec 'invalid Sol environment override'
+assert_status 2
+assert_output_contains 'invalid model name'
+assert_equals '0' "$(wc -l < "$fake_log" | tr -d ' ')"
+
+sed -i 's/^sol_model = .*/sol_model = "not a valid model"/' "$fake_home/super-bullet.runtime.toml"
+run env MYUNIX_CODEX_HOME="$fake_home" FAKE_CODEX_LOG="$fake_log" MYUNIX_CODEX_BIN="$fake_bin/codex" "$fake_bin/super-bullet" exec 'invalid persisted model'
+assert_status 2
+assert_output_contains 'invalid model name'
+assert_equals '0' "$(wc -l < "$fake_log" | tr -d ' ')"
 
 printf 'Codex SuperBullet tests passed.\n'

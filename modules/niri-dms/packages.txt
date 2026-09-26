@@ -5,3 +5,6 @@ quickshell
 kitty
 hyfetch
 zsh
+grim
+slurp
+wl-clipboard

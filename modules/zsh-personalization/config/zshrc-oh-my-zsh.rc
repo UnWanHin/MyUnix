@@ -14,3 +14,8 @@ plugins=(
 
 source "$ZSH/oh-my-zsh.sh"
 [[ -r "$HOME/.p10k.zsh" ]] && source "$HOME/.p10k.zsh"
+
+if (( $+commands[zoxide] )); then
+  eval "$(zoxide init zsh --cmd j)"
+fi
+[[ -r /usr/share/fzf/shell/key-bindings.zsh ]] && source /usr/share/fzf/shell/key-bindings.zsh

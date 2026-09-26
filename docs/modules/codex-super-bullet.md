@@ -19,6 +19,8 @@ The module writes only public templates and a launcher:
 - `${CODEX_HOME:-$HOME/.codex}/super-bullet.config.toml` — a profile layered by
   `codex -p super-bullet`, selecting `gpt-5.6-luna` at maximum reasoning and
   enabling the verified `multi_agent` feature;
+- `${CODEX_HOME:-$HOME/.codex}/super-bullet.runtime.toml` — user-level Luna/Sol
+  model and reasoning defaults used by the launcher;
 - `${CODEX_HOME:-$HOME/.codex}/skills/super-bullet/SKILL.md` — reusable mode
   reference;
 - `$HOME/.local/bin/super-bullet` — command-line entry point.
@@ -37,6 +39,14 @@ super-bullet exec "run the tests"        # Luna, then read-only Sol review
 super-bullet review                       # Sol-only read-only review
 MYUNIX_SUPER_BULLET_REVIEW_EFFORT=max \
   super-bullet review
+super-bullet config show                  # show effective global defaults
+super-bullet config set luna-model gpt-5.6-luna
+super-bullet config set sol-model gpt-5.6-sol
+super-bullet config reset                 # restore shipped defaults
+
+# One-command overrides are temporary and do not change the global file:
+super-bullet exec --luna-model gpt-6-sol --sol-model gpt-6-astra \
+  "review this change"
 ```
 
 The launcher prints `SuperBullet: active — Luna execution` only before a real
@@ -46,7 +56,10 @@ creates commits, Sol reviews the exact range from the pre-task `HEAD`; otherwise
 it uses the uncommitted worktree. Sol is invoked with `gpt-5.6-sol`, high/max
 reasoning, and `--disable multi_agent`; it never edits or auto-fixes findings.
 This Codex CLI does not allow a custom prompt together with `--uncommitted`, so
-`super-bullet review` intentionally takes no prompt.
+`super-bullet review` intentionally takes no prompt. The equivalent temporary
+environment variables are `MYUNIX_SUPER_BULLET_LUNA_MODEL`,
+`MYUNIX_SUPER_BULLET_LUNA_EFFORT`, `MYUNIX_SUPER_BULLET_SOL_MODEL`, and
+`MYUNIX_SUPER_BULLET_SOL_EFFORT`.
 
 ## Conversation override
 

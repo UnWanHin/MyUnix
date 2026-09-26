@@ -1,0 +1,11 @@
+# Fedora CLI productivity tools. lazydocker is installed from a pinned official
+# GitHub release by install.sh because Fedora does not currently package it.
+fzf
+tmux
+mosh
+zoxide
+bat
+btop
+ripgrep
+fd-find
+git-delta

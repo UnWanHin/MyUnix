@@ -24,6 +24,10 @@ codex_super_bullet_state_dir() {
   printf '%s\n' "${MYUNIX_SUPER_BULLET_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/myunix/backups/codex-super-bullet}"
 }
 
+codex_super_bullet_runtime_config() {
+  printf '%s\n' "${MYUNIX_SUPER_BULLET_RUNTIME_CONFIG:-$(codex_super_bullet_home)/super-bullet.runtime.toml}"
+}
+
 codex_super_bullet_backup_dir() {
   if [[ -z "${MYUNIX_SUPER_BULLET_ACTIVE_BACKUP_DIR:-}" ]]; then
     MYUNIX_SUPER_BULLET_ACTIVE_BACKUP_DIR="${MYUNIX_SUPER_BULLET_BACKUP_DIR:-$(codex_super_bullet_state_dir)/$(date +%Y%m%d-%H%M%S)}"
@@ -84,7 +88,7 @@ install_codex_super_bullet_agents() {
 }
 
 install_codex_super_bullet() {
-  local source_dir home bin_dir
+  local source_dir home bin_dir runtime_config
   is_fedora || die 'Fedora is required'
   source_dir="$(codex_super_bullet_source_dir)"
   home="$(codex_super_bullet_home)"
@@ -92,11 +96,16 @@ install_codex_super_bullet() {
 
   [[ -f "$source_dir/AGENTS.md" ]] || die "Missing SuperBullet AGENTS template: $source_dir/AGENTS.md"
   [[ -f "$source_dir/super-bullet.config.toml" ]] || die 'Missing SuperBullet profile template'
+  [[ -f "$source_dir/super-bullet.runtime.toml" ]] || die 'Missing SuperBullet runtime model template'
   [[ -f "$source_dir/skills/super-bullet/SKILL.md" ]] || die 'Missing SuperBullet skill template'
   [[ -f "$(codex_super_bullet_dir)/bin/super-bullet" ]] || die 'Missing SuperBullet launcher'
 
   install_codex_super_bullet_agents "$source_dir/AGENTS.md" "$home/AGENTS.md"
   copy_codex_super_bullet_file "$source_dir/super-bullet.config.toml" "$home/super-bullet.config.toml" 'super-bullet.config.toml'
+  runtime_config="$(codex_super_bullet_runtime_config)"
+  if [[ ! -e "$runtime_config" ]]; then
+    copy_codex_super_bullet_file "$source_dir/super-bullet.runtime.toml" "$runtime_config" 'super-bullet.runtime.toml'
+  fi
   copy_codex_super_bullet_file "$source_dir/skills/super-bullet/SKILL.md" "$home/skills/super-bullet/SKILL.md" 'skills/super-bullet/SKILL.md'
   copy_codex_super_bullet_file "$(codex_super_bullet_dir)/bin/super-bullet" "$bin_dir/super-bullet" 'bin/super-bullet' 1
   info "Codex SuperBullet installed under $home; launcher: $bin_dir/super-bullet"

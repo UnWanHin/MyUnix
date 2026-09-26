@@ -32,6 +32,51 @@ install_niri_dms_touchpad_toggle() {
   chmod 0755 "$target"
 }
 
+install_niri_dms_screenshot_helper() {
+  local module_dir source target
+  module_dir="$(niri_dms_dir)"
+  source="$module_dir/bin/myunix-screenshot-flameshot"
+  target="${MYUNIX_NIRI_DMS_SCREENSHOT_BIN_DIR:-$HOME/.local/bin}/myunix-screenshot-flameshot"
+  [[ -f "$source" ]] || die "Missing Niri screenshot helper: $source"
+  mkdir -p "$(dirname "$target")"
+  cp -a "$source" "$target"
+  chmod 0755 "$target"
+}
+
+install_niri_dms_screenshot_binding() {
+  local config_dir binding_file temporary backup_dir
+  config_dir="${MYUNIX_NIRI_CONFIG_DIR:-$HOME/.config/niri}"
+  binding_file="$config_dir/dms/binds.kdl"
+  [[ -f "$binding_file" ]] || {
+    info "Niri DMS bindings not found at $binding_file; rerun after DMS creates them."
+    return 0
+  }
+
+  temporary="$(mktemp "${binding_file}.myunix.XXXXXX")"
+  awk '
+    /^[[:space:]]*Mod\+S([[:space:]]|$)/ { next }
+    /^[[:space:]]*Mod\+Shift\+S([[:space:]]|$)/ { next }
+    /^[[:space:]]*}[[:space:]]*$/ && !written {
+      print "    Mod+S hotkey-overlay-title=\"Niri screenshot\" { screenshot; }"
+      print "    Mod+Shift+S hotkey-overlay-title=\"Flameshot (multi-monitor safe)\" { spawn \"sh\" \"-lc\" \"$HOME/.local/bin/myunix-screenshot-flameshot\"; }"
+      written = 1
+    }
+    { print }
+    END { if (!written) exit 2 }
+  ' "$binding_file" > "$temporary" || {
+    rm -f "$temporary"
+    die "Unable to update Niri screenshot bindings: $binding_file"
+  }
+  if cmp -s "$temporary" "$binding_file"; then
+    rm -f "$temporary"
+    return 0
+  fi
+  backup_dir="${MYUNIX_NIRI_DMS_BACKUP_DIR:-$HOME/.local/state/myunix/backups/niri-dms/$(date +%Y%m%d-%H%M%S)}"
+  mkdir -p "$backup_dir"
+  cp -a "$binding_file" "$backup_dir/binds.kdl"
+  mv "$temporary" "$binding_file"
+}
+
 configure_niri_dms_touchpad_toggle_binding() {
   local config_dir binding_file temporary
   # `--all` sets this explicitly. Keep direct module installs useful too:
@@ -170,6 +215,8 @@ install_niri_dms() {
   import_niri_dms_config || return $?
   import_kitty_config || return $?
   install_niri_dms_touchpad_toggle || return $?
+  install_niri_dms_screenshot_helper || return $?
+  install_niri_dms_screenshot_binding || return $?
   configure_niri_dms_touchpad_toggle_binding || return $?
   configure_niri_fcitx_session || return $?
   import_dms_personalization

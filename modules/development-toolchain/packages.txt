@@ -13,7 +13,6 @@ sqlite-devel
 libasan
 libubsan
 neovim
-tmux
 ShellCheck
 curl
 wget2-wget

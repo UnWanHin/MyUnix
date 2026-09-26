@@ -8,7 +8,7 @@ This optional module enables the installed DMS Phone Connect plugin through Fedo
 ./scripts/myunix install --module phone-connect
 ```
 
-The module installs `kdeconnectd`, copies a Niri startup fragment to `~/.config/niri/myunix/kdeconnect.kdl`, and adds an optional include to the main Niri configuration. Log out and back into Niri after installation, then check discovery and paired devices:
+The module installs both `kdeconnectd` (the background service) and `kde-connect` (the `kdeconnect-cli` client plus desktop integration), copies a Niri startup fragment to `~/.config/niri/myunix/kdeconnect.kdl`, and adds an optional include to the main Niri configuration. Log out and back into Niri after installation, then check discovery and paired devices:
 
 ```bash
 kdeconnect-cli -l

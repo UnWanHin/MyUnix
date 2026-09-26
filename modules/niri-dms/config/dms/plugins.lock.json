@@ -1,20 +1,48 @@
 {
   "lockfileVersion": 1,
   "plugins": {
+    "amdGpuMonitor": {
+      "repo": "https://github.com/navidagz/dms-amd-gpu-monitor",
+      "commit": "d0f87efb534b86dc07107288c5f86cfeb7ad9cd2"
+    },
+    "calculator": {
+      "repo": "https://github.com/rochacbruno/DankCalculator",
+      "commit": "1db5865419a40a33171a475855a59e0b8bf7187f"
+    },
     "dankActions": {
       "repo": "https://github.com/AvengeMedia/dms-plugins",
       "path": "DankActions",
-      "commit": "ec1685daf791c5c9d30fd0f3bd7aeafcb063dddd"
+      "commit": "e774a9756f2a50499c37a5513f28bee4ebe81d73"
     },
     "dankGifSearch": {
       "repo": "https://github.com/AvengeMedia/dms-plugins",
       "path": "DankGifSearch",
-      "commit": "ec1685daf791c5c9d30fd0f3bd7aeafcb063dddd"
+      "commit": "e774a9756f2a50499c37a5513f28bee4ebe81d73"
     },
     "dankKDEConnect": {
       "repo": "https://github.com/AvengeMedia/dms-plugins",
       "path": "DankKDEConnect",
-      "commit": "ec1685daf791c5c9d30fd0f3bd7aeafcb063dddd"
+      "commit": "e774a9756f2a50499c37a5513f28bee4ebe81d73"
+    },
+    "dmsThemeSync": {
+      "repo": "https://github.com/arqueon/dms-theme-sync",
+      "commit": "090867723a05271d13c492104cf7c4c28028924b"
+    },
+    "dockerManager": {
+      "repo": "https://github.com/LuckShiba/DmsDockerManager",
+      "commit": "f6f7d94c84510da098980a2bb733137e90f98fd8"
+    },
+    "emojiLauncher": {
+      "repo": "https://github.com/devnullvoid/dms-emoji-launcher",
+      "commit": "8ff394e3ddfcb2fd755ed2e7b4c6f01f3e26e596"
+    },
+    "homeAssistantMonitor": {
+      "repo": "https://github.com/xxyangyoulin/dms-plugin-hass",
+      "commit": "a2370721cdcb96dc37aaae21e32e84cbb4c7c1fa"
+    },
+    "wallpaperCarousel": {
+      "repo": "https://github.com/motor-dev/wallpaperCarousel",
+      "commit": "761ecd1b7f347beee9f17909f8334d987c935a1a"
     }
   }
 }

@@ -53,8 +53,14 @@ run bash -c '
   ! rg -Fx wget "'"$PROJECT_ROOT"'/modules/dnf/core.txt"
   rg -Fx "build-tools|package|wget2-wget" "'"$PROJECT_ROOT"'/modules/development-toolchain/packages.tsv"
   rg -Fx "build-tools|package|ShellCheck" "'"$PROJECT_ROOT"'/modules/development-toolchain/packages.tsv"
+  ! rg -Fx "build-tools|package|tmux" "'"$PROJECT_ROOT"'/modules/development-toolchain/packages.tsv"
+  ! rg -Fx "build-tools|package|fzf" "'"$PROJECT_ROOT"'/modules/development-toolchain/packages.tsv"
   rg -Fx ShellCheck "'"$PROJECT_ROOT"'/modules/development-toolchain/packages.txt"
   rg -Fx wget2-wget "'"$PROJECT_ROOT"'/modules/development-toolchain/packages.txt"
+  rg -Fx fzf "'"$PROJECT_ROOT"'/modules/terminal-tools/packages.txt"
+  rg -Fx tmux "'"$PROJECT_ROOT"'/modules/terminal-tools/packages.txt"
+  ! rg -Fx fzf "'"$PROJECT_ROOT"'/modules/dnf/portable.txt"
+  ! rg -Fx tmux "'"$PROJECT_ROOT"'/modules/dnf/portable.txt"
 '
 assert_status 0
 

@@ -4,6 +4,17 @@ source "$(dirname "$0")/test_helper.bash"
 source "$PROJECT_ROOT/scripts/lib/core.sh"
 source "$PROJECT_ROOT/modules/niri-dms/install.sh"
 
+for plugin in amdGpuMonitor calculator dankActions dankGifSearch dankKDEConnect dmsThemeSync dockerManager emojiLauncher homeAssistantMonitor wallpaperCarousel; do
+  grep -Fxq "$plugin" "$PROJECT_ROOT/modules/niri-dms/plugins.txt" || {
+    printf 'Missing public DMS plugin manifest entry: %s\n' "$plugin" >&2
+    exit 1
+  }
+  jq -e --arg plugin "$plugin" '.plugins[$plugin]' "$PROJECT_ROOT/modules/niri-dms/config/dms/plugins.lock.json" >/dev/null || {
+    printf 'Missing DMS plugin lock entry: %s\n' "$plugin" >&2
+    exit 1
+  }
+done
+
 run env MYUNIX_FEDORA_RELEASE=42 bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; require_dms_supported_fedora"
 assert_status 2
 assert_output_contains 'DMS is supported only on Fedora 43 or 44'
@@ -70,6 +81,17 @@ find "$temporary_dir/home/.local/state/myunix/backups/niri-dms" -type f -name co
 }
 run env HOME="$temporary_dir/home" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; install_niri_dms_touchpad_toggle; test -x \"\$HOME/.local/bin/niri-touchpad-toggle\""
 assert_status 0
+run env HOME="$temporary_dir/home" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; install_niri_dms_screenshot_helper; test -x \"\$HOME/.local/bin/myunix-screenshot-flameshot\""
+assert_status 0
+
+temporary_screenshot_binding="$(mktemp -d)"
+mkdir -p "$temporary_screenshot_binding/home/.config/niri/dms"
+printf '%s\n' 'binds {' '    Mod+S { spawn "flameshot"; }' '    Mod+Shift+S { spawn "old-helper"; }' '}' > "$temporary_screenshot_binding/home/.config/niri/dms/binds.kdl"
+run env HOME="$temporary_screenshot_binding/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_screenshot_binding/home/.config/niri" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; install_niri_dms_screenshot_binding; cat \"\$HOME/.config/niri/dms/binds.kdl\""
+assert_status 0
+assert_output_contains 'Mod+S hotkey-overlay-title="Niri screenshot"'
+assert_output_contains 'Mod+Shift+S hotkey-overlay-title="Flameshot (multi-monitor safe)"'
+[[ "$OUTPUT" != *'old-helper'* ]] || { printf '%s\n' 'Old screenshot binding was not removed' >&2; exit 1; }
 
 temporary_binding="$(mktemp -d)"
 run env HOME="$temporary_binding/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_binding/home/.config/niri" MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=1 bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_touchpad_toggle_binding; cat \"\$MYUNIX_NIRI_CONFIG_DIR/myunix/touchpad-bind.kdl\""

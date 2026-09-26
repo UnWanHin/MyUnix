@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# Flameshot's Wayland portal path currently times out in Niri when more than
+# one output is present. Keep Flameshot as the normal capture UI, but use the
+# compositor-native grim path for multi-output sessions (or when Flameshot
+# returns an error). Multi-output sessions bypass the portal entirely, while a
+# single-output Flameshot session is allowed to remain open until the user
+# finishes selecting and annotating a region.
+
+screenshots_dir() {
+  printf '%s\n' "${MYUNIX_SCREENSHOTS_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots}"
+}
+
+output_count() {
+  local outputs count
+  command -v niri >/dev/null 2>&1 || {
+    printf '%s\n' 1
+    return 0
+  }
+  outputs="$(niri msg -j outputs 2>/dev/null || true)"
+  if [[ -z "$outputs" ]] || ! command -v jq >/dev/null 2>&1; then
+    printf '%s\n' 1
+    return 0
+  fi
+  count="$(jq 'if type == "object" then length else 0 end' <<<"$outputs" 2>/dev/null || printf '%s\n' 0)"
+  [[ "$count" =~ ^[1-9][0-9]*$ ]] || count=1
+  printf '%s\n' "$count"
+}
+
+capture_with_grim() {
+  local directory file geometry
+  command -v grim >/dev/null 2>&1 || {
+    printf '%s\n' 'Multi-monitor fallback requires grim; install the niri-dms module again.' >&2
+    return 127
+  }
+
+  directory="$(screenshots_dir)"
+  mkdir -p "$directory"
+  file="$directory/Screenshot from $(date '+%Y-%m-%d %H-%M-%S').png"
+
+  if command -v slurp >/dev/null 2>&1; then
+    geometry="$(slurp)" || return $?
+    [[ -n "$geometry" ]] || return 0
+    grim -g "$geometry" "$file"
+  else
+    grim "$file"
+  fi
+
+  if command -v wl-copy >/dev/null 2>&1; then
+    wl-copy --type image/png < "$file"
+  fi
+  command -v notify-send >/dev/null 2>&1 && notify-send 'Screenshot saved' "$file"
+}
+
+main() {
+  local count
+  count="$(output_count)"
+  if (( count <= 1 )) && command -v flameshot >/dev/null 2>&1; then
+    if flameshot gui "$@"; then
+      return 0
+    fi
+    printf '%s\n' 'Flameshot failed; using the Wayland screenshot fallback.' >&2
+  fi
+  capture_with_grim
+}
+
+main "$@"

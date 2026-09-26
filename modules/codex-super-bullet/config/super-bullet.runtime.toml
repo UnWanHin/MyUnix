@@ -1,0 +1,5 @@
+# Managed by MyUnix SuperBullet; not read by Codex directly.
+luna_model = "gpt-5.6-luna"
+luna_reasoning_effort = "max"
+sol_model = "gpt-5.6-sol"
+sol_reasoning_effort = "high"

@@ -14,6 +14,12 @@ rerunning the module remains idempotent. `config/dms/plugin-settings.json`
 contains only the reviewed public `dankActions` section; KDE Connect pairing
 identity and all other plugin state remain local.
 
+The public plugin manifest also covers the extra plugins already present on
+this machine: AMD GPU Monitor, Calculator, DMS Theme Sync, Docker Manager,
+Emoji Launcher, Home Assistant Monitor and Wallpaper Carousel. Their lock
+revisions are pinned in `config/dms/plugins.lock.json`; plugin metadata and
+credentials are not copied.
+
 The installer also enables the packaged user-level `dms.service` with
 `systemctl --user enable dms.service`. This starts the DMS bar and UI with the
 Niri graphical session; it does not replace GDM or change the display manager.
@@ -94,10 +100,14 @@ the shortcuts below are the MyUnix-managed DMS and desktop customizations:
 | `Mod+Space` | Open DMS application launcher |
 | `Mod+E` | Open Nautilus file manager |
 | `Alt+E` | Open NetworkManager connection editor |
-| `Mod+S` | Launch Flameshot region screenshot |
+| `Mod+S` | Niri native screenshot; safe with multiple monitors |
+| `Mod+Shift+S` | Flameshot region screenshot; uses a `grim`/`slurp`/`wl-copy` fallback when multiple monitors make the GNOME portal unusable |
+| `Mod+Left` / `Mod+Right` | Focus the column to the left / right |
+| `Mod+Shift+Left` / `Mod+Shift+Right` | Move the focused column left / right |
+| `Mod+F` | Maximize the focused column while retaining the top bar and Firefox chrome |
 | `Mod+F8` | Toggle all touchpads; preserves tap-to-click, drag and natural scrolling settings |
 | `Mod+Shift+T` | Toggle the focused window floating |
-| `Mod+Shift+F` | Toggle fullscreen for the focused window |
+| `Mod+Shift+F` | Toggle true fullscreen for the focused window; it may hide the top bar and Firefox chrome |
 | `Mod+Alt+L` | Lock screen through DMS |
 | `Mod+Comma` | Open DMS settings |
 | `Mod+M` | Toggle DMS process list/task manager |
@@ -188,5 +198,12 @@ Bluetooth and audio-device pins, output/display profiles, wallpaper and custom
 paths, commands, usage histories, notification data, greeter settings, caches
 and generated files. A bar widget ID such as `dankKDEConnect` is only a public
 layout reference; it does not include the paired phone identity.
+
+Useful entry points include `= 3 + 3` in the DMS launcher for Calculator,
+`:e smile` for Emoji Launcher, `dms ipc call dmsThemeSync status` for Theme
+Sync, and `dms ipc wallpaperCarousel toggle` for Wallpaper Carousel. The
+KDE Connect, Docker Manager, AMD GPU Monitor and Home Assistant widgets are
+added from DMS Settings → Bar. External service URLs, tokens and device IDs
+remain local and are never synchronized.
 
 Log out and back into Niri after either session-level change. For Cangjie 5, Fcitx5 uses the internal ID `cangjie5`; on Fedora, `fcitx5-chinese-addons` provides the Table engine and `fcitx5-table-extra` provides the Cangjie table data.

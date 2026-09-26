@@ -19,6 +19,7 @@ rg -Fq '[[../modules/steam|Steam]]' "$PROJECT_ROOT/docs/obsidian/installation-ma
 rg -Fq '[[../modules/time-sync|System time sync]]' "$PROJECT_ROOT/docs/obsidian/installation-map.md"
 rg -Fq '[[../modules/distrobox|Distrobox]]' "$PROJECT_ROOT/docs/obsidian/installation-map.md"
 rg -Fq '[[../modules/development-toolchain|Development Toolchain]]' "$PROJECT_ROOT/docs/obsidian/installation-map.md"
+rg -Fq '[[../modules/terminal-tools|Terminal Tools]]' "$PROJECT_ROOT/docs/obsidian/installation-map.md"
 [[ -f "$PROJECT_ROOT/docs/obsidian/assets/myunix-installation-map.svg" ]] || {
   printf '%s\n' 'Missing Obsidian installation-map SVG' >&2
   exit 1

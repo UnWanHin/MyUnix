@@ -28,6 +28,7 @@ flowchart TD
   Select --> SteamChoice[[Steam]]
   Select --> NiriChoice[[Niri + DMS opt-out / touchpad choice]]
   Select --> Toolchain[[Development Toolchain]]
+  Select --> TerminalTools[[Terminal productivity tools]]
 
   Demand --> RPM[[Direct RPM registry]]
   Demand --> Phone[[Phone Connect]]
@@ -37,6 +38,7 @@ flowchart TD
   Demand --> Toolbox[[JetBrains Toolbox]]
   Demand --> Box[[Distrobox / Ubuntu 22]]
   Demand --> Greeter[[Guarded greeter replacement]]
+  Demand --> TerminalTools
 
   Niri --> Session[[Desktop sessions and shortcuts]]
   Input --> Session
@@ -67,6 +69,7 @@ FlClash 等下載型應用維持為明確管理的選用項，不在基線中偷
 - [[../modules/steam|Steam]]
 - [[../modules/niri-dms|Niri + DMS]]，一鍵安裝預設包含 `Mod+F8` touchpad toggle；自訂安裝可選擇
 - [[../modules/development-toolchain|Development Toolchain]] 的元件與系統／使用者層範圍
+- [[../modules/terminal-tools|Terminal Tools]]，可選 fzf、tmux、mosh、zoxide、bat、btop、ripgrep、fd、delta、lazydocker
 
 GNOME 會保留；Niri 是並存的登入 session。[[session]] 記錄輸入法、
 快捷鍵、DMS personalization 和 KDE Connect 的界線。
@@ -84,6 +87,7 @@ GNOME 會保留；Niri 是並存的登入 session。[[session]] 記錄輸入法�
 | JetBrains Toolbox | [[../modules/jetbrains-toolbox|JetBrains Toolbox]] |
 | Ubuntu container | [[../modules/distrobox|Distrobox]] |
 | Fedora development toolchain and native Codex CLI | [[../modules/development-toolchain|Development Toolchain]]、[[../modules/codex-fedora|Fedora native Codex]] |
+| Zsh/terminal productivity tools | [[../modules/terminal-tools|Terminal Tools]] |
 | Personal Niri/DMS shortcuts | [[../modules/niri-dms|Niri + DMS shortcut reference]] |
 | Global Codex mode | [[../modules/codex-super-bullet|Codex SuperBullet]] |
 | ROS 2 Humble、container Codex | `distrobox-ros2-humble`、`distrobox-codex` modules |

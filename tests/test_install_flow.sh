@@ -69,6 +69,35 @@ assert_output_contains 'module:shell-config'
 assert_output_contains 'module:zsh-personalization'
 assert_output_contains 'module:development-toolchain'
 assert_output_contains 'module:codex-fedora'
+[[ "$OUTPUT" != *'module:terminal-tools'* ]] || {
+  printf '%s\n' 'Terminal tools should stay optional in --all' >&2
+  exit 1
+}
+
+run env MYUNIX_SOURCE_ONLY=1 MYUNIX_TEST_MODE=fedora MYUNIX_STATE_DIR="$temporary/terminal-tools-state" bash -c '
+  source "'"$PROJECT_ROOT"'/scripts/myunix"
+  install_terminal_tools() { printf "terminal-tools installer\n"; }
+  run_module terminal-tools
+'
+assert_status 0
+assert_output_contains 'terminal-tools installer'
+
+run bash -c '
+  export MYUNIX_SOURCE_ONLY=1 MYUNIX_UI_TEST_MODE=1
+  source "'"$PROJECT_ROOT"'/scripts/myunix"
+  ui_choose_many() {
+    case "$1" in
+      "Choose input methods") printf "0\n" ;;
+      "Optional desktop applications"|"Optional desktop modules"|"Optional modules") : ;;
+      "Optional terminal modules") printf "0\n" ;;
+      *) printf "unexpected prompt: %s\n" "$1" >&2; return 1 ;;
+    esac
+  }
+  run_selected_modules() { printf "dispatch:%s\n" "$*"; }
+  run_custom_install
+'
+assert_status 0
+assert_output_contains 'dispatch:terminal-tools'
 
 run bash -c '
   export MYUNIX_SOURCE_ONLY=1 MYUNIX_INSTALL_MODE=all MYUNIX_STATE_DIR="'"$temporary"'/dnf-state"

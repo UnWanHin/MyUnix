@@ -131,7 +131,8 @@ binds {
     Alt+E hotkey-overlay-title="Network Manager" { spawn "sh" "-c" "nm-connection-editor"; }
     Mod+E hotkey-overlay-title="Files" { spawn "sh" "-c" "nautilus"; }
     Mod+F8 repeat=false hotkey-overlay-title="Touchpad" { spawn "sh" "-c" "$HOME/.local/bin/niri-touchpad-toggle"; }
-    Mod+S hotkey-overlay-title="flameshot" { spawn "sh" "-c" "flameshot gui"; }
+    Mod+S hotkey-overlay-title="Niri screenshot" { screenshot; }
+    Mod+Shift+S hotkey-overlay-title="Flameshot (multi-monitor safe)" { spawn "sh" "-lc" "$HOME/.local/bin/myunix-screenshot-flameshot"; }
     Mod+T hotkey-overlay-title="Open Terminal" { spawn "kitty"; }
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
     Mod+O repeat=false { toggle-overview; }

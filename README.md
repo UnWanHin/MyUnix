@@ -30,6 +30,7 @@ portable changes into the owning manifest before committing.
 ./scripts/myunix install --module portal-login
 ./scripts/myunix install --module time-sync
 ./scripts/myunix install --module development-toolchain
+./scripts/myunix install --module terminal-tools
 ./scripts/myunix install --module distrobox
 ./scripts/myunix install --module distrobox-ros2-humble
 ./scripts/myunix install --module distrobox-codex
@@ -59,6 +60,11 @@ command and is never installed automatically.
 The one-click baseline also installs Fedora's `nodejs`/`npm` runtime and the
 official `@openai/codex` CLI through the isolated [Fedora Codex module](docs/modules/codex-fedora.md).
 Run `codex login` once on each machine; credentials are never synchronized.
+
+Optional terminal conveniences (fzf, tmux, mosh, zoxide, bat, btop, ripgrep,
+fd, delta and lazydocker) are available through [Terminal Tools](docs/modules/terminal-tools.md).
+That collection stays out of the one-click baseline unless selected in custom
+installation.
 
 The synchronized [Niri/DMS shortcut list](docs/modules/niri-dms.md#managed-custom-shortcuts)
 documents the personal terminal, launcher, screenshot, touchpad, window and

@@ -27,6 +27,9 @@ for fragment in env.rc aliases.rc functions.rc; do
   }
 done
 
+run env HOME="$temporary_dir/home" bash -c '. "$HOME/.config/.sysrc"; case ":$PATH:" in *":$HOME/.local/bin:"*) exit 0 ;; *) exit 1 ;; esac'
+assert_status 0
+
 printf '%s\n' 'export MYUNIX_SYSRC_TEST=loaded' > "$temporary_dir/home/.config/sysrc.d/env.rc"
 run env HOME="$temporary_dir/home" XDG_CONFIG_HOME="$temporary_dir/other-config" bash -c '. "$HOME/.config/.sysrc"; printf %s "${MYUNIX_SYSRC_TEST:-missing}"'
 assert_status 0

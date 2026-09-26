@@ -1,4 +1,11 @@
 # Public DMS plugins recreated after the Niri + DMS package installation.
+amdGpuMonitor
+calculator
 dankActions
 dankGifSearch
 dankKDEConnect
+dmsThemeSync
+dockerManager
+emojiLauncher
+homeAssistantMonitor
+wallpaperCarousel

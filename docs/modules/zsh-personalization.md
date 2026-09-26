@@ -20,6 +20,10 @@ The shell-neutral aliases/functions remain owned by `shell-config`; this
 module does not sync history, NVM, Ubuntu-only hooks, account data, tokens,
 private keys, or arbitrary custom plugins.
 
+When [Terminal Tools](terminal-tools.md) is selected, this module's managed
+Zsh block also enables fzf key bindings and the `j`/`ji` zoxide commands while
+leaving Oh My Zsh's existing `z` plugin intact.
+
 Use `./scripts/myunix export` to copy only the reviewed Powerlevel10k file back
 to the repository. Source revisions are updated deliberately by changing the
 manifest after reviewing the upstream commit; no unpinned network checkout is
