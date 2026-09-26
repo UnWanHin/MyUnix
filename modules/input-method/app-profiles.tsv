@@ -2,3 +2,4 @@
 wechat|wechat.desktop|qt-fcitx|system
 wechat|com.tencent.WeChat.desktop|qt-fcitx|flatpak
 qq|qq.desktop|electron-wayland-ime|system
+qq|com.qq.QQ.desktop|electron-wayland-ime|flatpak

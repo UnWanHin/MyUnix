@@ -28,8 +28,8 @@ MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=0 ./scripts/myunix install --module i
 
 Some proprietary desktop clients use a toolkit-specific input-method path even inside a correct Niri/Fcitx5 session. The module manages reviewed user launcher overrides below `~/.local/share/applications/`; it never edits distributor files below `/usr/share/applications/` or Flatpak export directories.
 
-- **WeChat** uses the `qt-fcitx` profile, which launches it with Fcitx Qt variables including `QT_IM_MODULES=fcitx`. The allowlist supports the RPM launcher `/usr/share/applications/wechat.desktop` and the Flatpak launcher `com.tencent.WeChat.desktop`; Flatpak sources are discovered from the standard per-user and system export directories, and each discovered variant receives a matching user override. RPM and Flatpak variants may coexist. For the same Flatpak desktop filename the user export takes precedence, then `/var/lib/flatpak/exports/share/applications`, then `/usr/share/flatpak/exports/share/applications`.
-- **QQ** uses the `electron-wayland-ime` profile, which keeps Electron's Wayland auto-selection and adds `--enable-wayland-ime`.
+- **WeChat** (`wechat.desktop` for RPM and `com.tencent.WeChat.desktop` for Flatpak) uses the `qt-fcitx` profile with `XMODIFIERS=@im=fcitx`, `QT_IM_MODULE=fcitx`, and the Niri-compatible `QT_IM_MODULES=wayland;fcitx` chain. Flatpak sources are discovered from per-user and system export directories, with user exports taking precedence.
+- **QQ** (`qq.desktop` for RPM and `com.qq.QQ.desktop` for Flatpak) uses the `electron-wayland-ime` profile, preserving Flatpak's `--file-forwarding` arguments while adding `--enable-wayland-ime` before the forwarding group.
 
 Only applications listed in `modules/input-method/app-profiles.tsv` receive an override. Native Wayland GTK applications remain untouched, and MyUnix does not globally force `GTK_IM_MODULE`. If an application is installed after the input-method module, rerun:
 

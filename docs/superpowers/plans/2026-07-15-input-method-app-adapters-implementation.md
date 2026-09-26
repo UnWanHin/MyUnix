@@ -24,7 +24,7 @@
 - Create: `modules/input-method/app-profiles.tsv`
 - Modify: `tests/test_input_method.sh`
 
-- [ ] **Step 1: Add test desktop files for WeChat, QQ, and a missing app.** Run `install_input_method_app_overrides` with a temporary applications source and XDG data directory. Assert the generated WeChat `Exec=` is `env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx /usr/bin/wechat %U`; assert QQ has `ELECTRON_OZONE_PLATFORM_HINT=auto`, `--enable-wayland-ime`, and `%U`; assert missing desktop files create no override.
+- [ ] **Step 1: Add test desktop files for WeChat, QQ, and a missing app.** Run `install_input_method_app_overrides` with a temporary applications source and XDG data directory. Assert the generated WeChat `Exec=` is `env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx "QT_IM_MODULES=wayland;fcitx" /usr/bin/wechat %U`; assert QQ has `ELECTRON_OZONE_PLATFORM_HINT=auto`, `--enable-wayland-ime`, and `%U`; assert missing desktop files create no override. When `desktop-file-validate` is available, validate both generated launchers.
 
 - [ ] **Step 2: Run `bash tests/test_input_method.sh`; expect failure because the function and registry are missing.**
 

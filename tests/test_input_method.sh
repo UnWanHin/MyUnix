@@ -55,14 +55,28 @@ find "$temporary/home/.local/state/myunix/backups/input-method" -type f -name pr
 }
 
 temporary_apps="$(mktemp -d)"
-mkdir -p "$temporary_apps/system" "$temporary_apps/home/.local/share/applications"
+mkdir -p "$temporary_apps/system" "$temporary_apps/flatpak" "$temporary_apps/home/.local/share/applications"
 printf '%s\n' '[Desktop Entry]' 'Name=wechat' 'Exec=/usr/bin/wechat %U' 'Type=Application' > "$temporary_apps/system/wechat.desktop"
+printf '%s\n' '[Desktop Entry]' 'Name=WeChat Flatpak' 'Exec=/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=wechat --file-forwarding com.tencent.WeChat @@u %U @@' 'Type=Application' > "$temporary_apps/flatpak/com.tencent.WeChat.desktop"
 printf '%s\n' '[Desktop Entry]' 'Name=QQ' 'Exec=/opt/QQ/qq %U' 'Type=Application' > "$temporary_apps/system/qq.desktop"
+printf '%s\n' '[Desktop Entry]' 'Name=QQ Flatpak' 'Exec=/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=qq --file-forwarding com.qq.QQ @@u %U @@' 'Type=Application' > "$temporary_apps/flatpak/com.qq.QQ.desktop"
 printf '%s\n' 'old user launcher' > "$temporary_apps/home/.local/share/applications/wechat.desktop"
-run env HOME="$temporary_apps/home" XDG_DATA_HOME="$temporary_apps/home/.local/share" MYUNIX_SYSTEM_APPLICATIONS_DIR="$temporary_apps/system" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/input-method/install.sh'; install_input_method_app_overrides; install_input_method_app_overrides"
+run env HOME="$temporary_apps/home" XDG_DATA_HOME="$temporary_apps/home/.local/share" MYUNIX_SYSTEM_APPLICATIONS_DIR="$temporary_apps/system" MYUNIX_FLATPAK_USER_APPLICATIONS_DIR="$temporary_apps/no-user-flatpak" MYUNIX_FLATPAK_SYSTEM_APPLICATIONS_DIR="$temporary_apps/flatpak" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/input-method/install.sh'; install_input_method_app_overrides; install_input_method_app_overrides"
 assert_status 0
-assert_equals 'Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx /usr/bin/wechat %U' "$(rg '^Exec=' "$temporary_apps/home/.local/share/applications/wechat.desktop")"
+assert_equals 'Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx "QT_IM_MODULES=wayland;fcitx" /usr/bin/wechat %U' "$(rg '^Exec=' "$temporary_apps/home/.local/share/applications/wechat.desktop")"
+assert_equals 'Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx "QT_IM_MODULES=wayland;fcitx" /usr/bin/flatpak run --branch=stable --arch=x86_64 --command=wechat --file-forwarding com.tencent.WeChat @@u %U @@' "$(rg '^Exec=' "$temporary_apps/home/.local/share/applications/com.tencent.WeChat.desktop")"
 assert_equals 'Exec=env XMODIFIERS=@im=fcitx ELECTRON_OZONE_PLATFORM_HINT=auto /opt/QQ/qq --enable-wayland-ime %U' "$(rg '^Exec=' "$temporary_apps/home/.local/share/applications/qq.desktop")"
+assert_equals 'Exec=env XMODIFIERS=@im=fcitx ELECTRON_OZONE_PLATFORM_HINT=auto /usr/bin/flatpak run --branch=stable --arch=x86_64 --command=qq --file-forwarding com.qq.QQ --enable-wayland-ime @@u %U @@' "$(rg '^Exec=' "$temporary_apps/home/.local/share/applications/com.qq.QQ.desktop")"
+if command -v desktop-file-validate >/dev/null 2>&1; then
+  run desktop-file-validate "$temporary_apps/home/.local/share/applications/wechat.desktop"
+  assert_status 0
+  run desktop-file-validate "$temporary_apps/home/.local/share/applications/com.tencent.WeChat.desktop"
+  assert_status 0
+  run desktop-file-validate "$temporary_apps/home/.local/share/applications/qq.desktop"
+  assert_status 0
+  run desktop-file-validate "$temporary_apps/home/.local/share/applications/com.qq.QQ.desktop"
+  assert_status 0
+fi
 [[ ! -e "$temporary_apps/home/.local/share/applications/missing.desktop" ]] || {
   printf '%s\n' 'Unexpected launcher override for missing application' >&2
   exit 1
@@ -106,7 +120,7 @@ run env \
   bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/input-method/install.sh'; install_input_method_app_overrides"
 assert_status 0
 assert_equals \
-  'Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx /app/bin/wechat %U' \
+  'Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx "QT_IM_MODULES=wayland;fcitx" /app/bin/wechat %U' \
   "$(rg '^Exec=' "$temporary_flatpak_user/home/.local/share/applications/com.tencent.WeChat.desktop")"
 
 temporary_flatpak_system="$(mktemp -d)"
@@ -128,5 +142,5 @@ run env \
   bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/input-method/install.sh'; install_input_method_app_overrides"
 assert_status 0
 assert_equals \
-  'Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx /system/app/bin/wechat %U' \
+  'Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx "QT_IM_MODULES=wayland;fcitx" /system/app/bin/wechat %U' \
   "$(rg '^Exec=' "$temporary_flatpak_system/home/.local/share/applications/com.tencent.WeChat.desktop")"

@@ -380,7 +380,8 @@ run env \
     ! fix_diagnose_wechat_cangjie
     fix_run_selected wechat-cangjie
     test -f "$HOME/.local/share/applications/com.tencent.WeChat.desktop"
-    grep -Fqx "Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx /app/bin/wechat %U" "$HOME/.local/share/applications/com.tencent.WeChat.desktop"
+    expected_exec="Exec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx \"QT_IM_MODULES=wayland;fcitx\" /app/bin/wechat %U"
+    grep -Fqx "$expected_exec" "$HOME/.local/share/applications/com.tencent.WeChat.desktop"
     fix_verify_wechat_cangjie
   '
 assert_status 0

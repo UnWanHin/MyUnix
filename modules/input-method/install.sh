@@ -140,7 +140,7 @@ input_method_launcher_content() {
   local source_launcher=$1 profile=$2 prefix electron_flag
   case "$profile" in
     qt-fcitx)
-      prefix='env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx '
+      prefix='env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx "QT_IM_MODULES=wayland;fcitx" '
       electron_flag=0
       ;;
     electron-wayland-ime)
@@ -154,7 +154,9 @@ input_method_launcher_content() {
     /^Exec=/ {
       command_line = substr($0, 6)
       if (electron_flag) {
-        if (match(command_line, /%[fFuUdDnNickvm]/)) {
+        if (match(command_line, / @@u? /)) {
+          command_line = substr(command_line, 1, RSTART) "--enable-wayland-ime " substr(command_line, RSTART + 1)
+        } else if (match(command_line, /%[fFuUdDnNickvm]/)) {
           command_line = substr(command_line, 1, RSTART - 1) "--enable-wayland-ime " substr(command_line, RSTART)
         } else {
           command_line = command_line " --enable-wayland-ime"

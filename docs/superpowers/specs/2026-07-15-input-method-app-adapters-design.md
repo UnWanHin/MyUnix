@@ -20,7 +20,10 @@ is never modified.
 Initial profiles are:
 
 - `qt-fcitx` for WeChat: set `XMODIFIERS=@im=fcitx`,
-  `QT_IM_MODULE=fcitx`, and `QT_IM_MODULES=fcitx` for the launcher process.
+  `QT_IM_MODULE=fcitx`, and `QT_IM_MODULES=wayland;fcitx` for the launcher
+  process so Qt retains the Wayland input-method backend. The generated
+  desktop entry quotes the `QT_IM_MODULES` assignment because the semicolon is
+  special in desktop-entry `Exec=` syntax.
 - `electron-wayland-ime` for QQ: set `XMODIFIERS=@im=fcitx`, retain Electron
   Wayland auto-selection, and add `--enable-wayland-ime`.
 

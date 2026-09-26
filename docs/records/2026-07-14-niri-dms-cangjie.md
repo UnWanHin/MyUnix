@@ -17,6 +17,12 @@ Fcitx5's Cangjie input-method ID is `cangjie5`. `table-cangjie5` is not a valid 
 - Do not globally force `GTK_IM_MODULE` in Niri. The Fcitx Wayland guidance recommends native GTK Wayland text-input-v3 where available.
 - The input-method module owns allowlisted launcher adapters for toolkit-specific clients: WeChat uses Fcitx Qt variables, while QQ receives Electron's `--enable-wayland-ime`. They are XDG user overrides, rebuilt from distributor desktop files when the module is rerun.
 
+For Qt clients such as WeChat, the launcher must retain the Wayland backend
+in the module chain: `XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx
+QT_IM_MODULES=wayland;fcitx`. A launcher that sets only
+`QT_IM_MODULES=fcitx` can start successfully while still losing Fcitx input
+focus inside the Qt text field.
+
 When either application is installed or its desktop file changes, rebuild the
 adapter rather than editing `/usr/share/applications/` directly:
 

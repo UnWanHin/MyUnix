@@ -62,7 +62,7 @@ for scenario in install-failure verifier-packages wechat-only render-failure bac
         ;;
       backup-failure)
         printf "[Desktop Entry]\nName=stale WeChat\nExec=/usr/bin/stale-wechat %%U\n" > "$HOME/.local/share/applications/wechat.desktop"
-        render_input_method_launcher() { printf "[Desktop Entry]\nName=rendered WeChat\nExec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx /usr/bin/wechat %%U\n" > "$2"; }
+        render_input_method_launcher() { printf "[Desktop Entry]\nName=rendered WeChat\nExec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx \"QT_IM_MODULES=wayland;fcitx\" /usr/bin/wechat %%U\n" > "$2"; }
         backup_input_method_launcher() { return 42; }
         if install_input_method_app_overrides wechat; then exit 1; else result=$?; fi
         test "$result" = 42
@@ -71,7 +71,7 @@ for scenario in install-failure verifier-packages wechat-only render-failure bac
         ;;
       replacement-failure)
         printf "[Desktop Entry]\nName=stale WeChat\nExec=/usr/bin/stale-wechat %%U\n" > "$HOME/.local/share/applications/wechat.desktop"
-        render_input_method_launcher() { printf "[Desktop Entry]\nName=rendered WeChat\nExec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx /usr/bin/wechat %%U\n" > "$2"; }
+        render_input_method_launcher() { printf "[Desktop Entry]\nName=rendered WeChat\nExec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx \"QT_IM_MODULES=wayland;fcitx\" /usr/bin/wechat %%U\n" > "$2"; }
         backup_input_method_launcher() { :; }
         mv() { return 43; }
         if install_input_method_app_overrides wechat; then exit 1; else result=$?; fi
@@ -85,7 +85,7 @@ for scenario in install-failure verifier-packages wechat-only render-failure bac
         install_input_method_app_overrides wechat
         fix_verify_wechat_cangjie
         for desktop_file in wechat.desktop com.tencent.WeChat.desktop; do
-          printf "[Desktop Entry]\nName=stale WeChat\nExec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx QT_IM_MODULES=fcitx /usr/bin/wrong-wechat %%U\n" > "$HOME/.local/share/applications/$desktop_file"
+          printf "[Desktop Entry]\nName=stale WeChat\nExec=env XMODIFIERS=@im=fcitx QT_IM_MODULE=fcitx \"QT_IM_MODULES=wayland;fcitx\" /usr/bin/wrong-wechat %%U\n" > "$HOME/.local/share/applications/$desktop_file"
           if fix_verify_wechat_cangjie; then exit 1; fi
           install_input_method_app_overrides wechat
           fix_verify_wechat_cangjie
