@@ -101,7 +101,7 @@ the shortcuts below are the MyUnix-managed DMS and desktop customizations:
 | `Mod+E` | Open Nautilus file manager |
 | `Alt+E` | Open NetworkManager connection editor |
 | `Mod+S` | Niri native screenshot; safe with multiple monitors |
-| `Mod+Shift+S` | Flameshot region screenshot; uses a `grim`/`slurp`/`wl-copy` fallback when multiple monitors make the GNOME portal unusable |
+| `Mod+Shift+S` | Opens the Flameshot capture toolbar first; falls back to `grim`/`slurp`/`wl-copy` only if Flameshot fails (including a multi-monitor portal timeout) |
 | `Mod+Left` / `Mod+Right` | Focus the column to the left / right |
 | `Mod+Shift+Left` / `Mod+Shift+Right` | Move the focused column left / right |
 | `Mod+F` | Maximize the focused column while retaining the top bar and Firefox chrome |

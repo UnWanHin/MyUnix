@@ -84,6 +84,27 @@ assert_status 0
 run env HOME="$temporary_dir/home" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; install_niri_dms_screenshot_helper; test -x \"\$HOME/.local/bin/myunix-screenshot-flameshot\""
 assert_status 0
 
+temporary_screenshot_helper="$(mktemp -d)"
+mkdir -p "$temporary_screenshot_helper/bin"
+printf '%s\n' '#!/usr/bin/env bash' 'printf "%s\\n" "flameshot $*" >> "$MYUNIX_SCREENSHOT_TEST_LOG"' > "$temporary_screenshot_helper/bin/flameshot"
+printf '%s\n' '#!/usr/bin/env bash' 'printf "%s\\n" "grim $*" >> "$MYUNIX_SCREENSHOT_TEST_LOG"' > "$temporary_screenshot_helper/bin/grim"
+chmod 0755 "$temporary_screenshot_helper/bin/flameshot" "$temporary_screenshot_helper/bin/grim"
+run env \
+  PATH="$temporary_screenshot_helper/bin:/usr/bin:/bin" \
+  HOME="$temporary_screenshot_helper/home" \
+  MYUNIX_SCREENSHOT_TEST_LOG="$temporary_screenshot_helper/calls.log" \
+  MYUNIX_SCREENSHOTS_DIR="$temporary_screenshot_helper/screenshots" \
+  bash "$PROJECT_ROOT/modules/niri-dms/bin/myunix-screenshot-flameshot"
+assert_status 0
+grep -Fxq 'flameshot gui' "$temporary_screenshot_helper/calls.log" || {
+  printf '%s\n' 'Expected Flameshot GUI to be attempted first' >&2
+  exit 1
+}
+[[ "$(wc -l < "$temporary_screenshot_helper/calls.log")" == 1 ]] || {
+  printf '%s\n' 'Expected no grim fallback after successful Flameshot GUI' >&2
+  exit 1
+}
+
 temporary_screenshot_binding="$(mktemp -d)"
 mkdir -p "$temporary_screenshot_binding/home/.config/niri/dms"
 printf '%s\n' 'binds {' '    Mod+S { spawn "flameshot"; }' '    Mod+Shift+S { spawn "old-helper"; }' '}' > "$temporary_screenshot_binding/home/.config/niri/dms/binds.kdl"
