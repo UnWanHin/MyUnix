@@ -331,6 +331,14 @@ fix_niri_include_present() {
   esac
 }
 
+fix_niri_touchpad_include_order_is_healthy() {
+  local config=${1:-$(fix_niri_config_path)} dms_input_line touchpad_line
+  [[ -f "$config" ]] || return 1
+  dms_input_line="$(grep -nE '^[[:space:]]*include[[:space:]]+(optional[[:space:]]*=[[:space:]]*true[[:space:]]+)?\"dms/input\.kdl\"([[:space:]]|$)' "$config" | head -n1 | cut -d: -f1)"
+  touchpad_line="$(grep -nE '^[[:space:]]*include[[:space:]]+\"myunix/touchpad\.kdl\"([[:space:]]|$)' "$config" | head -n1 | cut -d: -f1)"
+  [[ -z "$dms_input_line" || -z "$touchpad_line" || "$dms_input_line" -lt "$touchpad_line" ]]
+}
+
 fix_niri_config_backup_dir() {
   printf '%s\n' "${MYUNIX_NIRI_REPAIR_BACKUP_DIR:-$HOME/.local/state/myunix/backups/niri-dms-repair/$(date +%Y%m%d-%H%M%S)}"
 }
@@ -494,6 +502,12 @@ fix_diagnose_niri_config() {
       missing=1
     fi
   done
+  if fix_niri_touchpad_include_order_is_healthy "$config"; then
+    printf '%s\n' '  - DMS input/touchpad include order: healthy'
+  else
+    printf '%s\n' '  - DMS input/touchpad include order: incorrect'
+    missing=1
+  fi
   if [[ -s "$(fix_niri_touchpad_fragment_path)" ]]; then
     printf '%s\n' "  - MyUnix touchpad fragment: present ($(fix_niri_touchpad_fragment_path))"
   else
@@ -541,6 +555,7 @@ fix_apply_niri_managed_config() {
   fix_niri_restore_toggle_binding || return $?
   fix_niri_validate_config "$config" || return $?
   fix_niri_restore_missing_includes "$config" "$repair_fcitx" || return $?
+  normalize_niri_dms_touchpad_includes || return $?
   fix_reload_niri_if_running
 }
 
@@ -625,6 +640,12 @@ fix_diagnose_touchpad_toggle() {
     printf '%s\n' '  - Niri touchpad fragment: present'
   else
     printf '%s\n' '  - Niri touchpad fragment: missing'
+    missing=1
+  fi
+  if fix_niri_touchpad_include_order_is_healthy "$config"; then
+    printf '%s\n' '  - DMS input/touchpad include order: healthy'
+  else
+    printf '%s\n' '  - DMS input/touchpad include order: incorrect'
     missing=1
   fi
   if ! fix_niri_validate_config "$config"; then

@@ -77,6 +77,72 @@ install_niri_dms_screenshot_binding() {
   mv "$temporary" "$binding_file"
 }
 
+remove_niri_dms_legacy_touchpad_binding() {
+  local config_dir binding_file temporary backup_dir backup_file
+  config_dir="${MYUNIX_NIRI_CONFIG_DIR:-$HOME/.config/niri}"
+  binding_file="$config_dir/dms/binds.kdl"
+  [[ -f "$binding_file" ]] || return 0
+
+  temporary="$(mktemp "${binding_file}.myunix.XXXXXX")"
+  awk '
+    /^[[:space:]]*Mod\+F8([[:space:]]|$)/ { next }
+    { print }
+  ' "$binding_file" > "$temporary"
+  if cmp -s "$temporary" "$binding_file"; then
+    rm -f "$temporary"
+    return 0
+  fi
+
+  backup_dir="${MYUNIX_NIRI_DMS_TOUCHPAD_BACKUP_DIR:-$HOME/.local/state/myunix/backups/niri-dms/$(date +%Y%m%d-%H%M%S)}"
+  mkdir -p "$backup_dir"
+  backup_file="$backup_dir/binds-before-touchpad-cleanup.kdl"
+  [[ -e "$backup_file" ]] && backup_file="$backup_dir/binds-before-touchpad-cleanup-$(date +%N).kdl"
+  cp -a "$binding_file" "$backup_file"
+  mv "$temporary" "$binding_file"
+}
+
+normalize_niri_dms_touchpad_includes() {
+  local config temporary backup_dir backup_file binding_line
+  config="${MYUNIX_NIRI_CONFIG:-${MYUNIX_NIRI_CONFIG_DIR:-$HOME/.config/niri}/config.kdl}"
+  [[ -f "$config" ]] || return 0
+
+  binding_line='include optional=true "myunix/touchpad-bind.kdl"'
+  temporary="$(mktemp "${config}.myunix.XXXXXX")"
+  awk -v binding_line="$binding_line" -v binding_file="$(dirname "$config")/myunix/touchpad-bind.kdl" '
+    /^[[:space:]]*include[[:space:]]+(optional[[:space:]]*=[[:space:]]*true[[:space:]]+)?"dms\/input\.kdl"([[:space:]]|$)/ {
+      dms_input_seen = 1
+      next
+    }
+    /^[[:space:]]*include[[:space:]]+"myunix\/touchpad\.kdl"([[:space:]]|$)/ { next }
+    /^[[:space:]]*include[[:space:]]+optional[[:space:]]*=[[:space:]]*true[[:space:]]+"myunix\/touchpad-bind\.kdl"([[:space:]]|$)/ { next }
+    { print }
+    END {
+      if (dms_input_seen) print "include optional=true \"dms/input.kdl\""
+      print "include \"myunix/touchpad.kdl\""
+      if ((getline probe < binding_file) > 0) {
+        close(binding_file)
+        print binding_line
+      }
+    }
+  ' "$config" > "$temporary"
+  if cmp -s "$temporary" "$config"; then
+    rm -f "$temporary"
+    return 0
+  fi
+
+  if command -v niri >/dev/null 2>&1 && ! niri validate --config "$temporary" >/dev/null 2>&1; then
+    rm -f "$temporary"
+    return 1
+  fi
+
+  backup_dir="${MYUNIX_NIRI_DMS_TOUCHPAD_BACKUP_DIR:-$HOME/.local/state/myunix/backups/niri-dms/$(date +%Y%m%d-%H%M%S)}"
+  mkdir -p "$backup_dir"
+  backup_file="$backup_dir/config-before-touchpad-order.kdl"
+  [[ -e "$backup_file" ]] && backup_file="$backup_dir/config-before-touchpad-order-$(date +%N).kdl"
+  cp -a "$config" "$backup_file"
+  mv "$temporary" "$config"
+}
+
 configure_niri_dms_touchpad_toggle_binding() {
   local config_dir binding_file temporary
   # `--all` sets this explicitly. Keep direct module installs useful too:
@@ -217,7 +283,9 @@ install_niri_dms() {
   install_niri_dms_touchpad_toggle || return $?
   install_niri_dms_screenshot_helper || return $?
   install_niri_dms_screenshot_binding || return $?
+  remove_niri_dms_legacy_touchpad_binding || return $?
   configure_niri_dms_touchpad_toggle_binding || return $?
+  normalize_niri_dms_touchpad_includes || return $?
   configure_niri_fcitx_session || return $?
   import_dms_personalization
   import_dms_plugin_settings

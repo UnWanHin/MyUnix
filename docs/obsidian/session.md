@@ -12,7 +12,8 @@ module is run deliberately.
   shortcuts.
 - The public Niri touchpad preference fragment and its `Mod+F8` toggle helper;
   this applies to all touchpads in Niri because Niri does not yet expose
-  per-device touchpad configuration.
+  per-device touchpad configuration. The generated DMS `dms/input.kdl` stays
+  local, while the synchronized config loads it before the MyUnix override.
 - Allowlisted DMS personalization split into bar, dock, appearance, frame and
   time/weather categories; each category merges without replacing unrelated
   local settings.

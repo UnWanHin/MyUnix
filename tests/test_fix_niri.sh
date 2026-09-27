@@ -5,7 +5,7 @@ source "$(dirname "$0")/test_helper.bash"
 temporary_dir="$(mktemp -d)"
 trap 'rm -rf -- "$temporary_dir"' EXIT
 
-for scenario in missing-fragment invalid-config invalid-candidate invalid-candidate-symlink custom-path reload-failure fcitx-session; do
+for scenario in missing-fragment ordering invalid-config invalid-candidate invalid-candidate-symlink custom-path reload-failure fcitx-session; do
   [[ -z "${TEST_CASE:-}" || "$TEST_CASE" == "$scenario" ]] || continue
   home="$temporary_dir/$scenario"
   mkdir -p "$home/.config/niri"
@@ -36,6 +36,24 @@ for scenario in missing-fragment invalid-config invalid-candidate invalid-candid
         fix_apply_touchpad_toggle
         test -s "$HOME/.config/niri/myunix/touchpad.kdl"
         fix_verify_touchpad_toggle
+        ;;
+      ordering)
+        printf "%s\n" \
+          "include \"myunix/touchpad.kdl\"" \
+          "include optional=true \"myunix/touchpad-bind.kdl\"" \
+          "include \"dms/input.kdl\"" \
+          > "$HOME/.config/niri/config.kdl"
+        mkdir -p "$HOME/.config/niri/myunix"
+        printf "%s\n" "input {" "  touchpad {" "    tap" "  }" "}" > \
+          "$HOME/.config/niri/myunix/touchpad.kdl"
+        install_niri_dms_touchpad_toggle
+        configure_niri_dms_touchpad_toggle_binding
+        diagnosis="$(fix_diagnose_touchpad_toggle || true)"
+        [[ "$diagnosis" == *"DMS input/touchpad include order: incorrect"* ]]
+        fix_apply_touchpad_toggle
+        input_line="$(grep -nF "include optional=true \"dms/input.kdl\"" "$HOME/.config/niri/config.kdl" | cut -d: -f1)"
+        touchpad_line="$(grep -nF "include \"myunix/touchpad.kdl\"" "$HOME/.config/niri/config.kdl" | cut -d: -f1)"
+        [[ -n "$input_line" && -n "$touchpad_line" && "$input_line" -lt "$touchpad_line" ]]
         ;;
       invalid-config|invalid-candidate|invalid-candidate-symlink)
         if [[ "$SCENARIO" == invalid-config ]]; then

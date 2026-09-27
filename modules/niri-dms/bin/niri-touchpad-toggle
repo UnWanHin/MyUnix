@@ -30,7 +30,9 @@ write_state() {
       '    touchpad {' \
       '        tap' \
       '        drag true' \
+      '        accel-speed 0.0' \
       '        natural-scroll' \
+      '        dwt' \
       '    }' \
       '}' > "$temporary"
   fi

@@ -44,6 +44,9 @@ session integration:
   the Fcitx5 startup/environment through the Niri module helper. It validates
   that exact candidate in the same directory before replacing the config,
   and backs up changed managed files under `~/.local/state/myunix/backups/`.
+  It also reports and repairs the ordering of generated `dms/input.kdl` before
+  the MyUnix touchpad override, so local DMS input state cannot overwrite the
+  `Mod+F8` state after a repair.
   An invalid user config is never replaced or rewritten. `niri` must be
   available to validate both the original and candidate configuration.
   Fcitx5 startup takes effect on the next Niri login; reloading the config does
@@ -105,7 +108,7 @@ the shortcuts below are the MyUnix-managed DMS and desktop customizations:
 | `Mod+Left` / `Mod+Right` | Focus the column to the left / right |
 | `Mod+Shift+Left` / `Mod+Shift+Right` | Move the focused column left / right |
 | `Mod+F` | Maximize the focused column while retaining the top bar and Firefox chrome |
-| `Mod+F8` | Toggle all touchpads; preserves tap-to-click, drag and natural scrolling settings |
+| `Mod+F8` | Toggle all touchpads through the MyUnix binding fragment; preserves DMS tap-to-click, drag, acceleration, natural scrolling and disable-while-typing settings |
 | `Mod+Shift+T` | Toggle the focused window floating |
 | `Mod+Shift+F` | Toggle true fullscreen for the focused window; it may hide the top bar and Firefox chrome |
 | `Mod+Alt+L` | Lock screen through DMS |
@@ -188,8 +191,11 @@ contain monitor-specific modes, scale and positions. The optional include in
 `config.kdl` remains so each computer can keep or regenerate its own display
 profile; this prevents a laptop's output settings from causing an invalid
 layout or black screen on another machine. DMS's generated `dms/input.kdl` is
-also excluded because it is not referenced by the public config; touchpad
-behavior is carried by the portable `myunix/touchpad.kdl` fragment.
+still excluded from synchronization, but the public config keeps its optional
+include before the MyUnix-owned `myunix/touchpad.kdl` override. This ordering
+lets `Mod+F8` disable or enable all touchpads consistently; it does not depend
+on the number or arrangement of monitors. The enabled override preserves DMS's
+tap, drag, acceleration, natural-scroll and disable-while-typing preferences.
 
 The sync excludes plugin metadata and paired-device identities, while the
 reviewed `dankActions` object is synchronized separately. It also excludes

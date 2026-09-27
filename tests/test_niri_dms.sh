@@ -54,7 +54,12 @@ assert_output_contains 'spawn-at-startup "fcitx5" "-d"'
 
 temporary_dir="$(mktemp -d)"
 mkdir -p "$temporary_dir/source/dms" "$temporary_dir/source/myunix" "$temporary_dir/home/.config/niri/dms"
-printf '%s\n' 'environment {' '}' > "$temporary_dir/source/config.kdl"
+printf '%s\n' \
+  'environment {' '}' \
+  'include optional=true "dms/input.kdl"' \
+  'include "myunix/touchpad.kdl"' \
+  'include optional=true "myunix/touchpad-bind.kdl"' \
+  > "$temporary_dir/source/config.kdl"
 printf '%s\n' 'binds {}' > "$temporary_dir/source/dms/binds.kdl"
 printf '%s\n' 'output "eDP-1" { mode "3072x1920@60.000" }' > "$temporary_dir/source/dms/outputs.kdl"
 printf '%s\n' 'input {}' > "$temporary_dir/source/dms/input.kdl"
@@ -63,6 +68,33 @@ printf '%s\n' 'old-config' > "$temporary_dir/home/.config/niri/config.kdl"
 run env HOME="$temporary_dir/home" MYUNIX_NIRI_DMS_CONFIG_SOURCE="$temporary_dir/source" MYUNIX_NIRI_CONFIG_DIR="$temporary_dir/home/.config/niri" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; import_niri_dms_config; cat \"\$MYUNIX_NIRI_CONFIG_DIR/config.kdl\""
 assert_status 0
 assert_output_contains 'environment {'
+input_include_line="$(grep -nF 'include optional=true "dms/input.kdl"' "$temporary_dir/home/.config/niri/config.kdl" | cut -d: -f1)"
+touchpad_include_line="$(grep -nF 'include "myunix/touchpad.kdl"' "$temporary_dir/home/.config/niri/config.kdl" | cut -d: -f1)"
+[[ -n "$input_include_line" && -n "$touchpad_include_line" && "$input_include_line" -lt "$touchpad_include_line" ]] || {
+  printf '%s\n' 'Expected DMS input include before the MyUnix touchpad override' >&2
+  exit 1
+}
+printf '%s\n' \
+  'include "myunix/touchpad.kdl" // managed touchpad' \
+  'include optional=true "myunix/touchpad-bind.kdl" // managed binding' \
+  'include "dms/input.kdl" // generated DMS state' \
+  > "$temporary_dir/home/.config/niri/config.kdl"
+run env HOME="$temporary_dir/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_dir/home/.config/niri" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; normalize_niri_dms_touchpad_includes; normalize_niri_dms_touchpad_includes; cat \"\$HOME/.config/niri/config.kdl\""
+assert_status 0
+input_include_line="$(grep -nF 'include optional=true "dms/input.kdl"' "$temporary_dir/home/.config/niri/config.kdl" | cut -d: -f1)"
+touchpad_include_line="$(grep -nF 'include "myunix/touchpad.kdl"' "$temporary_dir/home/.config/niri/config.kdl" | cut -d: -f1)"
+[[ "$input_include_line" -lt "$touchpad_include_line" ]] || {
+  printf '%s\n' 'Expected include normalization to move the MyUnix touchpad override after DMS input' >&2
+  exit 1
+}
+[[ "$(grep -cF 'include optional=true "dms/input.kdl"' "$temporary_dir/home/.config/niri/config.kdl")" == 1 ]] || {
+  printf '%s\n' 'Expected include normalization to keep one DMS input include' >&2
+  exit 1
+}
+[[ "$(grep -cF 'include "myunix/touchpad.kdl"' "$temporary_dir/home/.config/niri/config.kdl")" == 1 ]] || {
+  printf '%s\n' 'Expected include normalization to keep one touchpad include' >&2
+  exit 1
+}
 find "$temporary_dir/home/.local/state/myunix/backups/niri-dms" -type f -name config.kdl -print -quit | grep -q . || {
   printf '%s\n' 'Expected existing Niri config backup' >&2
   exit 1
@@ -114,6 +146,23 @@ assert_output_contains 'Mod+S hotkey-overlay-title="Niri screenshot"'
 assert_output_contains 'Mod+Shift+S hotkey-overlay-title="Flameshot (multi-monitor safe)"'
 [[ "$OUTPUT" != *'old-helper'* ]] || { printf '%s\n' 'Old screenshot binding was not removed' >&2; exit 1; }
 
+temporary_legacy_touchpad_binding="$(mktemp -d)"
+mkdir -p "$temporary_legacy_touchpad_binding/home/.config/niri/dms"
+printf '%s\n' \
+  'binds {' \
+  '    Mod+T { spawn "kitty"; }' \
+  '    Mod+F8 repeat=false { spawn "old-touchpad-helper"; }' \
+  '}' > "$temporary_legacy_touchpad_binding/home/.config/niri/dms/binds.kdl"
+run env HOME="$temporary_legacy_touchpad_binding/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_legacy_touchpad_binding/home/.config/niri" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; remove_niri_dms_legacy_touchpad_binding; remove_niri_dms_legacy_touchpad_binding; cat \"\$HOME/.config/niri/dms/binds.kdl\""
+assert_status 0
+assert_output_contains 'Mod+T'
+[[ "$OUTPUT" != *'Mod+F8'* ]] || { printf '%s\n' 'Legacy Mod+F8 binding was not removed' >&2; exit 1; }
+[[ "$OUTPUT" != *'old-touchpad-helper'* ]] || { printf '%s\n' 'Legacy touchpad helper binding was not removed' >&2; exit 1; }
+find "$temporary_legacy_touchpad_binding/home/.local/state/myunix/backups/niri-dms" -type f -name 'binds-before-touchpad-cleanup.kdl' -print -quit | grep -q . || {
+  printf '%s\n' 'Expected a backup before removing the legacy Mod+F8 binding' >&2
+  exit 1
+}
+
 temporary_binding="$(mktemp -d)"
 run env HOME="$temporary_binding/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_binding/home/.config/niri" MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=1 bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_touchpad_toggle_binding; cat \"\$MYUNIX_NIRI_CONFIG_DIR/myunix/touchpad-bind.kdl\""
 assert_status 0
@@ -136,7 +185,13 @@ mkdir -p "$temporary_export/home/.config/niri/myunix"
 printf '%s\n' 'private phone fragment' > "$temporary_export/home/.config/niri/myunix/kdeconnect.kdl"
 printf '%s\n' 'input {' '  touchpad {' '  }' '}' > "$temporary_export/home/.config/niri/myunix/touchpad.kdl"
 printf '%s\n' 'binds {' '  Mod+F8 { spawn "niri-touchpad-toggle"; }' '}' > "$temporary_export/home/.config/niri/myunix/touchpad-bind.kdl"
+printf '%s\n' \
+  'include "myunix/touchpad.kdl"' \
+  'include optional=true "myunix/touchpad-bind.kdl"' \
+  'include "dms/input.kdl"' \
+  > "$temporary_export/home/.config/niri/config.kdl"
 printf '%s\n' 'private backup' > "$temporary_export/home/.config/niri/config.kdl.backup.private"
+printf '%s\n' 'binds {' '  Mod+F8 repeat=false { spawn "old-touchpad-helper"; }' '  Mod+T { spawn "kitty"; }' '}' > "$temporary_export/home/.config/niri/dms/binds.kdl"
 mkdir -p "$temporary_export/home/.config/kitty"
 printf '%s\n' 'font_size 12' > "$temporary_export/home/.config/kitty/kitty.conf"
 printf '%s\n' 'background #000000' > "$temporary_export/home/.config/kitty/dank-theme.conf"
@@ -150,6 +205,24 @@ assert_status 0
 }
 [[ -f "$temporary_export/target/dms/binds.kdl" ]] || {
   printf '%s\n' 'Expected DMS shortcuts to be exported to the requested target' >&2
+  exit 1
+}
+! grep -qE '^[[:space:]]*Mod\+F8([[:space:]]|$)' "$temporary_export/target/dms/binds.kdl" || {
+  printf '%s\n' 'Exporter must not synchronize the legacy Mod+F8 binding' >&2
+  exit 1
+}
+grep -qE '^[[:space:]]*Mod\+T([[:space:]]|$)' "$temporary_export/target/dms/binds.kdl" || {
+  printf '%s\n' 'Exporter must preserve unrelated DMS bindings' >&2
+  exit 1
+}
+exported_input_line="$(grep -nF 'include optional=true "dms/input.kdl"' "$temporary_export/target/config.kdl" | cut -d: -f1)"
+exported_touchpad_line="$(grep -nF 'include "myunix/touchpad.kdl"' "$temporary_export/target/config.kdl" | cut -d: -f1)"
+[[ -n "$exported_input_line" && -n "$exported_touchpad_line" && "$exported_input_line" -lt "$exported_touchpad_line" ]] || {
+  printf '%s\n' 'Exporter must make DMS input optional and load it before touchpad overrides' >&2
+  exit 1
+}
+[[ "$temporary_export/target/config.kdl" != *'include "dms/input.kdl"'* ]] || {
+  printf '%s\n' 'Exporter must not leave a required generated DMS input include' >&2
   exit 1
 }
 [[ -f "$temporary_export/target/dms/alttab.kdl" ]] || {
@@ -224,8 +297,16 @@ grep -qx '[[:space:]]*drag true' "$touchpad_state" || {
   printf '%s\n' 'Expected enabled touchpad fragment to preserve tap-and-drag' >&2
   exit 1
 }
+grep -qx '[[:space:]]*accel-speed 0.0' "$touchpad_state" || {
+  printf '%s\n' 'Expected enabled touchpad fragment to preserve DMS acceleration' >&2
+  exit 1
+}
 grep -qx '[[:space:]]*natural-scroll' "$touchpad_state" || {
   printf '%s\n' 'Expected enabled touchpad fragment to preserve reverse scrolling' >&2
+  exit 1
+}
+grep -qx '[[:space:]]*dwt' "$touchpad_state" || {
+  printf '%s\n' 'Expected enabled touchpad fragment to preserve disable-while-typing' >&2
   exit 1
 }
 
@@ -259,12 +340,22 @@ grep -qx '[[:space:]]*drag true' "$PROJECT_ROOT/modules/niri-dms/config/niri/myu
   printf '%s\n' 'Expected touchpad template to enable tap-and-drag' >&2
   exit 1
 }
+grep -qx '[[:space:]]*accel-speed 0.0' "$PROJECT_ROOT/modules/niri-dms/config/niri/myunix/touchpad.kdl" || {
+  printf '%s\n' 'Expected touchpad template to preserve DMS acceleration' >&2
+  exit 1
+}
 grep -qx '[[:space:]]*natural-scroll' "$PROJECT_ROOT/modules/niri-dms/config/niri/myunix/touchpad.kdl" || {
   printf '%s\n' 'Expected touchpad template to use reverse scrolling' >&2
   exit 1
 }
-grep -qE 'Mod\+F8[[:space:]]+repeat=false' "$PROJECT_ROOT/modules/niri-dms/config/niri/dms/binds.kdl" || {
-  printf '%s\n' 'Expected the synchronized Mod+F8 binding to disable key repeat' >&2
+grep -qE 'Mod\+F8' "$PROJECT_ROOT/modules/niri-dms/config/niri/dms/binds.kdl" && {
+  printf '%s\n' 'Expected the synchronized DMS binds file to omit the managed Mod+F8 binding' >&2
+  exit 1
+}
+canonical_input_line="$(grep -nF 'include optional=true "dms/input.kdl"' "$PROJECT_ROOT/modules/niri-dms/config/niri/config.kdl" | cut -d: -f1)"
+canonical_touchpad_line="$(grep -nF 'include "myunix/touchpad.kdl"' "$PROJECT_ROOT/modules/niri-dms/config/niri/config.kdl" | cut -d: -f1)"
+[[ -n "$canonical_input_line" && -n "$canonical_touchpad_line" && "$canonical_input_line" -lt "$canonical_touchpad_line" ]] || {
+  printf '%s\n' 'Expected canonical Niri config to load DMS input before the touchpad override' >&2
   exit 1
 }
 
