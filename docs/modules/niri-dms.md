@@ -4,15 +4,22 @@ The Niri + DMS module keeps GNOME installed and is included in one-click
 installation so the synchronized desktop, DMS personalization and hotkeys are
 restored on a replacement Fedora computer. Custom installation still lets the
 user opt out. It uses the documented Fedora COPR package route for Fedora 43
-and 44 only. Its complete package registry is `modules/niri-dms/packages.txt`;
-after enabling the COPRs, the module verifies that every entry resolves through
+and 44 only. Its complete package registry is `modules/niri-dms/packages.txt`,
+which covers the DMS COPR packages plus the Fedora runtime dependencies of the
+reviewed plugins (`qalculate`, `qt6-qtwebsockets-devel`, `adw-gtk3-theme`,
+`qt5ct`, `qt6ct`, `kvantum`, `qt6-qttools`, `plasma-breeze`, `breeze-gtk`,
+`xsettingsd`, `papirus-icon-theme`); the separate opt-in
+`modules/niri-dms/packages-kde.txt` is described below. After enabling the
+COPRs, the module verifies that every entry resolves through
 DNF before it begins installation. The reviewed DMS plugin IDs in
 `modules/niri-dms/plugins.txt` are then recreated through `dms plugins install`;
 when `config/dms/plugins.lock.json` is present, `dms plugins restore` pins the
 managed plugin revisions instead. Existing plugin metadata is detected so
 rerunning the module remains idempotent. `config/dms/plugin-settings.json`
-contains only the reviewed public `dankActions` section; KDE Connect pairing
-identity and all other plugin state remain local.
+contains only the reviewed public `dankActions` command list and the
+`dockerManager` container binary (`podman`, because Docker is not installed);
+KDE Connect pairing identity, Home Assistant tokens, theme-folder overrides and
+all other plugin state remain local.
 
 The public plugin manifest also covers the extra plugins already present on
 this machine: AMD GPU Monitor, Calculator, DMS Theme Sync, Docker Manager,
@@ -25,6 +32,42 @@ The installer also enables the packaged user-level `dms.service` with
 Niri graphical session; it does not replace GDM or change the display manager.
 If DMS is missing after an earlier installation, run that command once and
 log out/in again.
+
+## Optional KDE/Plasma application menu
+
+The reviewed DMS plugins expect an XDG application menu. On a Niri session the
+only complete menu tree is `/etc/xdg/menus/plasma-applications.menu`, provided
+by `plasma-workspace`. That package resolves to roughly 250 packages and
+~550 MiB because it also pulls the Plasma desktop, kwin and
+`xdg-desktop-portal-kde`, so it is deliberately kept out of the default
+manifest in `modules/niri-dms/packages-kde.txt`.
+
+```bash
+MYUNIX_NIRI_DMS_KDE=1 ./scripts/myunix install --module niri-dms
+```
+
+In `./scripts/myunix install --guided`, select **KDE/Plasma application menu**
+under the Niri + DMS personalization step instead. `kde-cli-tools` is listed
+there because it provides `keditfiletype`, which KDE applications use for the
+file-type editor and which is neither a `Requires` nor a `Recommends` of
+`plasma-workspace`. `breeze-icon-theme` arrives as a dependency.
+
+Selecting it writes the managed fragment
+`~/.config/niri/myunix/plasma-menu.kdl`, which sets
+`XDG_MENU_PREFIX "plasma-"`. That fragment is installed whenever
+`/etc/xdg/menus/plasma-applications.menu` exists, so removing
+`plasma-workspace` removes the setting again; `MYUNIX_NIRI_DMS_KDE_MENU=0|1`
+overrides the detection. `XDG_MENU_PREFIX` lives in `environment{}`, so an
+already-running session picks it up only after a Niri re-login.
+
+`plasma-workspace` *weak-depends* on `xwaylandvideobridge`, whose helper window
+is invisible only through the X11 EWMH opacity hint that
+`xwayland-satellite` does not implement. `config.kdl` therefore carries a
+`window-rule` that matches `app-id=r#"^xwaylandvideobridge$"#` and reproduces
+the invisibility natively (floating, unfocused, `opacity 0.0`, no
+focus-ring/border/shadow). Without it the helper stays as an unclosable black
+tile in the tiling layout while X11 applications still use it for screen
+sharing.
 
 The interactive `./scripts/myunix fix` menu keeps session repairs separate
 from application repairs. Input-method repairs do not rewrite Niri config;
@@ -39,7 +82,7 @@ session integration:
 - **Niri configuration validation** runs `niri validate --config` against the
   exact active config path when available and reports the complete command
   output under a labeled diagnostic. Its repair first restores absent,
-  independent MyUnix-owned touchpad/helper/binding files; only after that
+  independent MyUnix-owned touchpad/helper/binding/plugin-binding files; only after that
   exact config validates may it prepare managed include lines and restore
   the Fcitx5 startup/environment through the Niri module helper. It validates
   that exact candidate in the same directory before replacing the config,
@@ -112,6 +155,9 @@ the shortcuts below are the MyUnix-managed DMS and desktop customizations:
 | `Mod+Shift+T` | Toggle the focused window floating |
 | `Mod+Shift+F` | Toggle true fullscreen for the focused window; it may hide the top bar and Firefox chrome |
 | `Mod+Alt+L` | Lock screen through DMS |
+| `Mod+Alt+W` | Toggle the Wallpaper Carousel |
+| `Mod+Alt+Left` / `Mod+Alt+Right` | Previous / next wallpaper |
+| `Mod+Alt+H` | Open the DMS Theme Sync configuration |
 | `Mod+Comma` | Open DMS settings |
 | `Mod+M` | Toggle DMS process list/task manager |
 | `Mod+N` | Toggle DMS notification center |
@@ -158,6 +204,27 @@ module exports and restores that KDE Connect startup fragment. DMS JSON
 settings are synchronized only through the categorized public allowlist below;
 plugin state, caches and machine-specific paths remain excluded.
 
+## Managed Niri fragments
+
+`config.kdl` loads four MyUnix-owned `myunix/*.kdl` fragments and one plugin
+artifact, always through an optional include so a missing file can never make
+the configuration invalid:
+
+| Include | Owner | Purpose |
+| --- | --- | --- |
+| `myunix/touchpad.kdl` | MyUnix | Touchpad state toggled by `Mod+F8` |
+| `myunix/touchpad-bind.kdl` | MyUnix, opt-out | The `Mod+F8` binding itself |
+| `myunix/plugin-binds.kdl` | MyUnix | `Mod+Alt` shortcuts for the reviewed DMS plugins |
+| `myunix/plasma-menu.kdl` | MyUnix, follows `plasma-workspace` | `XDG_MENU_PREFIX "plasma-"` |
+| `dms-theme-sync.kdl` | DMS `dmsThemeSync` plugin | Generated cursor/Qt/border environment |
+
+`install_niri_dms` and `export_niri_dms` normalize this include list in one
+place: each managed include is collapsed to exactly one line, the generated
+`dms-theme-sync.kdl` include is rewritten as optional, `dms/input.kdl` stays
+before the touchpad override, and the export strips any inline
+`XDG_MENU_PREFIX`. Plugin-generated files are never committed; only the
+MyUnix-owned fragments are.
+
 ## DMS personalization synchronization
 
 Public DMS preferences are kept separately from Niri KDL in
@@ -180,6 +247,15 @@ backed up before an effective change; a newly created file has no prior state
 to back up. It does not restart DMS automatically; log out/in or run
 `dms restart` when you deliberately want imported appearance changes applied.
 
+DMS 6.7 migrated `settings.json` to a compact schema: most visual options now
+live inside `barConfigs`/`dockConfigs` arrays and `builtInPluginSettings`
+instead of top-level keys. The categorized allowlist still captures `bar.json`
+faithfully, but `appearance.json`, `dock.json` and `frame.json` now export very
+few keys because the live file no longer has them at the top level. Treat those
+three files as a known follow-up when DMS documents the new keys; do not
+hand-edit them to restore removed keys, because the importer merges exactly the
+allowlisted names and nothing else.
+
 Kitty is synchronized through a separate public allowlist under
 `modules/niri-dms/config/kitty/`: `kitty.conf`, `dank-theme.conf`, and
 `dank-tabs.conf`. The installer backs up changed files below the Niri/DMS
@@ -198,7 +274,8 @@ on the number or arrangement of monitors. The enabled override preserves DMS's
 tap, drag, acceleration, natural-scroll and disable-while-typing preferences.
 
 The sync excludes plugin metadata and paired-device identities, while the
-reviewed `dankActions` object is synchronized separately. It also excludes
+reviewed `dankActions` object and the non-secret `dockerManager` keys are
+synchronized separately. It also excludes
 Wi-Fi,
 Bluetooth and audio-device pins, output/display profiles, wallpaper and custom
 paths, commands, usage histories, notification data, greeter settings, caches

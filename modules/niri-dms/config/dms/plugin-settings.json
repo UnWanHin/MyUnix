@@ -18,5 +18,9 @@
         "name": "nmcli"
       }
     ]
+  },
+  "dockerManager": {
+    "enabled": true,
+    "dockerBinary": "podman"
   }
 }

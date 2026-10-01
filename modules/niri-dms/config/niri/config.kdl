@@ -306,3 +306,49 @@ include optional=true "myunix/kdeconnect.kdl"
 include optional=true "dms/input.kdl"
 include "myunix/touchpad.kdl"
 include optional=true "myunix/touchpad-bind.kdl"
+include optional=true "dms-theme-sync.kdl"
+include optional=true "myunix/plugin-binds.kdl"
+include optional=true "myunix/plasma-menu.kdl"
+
+// ---------------------------------------------------------------------------
+// Xwayland Video Bridge (xwaylandvideobridge)
+//
+// The bridge advertises its helper window as invisible purely through the X11
+// EWMH hint _NET_WM_WINDOW_OPACITY=0 plus _NET_WM_STATE_KEEP_BELOW/SKIP_*.
+// niri's X11 backend is xwayland-satellite, which implements neither, so the
+// window ends up as an opaque black tile in the tiling layout (it cannot be
+// closed either: the app deliberately ignores close requests).
+//
+// Re-create the "invisible" part with a native niri rule. The window keeps
+// running, so X11 apps (WeChat, Discord, ...) can still share screens.
+//
+// Verified with xprop/XShape on the live X11 window:
+//   _NET_WM_WINDOW_OPACITY = 0                  (the hint niri ignores)
+//   _NET_WM_STATE = SKIP_TASKBAR, SKIP_PAGER, ...
+//   XShape input region = 0 rectangles          (clicks pass straight through)
+// Note: niri sizes new *floating* windows from the first preset-column-widths
+// entry, so the fixed size below only acts as a fallback if the window ever
+// ends up tiled. It must stay a soft default: hard max-width/max-height would
+// also clamp the client's resize and break actual screen sharing.
+// ---------------------------------------------------------------------------
+window-rule {
+    match app-id=r#"^xwaylandvideobridge$"#
+    open-floating true
+    open-focused false
+    default-column-width { fixed 64; }
+    default-window-height { fixed 36; }
+    opacity 0.0
+    // Alt+Tab can still land on this window (niri has no "exclude from window
+    // list" rule), and focusing an invisible window would otherwise draw its
+    // focus ring/border/shadow around nothing. Keep them off so it stays fully
+    // invisible even when focused.
+    focus-ring {
+        off
+    }
+    border {
+        off
+    }
+    shadow {
+        off
+    }
+}

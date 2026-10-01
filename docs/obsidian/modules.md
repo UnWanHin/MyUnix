@@ -12,7 +12,7 @@ desktop settings and exported state from overwriting one another.
 | gnome | GNOME media-key shortcuts | [[../modules/gnome|gnome]] |
 | input-method | IBus/Fcitx5 and app launch adapters | [[../modules/input-method|input method]] |
 | steam | RPM Fusion Steam plus Niri system-composer launcher | [[../modules/steam|steam]] |
-| niri-dms | default one-click Niri/DMS session, reviewed plugin IDs, KDL hotkeys, `Mod+F8` touchpad shortcut and categorized public personalization; custom install can opt out | [[../modules/niri-dms|niri dms]] |
+| niri-dms | default one-click Niri/DMS session, reviewed plugin IDs and runtime packages, KDL hotkeys, `Mod+F8` touchpad shortcut, managed fragment includes, xwaylandvideobridge window rule and categorized public personalization; the heavy KDE/Plasma menu integration is opt-in and custom install can opt out | [[../modules/niri-dms|niri dms]] |
 | shell-config | Bash/Zsh common `.sysrc` fragments | [[../modules/shell-config|shell config]] |
 | zsh-personalization | Pinned Oh My Zsh, Powerlevel10k and public Zsh plugins | [[../modules/zsh-personalization|zsh personalization]] |
 | jetbrains-toolbox | Optional official user-level JetBrains Toolbox installer | [[../modules/jetbrains-toolbox|JetBrains Toolbox]] |

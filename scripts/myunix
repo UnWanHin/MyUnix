@@ -203,8 +203,9 @@ run_all_install() {
   export MYUNIX_INSTALL_MODE=all
   export MYUNIX_INPUT_CANGJIE=1 MYUNIX_INPUT_PINYIN=1
   # The portable one-click profile includes the documented Mod+F8 touchpad
-  # toggle. Custom installs can still opt out explicitly.
-  export MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=1
+  # toggle. Custom installs can still opt out explicitly. The heavy KDE/Plasma
+  # application-menu integration stays opt-in for every mode.
+  export MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=1 MYUNIX_NIRI_DMS_KDE=0
   run_selected_modules bootstrap dnf time-sync rpm gnome input-method niri-dms shell-config zsh-personalization development-toolchain codex-fedora codex-super-bullet jetbrains-toolbox steam
 }
 
@@ -277,11 +278,15 @@ choose_custom_niri_dms() {
   desktop="$(ui_choose_many 'Optional desktop modules' '' 'Niri + DMS (keeps GNOME installed)')" || return $?
   grep -qx '0' <<< "$desktop" || return 1
 
-  personalization="$(ui_choose_many 'Niri + DMS personalization' '' 'Touchpad toggle shortcut (Mod+F8)')" || return $?
+  personalization="$(ui_choose_many 'Niri + DMS personalization' '' \
+    'Touchpad toggle shortcut (Mod+F8)' \
+    'KDE/Plasma application menu (about 250 packages)')" || return $?
+  export MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=0 MYUNIX_NIRI_DMS_KDE=0
   if grep -qx '0' <<< "$personalization"; then
     export MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=1
-  else
-    export MYUNIX_NIRI_DMS_TOUCHPAD_TOGGLE=0
+  fi
+  if grep -qx '1' <<< "$personalization"; then
+    export MYUNIX_NIRI_DMS_KDE=1
   fi
 }
 

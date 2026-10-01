@@ -25,14 +25,43 @@ dms_plugin_settings_target() {
   printf '%s\n' "${MYUNIX_DMS_PLUGIN_SETTINGS_TARGET:-$(dms_plugin_module_dir)/config/dms/plugin-settings.json}"
 }
 
+# Only reviewed, secret-free plugin keys may leave or enter the repository.
+# dankActions is a reviewed public command list; dockerManager carries only the
+# selected container binary. Everything else stays local, including keys that
+# can hold a URL, a token or a device identifier (homeAssistantMonitor,
+# dankKDEConnect and the dmsThemeSync folder overrides).
 validate_dms_public_plugin_settings() {
   local source=$1
   jq -e '
     type == "object"
-    and (keys | all(. == "dankActions"))
-    and ((.dankActions | type) == "object")
+    and (keys | all(. == "dankActions" or . == "dockerManager"))
+    and ((.dankActions // {}) | type == "object")
+    and ((.dockerManager // {}) | type == "object")
+    and ((.dockerManager // {}) | keys | all(. == "enabled" or . == "dockerBinary"))
+    and (((.dockerManager // {}).enabled // true) | type == "boolean")
+    and (((.dockerManager // {}).dockerBinary // "") | type == "string")
   ' "$source" >/dev/null
 }
+
+# Reduces a live plugin_settings.json to those public keys. Deliberately an
+# explicit projection instead of a blocklist, so a future plugin key cannot
+# start leaking into Git by default.
+dms_public_plugin_settings_filter() {
+  cat <<'JQ'
+def keep_dankActions:
+  if (.dankActions | type) == "object" then { dankActions: .dankActions } else {} end;
+def keep_dockerManager:
+  (if (.dockerManager | type) == "object" then
+     ((if (.dockerManager.enabled | type) == "boolean"
+       then { enabled: .dockerManager.enabled } else {} end)
+      + (if (.dockerManager.dockerBinary | type) == "string"
+         then { dockerBinary: .dockerManager.dockerBinary } else {} end))
+   else {} end) as $docker
+  | if ($docker | length) > 0 then { dockerManager: $docker } else {} end;
+keep_dankActions + keep_dockerManager
+JQ
+}
+
 
 export_dms_plugin_lock() {
   local target temporary
@@ -74,7 +103,7 @@ export_dms_plugin_settings() {
   require_command jq
   mkdir -p "$(dirname "$target")"
   temporary="$(mktemp "$(dirname "$target")/.plugin-settings.myunix.XXXXXX")"
-  jq 'if (.dankActions | type) == "object" then {dankActions} else {} end' "$settings" > "$temporary"
+  jq "$(dms_public_plugin_settings_filter)" "$settings" > "$temporary"
   if [[ "$(jq 'length' "$temporary")" == 0 ]]; then
     rm -f "$temporary" "$target"
     info 'No DMS public plugin settings to export'

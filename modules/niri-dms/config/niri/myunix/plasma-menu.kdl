@@ -1,0 +1,15 @@
+// Managed by MyUnix Niri + DMS: KDE application-menu integration.
+//
+// plasma-workspace ships /etc/xdg/menus/plasma-applications.menu, the only
+// complete XDG menu tree available in a Niri session. Without it, DMS reports a
+// missing menu and "Open With" in Dolphin and other KDE applications is empty.
+//
+// The matching packages live in the optional modules/niri-dms/packages-kde.txt
+// manifest, so this fragment is installed only while that menu file exists.
+// The include is optional, so removing plasma-workspace stays harmless.
+//
+// XDG_MENU_PREFIX belongs to environment{}, which Niri reads at start-up:
+// already-running applications pick it up only after a re-login.
+environment {
+    XDG_MENU_PREFIX "plasma-"
+}

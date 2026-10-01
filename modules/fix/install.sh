@@ -316,6 +316,22 @@ fix_niri_module_touchpad_fragment_path() {
   printf '%s\n' "${MYUNIX_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/modules/niri-dms/config/niri/myunix/touchpad.kdl"
 }
 
+fix_niri_plugin_bindings_path() {
+  printf '%s\n' "$(fix_niri_config_dir)/myunix/plugin-binds.kdl"
+}
+
+fix_niri_module_plugin_bindings_path() {
+  printf '%s\n' "${MYUNIX_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/modules/niri-dms/config/niri/myunix/plugin-binds.kdl"
+}
+
+fix_niri_plugin_bindings_are_healthy() {
+  local fragment
+  fragment="$(fix_niri_plugin_bindings_path)"
+  [[ -s "$fragment" ]] \
+    && grep -Fq 'wallpaperCarousel' "$fragment" \
+    && grep -Fq 'dmsThemeSync' "$fragment"
+}
+
 fix_niri_include_present() {
   local config=$1 fragment=$2
   case "$fragment" in
@@ -324,6 +340,9 @@ fix_niri_include_present() {
       ;;
     binding)
       grep -Eq '^[[:space:]]*include[[:space:]]+optional[[:space:]]*=[[:space:]]*true[[:space:]]+"myunix/touchpad-bind\.kdl"([[:space:]]|$)' "$config"
+      ;;
+    plugin-binds)
+      grep -Eq '^[[:space:]]*include[[:space:]]+optional[[:space:]]*=[[:space:]]*true[[:space:]]+"myunix/plugin-binds\.kdl"([[:space:]]|$)' "$config"
       ;;
     *)
       return 2
@@ -359,6 +378,9 @@ fix_niri_restore_missing_includes() {
   fi
   if ! fix_niri_include_present "$temporary" binding; then
     printf '\n%s\n' 'include optional=true "myunix/touchpad-bind.kdl"' >> "$temporary"
+  fi
+  if ! fix_niri_include_present "$temporary" plugin-binds; then
+    printf '\n%s\n' 'include optional=true "myunix/plugin-binds.kdl"' >> "$temporary"
   fi
   if [[ "$repair_fcitx" == 1 ]] && ! fix_niri_fcitx_is_healthy "$temporary"; then
     if ! grep -Eq '^[[:space:]]*environment[[:space:]]*\{[[:space:]]*$' "$temporary"; then
@@ -419,6 +441,20 @@ fix_niri_restore_touchpad_fragment() {
   source="$(fix_niri_module_touchpad_fragment_path)"
   [[ -s "$source" ]] || {
     printf 'MyUnix Niri touchpad fragment source is unavailable: %s\n' "$source" >&2
+    return 1
+  }
+  mkdir -p "$(dirname "$target")"
+  fix_niri_backup_file "$target" || return $?
+  cp -a "$source" "$target"
+}
+
+fix_niri_restore_plugin_bindings() {
+  local target source
+  fix_niri_plugin_bindings_are_healthy && return 0
+  target="$(fix_niri_plugin_bindings_path)"
+  source="$(fix_niri_module_plugin_bindings_path)"
+  [[ -s "$source" ]] || {
+    printf 'MyUnix Niri plugin binding source is unavailable: %s\n' "$source" >&2
     return 1
   }
   mkdir -p "$(dirname "$target")"
@@ -494,7 +530,7 @@ fix_diagnose_niri_config() {
     missing=1
   fi
 
-  for fragment in touchpad binding; do
+  for fragment in touchpad binding plugin-binds; do
     if fix_niri_include_present "$config" "$fragment"; then
       printf '%s\n' "  - MyUnix $fragment include: present"
     else
@@ -520,6 +556,12 @@ fix_diagnose_niri_config() {
     printf '%s\n' "  - MyUnix touchpad binding: missing ($(fix_niri_touchpad_binding_path))"
     missing=1
   fi
+  if fix_niri_plugin_bindings_are_healthy; then
+    printf '%s\n' "  - MyUnix DMS plugin bindings: present ($(fix_niri_plugin_bindings_path))"
+  else
+    printf '%s\n' "  - MyUnix DMS plugin bindings: missing ($(fix_niri_plugin_bindings_path))"
+    missing=1
+  fi
   if fix_niri_fcitx_is_healthy "$config"; then
     printf '%s\n' '  - Niri Fcitx5 startup and environment: present'
   else
@@ -531,7 +573,7 @@ fix_diagnose_niri_config() {
 
 fix_plan_niri_config() {
   cat <<'EOF'
-Validate the active Niri configuration and restore missing MyUnix-owned touchpad fragments, binding, include lines, and Fcitx5 startup/environment via the Niri module helper.
+Validate the active Niri configuration and restore missing MyUnix-owned touchpad fragments, binding, DMS plugin binding fragment, include lines, and Fcitx5 startup/environment via the Niri module helper.
 Validate the exact candidate before replacing the config; back up any changed managed file under ~/.local/state/myunix/backups/.
 An invalid user config is reported with its validation output and is never replaced or rewritten by this repair.
 No mouse settings, DMS private state, credentials, or session profiles are changed.
@@ -551,11 +593,12 @@ fix_apply_niri_managed_config() {
   config="$(fix_niri_config_path)"
   [[ -f "$config" ]] || return 1
   fix_niri_restore_touchpad_fragment || return $?
+  fix_niri_restore_plugin_bindings || return $?
   fix_niri_restore_toggle_helper || return $?
   fix_niri_restore_toggle_binding || return $?
   fix_niri_validate_config "$config" || return $?
   fix_niri_restore_missing_includes "$config" "$repair_fcitx" || return $?
-  normalize_niri_dms_touchpad_includes || return $?
+  normalize_niri_dms_managed_includes || return $?
   fix_reload_niri_if_running
 }
 

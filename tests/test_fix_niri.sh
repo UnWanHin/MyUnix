@@ -5,7 +5,7 @@ source "$(dirname "$0")/test_helper.bash"
 temporary_dir="$(mktemp -d)"
 trap 'rm -rf -- "$temporary_dir"' EXIT
 
-for scenario in missing-fragment ordering invalid-config invalid-candidate invalid-candidate-symlink custom-path reload-failure fcitx-session; do
+for scenario in missing-fragment ordering plugin-bindings invalid-config invalid-candidate invalid-candidate-symlink custom-path reload-failure fcitx-session; do
   [[ -z "${TEST_CASE:-}" || "$TEST_CASE" == "$scenario" ]] || continue
   home="$temporary_dir/$scenario"
   mkdir -p "$home/.config/niri"
@@ -54,6 +54,25 @@ for scenario in missing-fragment ordering invalid-config invalid-candidate inval
         input_line="$(grep -nF "include optional=true \"dms/input.kdl\"" "$HOME/.config/niri/config.kdl" | cut -d: -f1)"
         touchpad_line="$(grep -nF "include \"myunix/touchpad.kdl\"" "$HOME/.config/niri/config.kdl" | cut -d: -f1)"
         [[ -n "$input_line" && -n "$touchpad_line" && "$input_line" -lt "$touchpad_line" ]]
+        ;;
+      plugin-bindings)
+        printf "%s\n" \
+          "include \"myunix/touchpad.kdl\"" \
+          "include optional=true \"myunix/touchpad-bind.kdl\"" \
+          "include optional=true \"dms/input.kdl\"" \
+          > "$HOME/.config/niri/config.kdl"
+        mkdir -p "$HOME/.config/niri/myunix"
+        printf "%s\n" "input {" "  touchpad {" "    tap" "  }" "}" > \
+          "$HOME/.config/niri/myunix/touchpad.kdl"
+        install_niri_dms_touchpad_toggle
+        configure_niri_dms_touchpad_toggle_binding
+        diagnosis="$(fix_diagnose_niri_config || true)"
+        [[ "$diagnosis" == *"MyUnix DMS plugin bindings: missing"* ]]
+        fix_apply_niri_config
+        test -s "$HOME/.config/niri/myunix/plugin-binds.kdl"
+        grep -Fq "wallpaperCarousel" "$HOME/.config/niri/myunix/plugin-binds.kdl"
+        grep -Fqx "include optional=true \"myunix/plugin-binds.kdl\"" "$HOME/.config/niri/config.kdl"
+        fix_verify_niri_config
         ;;
       invalid-config|invalid-candidate|invalid-candidate-symlink)
         if [[ "$SCENARIO" == invalid-config ]]; then

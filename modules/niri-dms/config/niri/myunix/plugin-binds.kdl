@@ -1,0 +1,12 @@
+// Managed by MyUnix Niri + DMS: hotkeys for the reviewed DMS plugins.
+//
+// The upstream plugin READMEs suggest Mod+W / Mod+Shift+Left / Mod+Shift+Right,
+// but dms/binds.kdl already binds those to native Niri actions, so the
+// wallpaper carousel moves to Mod+Alt+*. This fragment is separate from the
+// DMS-generated dms/binds.kdl so neither side overwrites the other.
+binds {
+    Mod+Alt+W hotkey-overlay-title="Wallpaper Carousel" { spawn "dms" "ipc" "call" "wallpaperCarousel" "toggle"; }
+    Mod+Alt+Right hotkey-overlay-title="Next Wallpaper" { spawn "dms" "ipc" "call" "wallpaperCarousel" "cycleNext"; }
+    Mod+Alt+Left hotkey-overlay-title="Previous Wallpaper" { spawn "dms" "ipc" "call" "wallpaperCarousel" "cyclePrevious"; }
+    Mod+Alt+H hotkey-overlay-title="DMS Theme Sync" { spawn "dms" "ipc" "call" "dmsThemeSync" "configure"; }
+}

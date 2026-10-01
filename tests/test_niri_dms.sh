@@ -79,7 +79,7 @@ printf '%s\n' \
   'include optional=true "myunix/touchpad-bind.kdl" // managed binding' \
   'include "dms/input.kdl" // generated DMS state' \
   > "$temporary_dir/home/.config/niri/config.kdl"
-run env HOME="$temporary_dir/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_dir/home/.config/niri" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; normalize_niri_dms_touchpad_includes; normalize_niri_dms_touchpad_includes; cat \"\$HOME/.config/niri/config.kdl\""
+run env HOME="$temporary_dir/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_dir/home/.config/niri" bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; normalize_niri_dms_managed_includes; normalize_niri_dms_managed_includes; cat \"\$HOME/.config/niri/config.kdl\""
 assert_status 0
 input_include_line="$(grep -nF 'include optional=true "dms/input.kdl"' "$temporary_dir/home/.config/niri/config.kdl" | cut -d: -f1)"
 touchpad_include_line="$(grep -nF 'include "myunix/touchpad.kdl"' "$temporary_dir/home/.config/niri/config.kdl" | cut -d: -f1)"
@@ -186,6 +186,9 @@ printf '%s\n' 'private phone fragment' > "$temporary_export/home/.config/niri/my
 printf '%s\n' 'input {' '  touchpad {' '  }' '}' > "$temporary_export/home/.config/niri/myunix/touchpad.kdl"
 printf '%s\n' 'binds {' '  Mod+F8 { spawn "niri-touchpad-toggle"; }' '}' > "$temporary_export/home/.config/niri/myunix/touchpad-bind.kdl"
 printf '%s\n' \
+  'environment {' \
+  '  XDG_MENU_PREFIX "plasma-"' \
+  '}' \
   'include "myunix/touchpad.kdl"' \
   'include optional=true "myunix/touchpad-bind.kdl"' \
   'include "dms/input.kdl"' \
@@ -251,6 +254,26 @@ exported_touchpad_line="$(grep -nF 'include "myunix/touchpad.kdl"' "$temporary_e
 }
 [[ -f "$temporary_export/target/myunix/touchpad-bind.kdl" ]] || {
   printf '%s\n' 'Expected managed touchpad binding to be exported' >&2
+  exit 1
+}
+[[ -f "$temporary_export/target/myunix/plugin-binds.kdl" ]] || {
+  printf '%s\n' 'Expected managed DMS plugin bindings to be exported' >&2
+  exit 1
+}
+[[ -f "$temporary_export/target/myunix/plasma-menu.kdl" ]] || {
+  printf '%s\n' 'Expected managed KDE menu fragment to be exported' >&2
+  exit 1
+}
+grep -qF 'include optional=true "myunix/plugin-binds.kdl"' "$temporary_export/target/config.kdl" || {
+  printf '%s\n' 'Exporter must keep the managed plugin binding include' >&2
+  exit 1
+}
+[[ "$OUTPUT" != *'XDG_MENU_PREFIX'* ]] || {
+  printf '%s\n' 'Exporter must not export the machine-specific XDG_MENU_PREFIX' >&2
+  exit 1
+}
+[[ "$(cat "$temporary_export/target/config.kdl")" != *'XDG_MENU_PREFIX'* ]] || {
+  printf '%s\n' 'Exported Niri config still contains XDG_MENU_PREFIX' >&2
   exit 1
 }
 for kitty_file in kitty.conf dank-theme.conf dank-tabs.conf; do
@@ -515,3 +538,154 @@ assert_status 0
 }
 assert_output_contains 'plugins install dankGifSearch'
 assert_output_contains 'plugins install dankKDEConnect'
+
+# --- KDE application-menu fragment follows the installed Plasma menu -------
+temporary_kde="$(mktemp -d)"
+mkdir -p "$temporary_kde/config/myunix" "$temporary_kde/menus"
+printf '%s\n' 'plasma menu' > "$temporary_kde/menus/plasma-applications.menu"
+
+run env MYUNIX_NIRI_CONFIG_DIR="$temporary_kde/config" MYUNIX_NIRI_DMS_KDE_MENU=auto \
+  MYUNIX_NIRI_DMS_KDE_MENU_SOURCE="$temporary_kde/menus/plasma-applications.menu" \
+  bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_kde_menu; cat '$temporary_kde/config/myunix/plasma-menu.kdl'"
+assert_status 0
+assert_output_contains 'XDG_MENU_PREFIX "plasma-"'
+
+run env MYUNIX_NIRI_CONFIG_DIR="$temporary_kde/config" MYUNIX_NIRI_DMS_KDE_MENU=auto \
+  MYUNIX_NIRI_DMS_KDE_MENU_SOURCE="$temporary_kde/menus/absent.menu" \
+  bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_kde_menu; test ! -e '$temporary_kde/config/myunix/plasma-menu.kdl'"
+assert_status 0
+
+run env MYUNIX_NIRI_CONFIG_DIR="$temporary_kde/config" MYUNIX_NIRI_DMS_KDE_MENU=0 \
+  MYUNIX_NIRI_DMS_KDE_MENU_SOURCE="$temporary_kde/menus/plasma-applications.menu" \
+  bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_kde_menu; test ! -e '$temporary_kde/config/myunix/plasma-menu.kdl'"
+assert_status 0
+
+run env MYUNIX_NIRI_CONFIG_DIR="$temporary_kde/config" MYUNIX_NIRI_DMS_KDE_MENU=1 \
+  MYUNIX_NIRI_DMS_KDE_MENU_SOURCE="$temporary_kde/menus/absent.menu" \
+  bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_kde_menu; test -f '$temporary_kde/config/myunix/plasma-menu.kdl'"
+assert_status 0
+
+run env MYUNIX_NIRI_CONFIG_DIR="$temporary_kde/config" MYUNIX_NIRI_DMS_KDE_MENU=maybe \
+  bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; configure_niri_dms_kde_menu"
+assert_status 2
+assert_output_contains 'MYUNIX_NIRI_DMS_KDE_MENU must be 0, 1 or auto'
+
+# --- managed plugin bindings install from the module tree -----------------
+temporary_binds="$(mktemp -d)"
+run env MYUNIX_NIRI_CONFIG_DIR="$temporary_binds/niri" \
+  bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; install_niri_dms_plugin_bindings; cat '$temporary_binds/niri/myunix/plugin-binds.kdl'"
+assert_status 0
+assert_output_contains 'wallpaperCarousel'
+assert_output_contains 'dmsThemeSync'
+
+# --- include normalization covers every managed fragment ------------------
+temporary_includes="$(mktemp -d)"
+mkdir -p "$temporary_includes/niri/myunix" "$temporary_includes/home"
+printf '%s\n' 'environment {' '}' > "$temporary_includes/niri/dms-theme-sync.kdl"
+printf '%s\n' 'binds {' '}' > "$temporary_includes/niri/myunix/plugin-binds.kdl"
+printf '%s\n' 'environment {' '  XDG_MENU_PREFIX "plasma-"' '}' > "$temporary_includes/niri/myunix/plasma-menu.kdl"
+printf '%s\n' 'input {' '}' > "$temporary_includes/niri/myunix/touchpad.kdl"
+printf '%s\n' 'binds {' '}' > "$temporary_includes/niri/myunix/touchpad-bind.kdl"
+printf '%s\n' \
+  'include "dms-theme-sync.kdl"' \
+  'include optional=true "myunix/plugin-binds.kdl"' \
+  'include optional=true "myunix/plasma-menu.kdl"' \
+  'include "dms/input.kdl"' \
+  'include "myunix/touchpad.kdl"' \
+  'include optional=true "myunix/touchpad-bind.kdl"' \
+  > "$temporary_includes/niri/config.kdl"
+
+run env HOME="$temporary_includes/home" MYUNIX_NIRI_CONFIG_DIR="$temporary_includes/niri" \
+  bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; normalize_niri_dms_managed_includes; normalize_niri_dms_managed_includes; cat '$temporary_includes/niri/config.kdl'"
+assert_status 0
+for managed_include in \
+  'include optional=true "dms/input.kdl"' \
+  'include "myunix/touchpad.kdl"' \
+  'include optional=true "myunix/touchpad-bind.kdl"' \
+  'include optional=true "dms-theme-sync.kdl"' \
+  'include optional=true "myunix/plugin-binds.kdl"' \
+  'include optional=true "myunix/plasma-menu.kdl"'; do
+  count="$(grep -cF "$managed_include" "$temporary_includes/niri/config.kdl")"
+  [[ "$count" == 1 ]] || {
+    printf 'Expected exactly one managed include, found %s: %s\n' "$count" "$managed_include" >&2
+    exit 1
+  }
+done
+[[ "$(cat "$temporary_includes/niri/config.kdl")" != *'include "dms-theme-sync.kdl"'* ]] || {
+  printf '%s\n' 'Generated DMS theme include must stay optional' >&2
+  exit 1
+}
+input_include_line="$(grep -nF 'include optional=true "dms/input.kdl"' "$temporary_includes/niri/config.kdl" | cut -d: -f1)"
+touchpad_include_line="$(grep -nF 'include "myunix/touchpad.kdl"' "$temporary_includes/niri/config.kdl" | cut -d: -f1)"
+[[ "$input_include_line" -lt "$touchpad_include_line" ]] || {
+  printf '%s\n' 'Expected DMS input include before the MyUnix touchpad override' >&2
+  exit 1
+}
+
+# --- optional KDE package set stays opt-in --------------------------------
+run env MYUNIX_NIRI_DMS_KDE=0 bash -c "
+  source '$PROJECT_ROOT/scripts/lib/core.sh'
+  source '$PROJECT_ROOT/modules/niri-dms/install.sh'
+  verify_dnf_manifest_available() { printf 'verify:%s\n' \"\$1\"; }
+  install_dnf_manifest() { printf 'install:%s\n' \"\$1\"; }
+  install_niri_dms_kde_integration
+"
+assert_status 0
+[[ "$OUTPUT" != *'install:'* ]] || {
+  printf '%s\n' 'The KDE/Plasma package set must stay opt-in' >&2
+  exit 1
+}
+
+run env MYUNIX_NIRI_DMS_KDE=1 bash -c "
+  source '$PROJECT_ROOT/scripts/lib/core.sh'
+  source '$PROJECT_ROOT/modules/niri-dms/install.sh'
+  verify_dnf_manifest_available() { printf 'verify:%s\n' \"\$1\"; }
+  install_dnf_manifest() { printf 'install:%s\n' \"\$1\"; }
+  install_niri_dms_kde_integration
+"
+assert_status 0
+assert_output_contains 'packages-kde.txt'
+grep -Fxq plasma-workspace "$PROJECT_ROOT/modules/niri-dms/packages-kde.txt" || {
+  printf '%s\n' 'Expected plasma-workspace in the optional KDE manifest' >&2
+  exit 1
+}
+grep -Fxq plasma-workspace "$PROJECT_ROOT/modules/niri-dms/packages.txt" && {
+  printf '%s\n' 'plasma-workspace must not be part of the default Niri/DMS manifest' >&2
+  exit 1
+}
+
+run env MYUNIX_NIRI_DMS_KDE=2 bash -c "
+  source '$PROJECT_ROOT/scripts/lib/core.sh'
+  source '$PROJECT_ROOT/modules/niri-dms/install.sh'
+  install_niri_dms_kde_integration
+"
+assert_status 2
+assert_output_contains 'MYUNIX_NIRI_DMS_KDE must be 0 or 1'
+
+# --- public DMS plugin settings projection --------------------------------
+run bash -c "
+  source '$PROJECT_ROOT/scripts/lib/core.sh'
+  source '$PROJECT_ROOT/modules/niri-dms/install.sh'
+  printf '%s\n' '{\"dankActions\":{\"enabled\":true},\"dockerManager\":{\"enabled\":true,\"dockerBinary\":\"podman\"}}' > '$temporary_plugin_lock/public-ok.json'
+  printf '%s\n' '{\"dockerManager\":{\"haToken\":\"secret\"}}' > '$temporary_plugin_lock/public-bad.json'
+  printf '%s\n' '{\"dankKDEConnect\":{\"selectedDeviceId\":\"private\"}}' > '$temporary_plugin_lock/public-device.json'
+  validate_dms_public_plugin_settings '$temporary_plugin_lock/public-ok.json' && printf 'ok-accepted\n'
+  validate_dms_public_plugin_settings '$temporary_plugin_lock/public-bad.json' || printf 'token-rejected\n'
+  validate_dms_public_plugin_settings '$temporary_plugin_lock/public-device.json' || printf 'device-rejected\n'
+"
+assert_status 0
+assert_output_contains 'ok-accepted'
+assert_output_contains 'token-rejected'
+assert_output_contains 'device-rejected'
+
+public_live="$temporary_plugin_lock/public-live.json"
+public_target="$temporary_plugin_lock/public-exported.json"
+printf '%s\n' '{"dankActions":{"enabled":true},"dockerManager":{"enabled":true,"dockerBinary":"podman","containerName":"private"},"dankKDEConnect":{"selectedDeviceId":"private-device"},"homeAssistantMonitor":{"enabled":true,"token":"private-token"}}' > "$public_live"
+run env MYUNIX_DMS_PLUGIN_SETTINGS_FILE="$public_live" MYUNIX_DMS_PLUGIN_SETTINGS_TARGET="$public_target" \
+  bash -c "source '$PROJECT_ROOT/scripts/lib/core.sh'; source '$PROJECT_ROOT/modules/niri-dms/install.sh'; export_dms_plugin_settings; cat '$public_target'"
+assert_status 0
+assert_output_contains '"dockerBinary": "podman"'
+[[ "$OUTPUT" != *'private-token'* && "$OUTPUT" != *'private-device'* && "$OUTPUT" != *'containerName'* ]] || {
+  printf '%s\n' 'Public DMS plugin settings export leaked private plugin state' >&2
+  exit 1
+}

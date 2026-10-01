@@ -8,3 +8,20 @@ zsh
 grim
 slurp
 wl-clipboard
+
+# Runtime dependencies of the reviewed DMS plugins in plugins.txt. Without them
+# the plugins load but stay degraded: amdGpuMonitor warns every few seconds,
+# homeAssistantMonitor cannot import QtWebSockets, dockerManager looks for a
+# docker binary that is not installed, and dmsThemeSync cannot apply its
+# GTK/Qt/Kvantum/icon theme set.
+qalculate
+qt6-qtwebsockets-devel
+adw-gtk3-theme
+qt5ct
+qt6ct
+kvantum
+qt6-qttools
+plasma-breeze
+breeze-gtk
+xsettingsd
+papirus-icon-theme

@@ -101,28 +101,46 @@ remove_niri_dms_legacy_touchpad_binding() {
   mv "$temporary" "$binding_file"
 }
 
-normalize_niri_dms_touchpad_includes() {
+normalize_niri_dms_managed_includes() {
   local config temporary backup_dir backup_file binding_line
   config="${MYUNIX_NIRI_CONFIG:-${MYUNIX_NIRI_CONFIG_DIR:-$HOME/.config/niri}/config.kdl}"
   [[ -f "$config" ]] || return 0
 
   binding_line='include optional=true "myunix/touchpad-bind.kdl"'
   temporary="$(mktemp "${config}.myunix.XXXXXX")"
-  awk -v binding_line="$binding_line" -v binding_file="$(dirname "$config")/myunix/touchpad-bind.kdl" '
+  awk -v binding_line="$binding_line" \
+    -v binding_file="$(dirname "$config")/myunix/touchpad-bind.kdl" \
+    -v theme_sync_file="$(dirname "$config")/dms-theme-sync.kdl" \
+    -v plugin_binds_file="$(dirname "$config")/myunix/plugin-binds.kdl" \
+    -v plasma_menu_file="$(dirname "$config")/myunix/plasma-menu.kdl" '
+    function file_exists(path,   probe) {
+      if ((getline probe < path) > 0) {
+        close(path)
+        return 1
+      }
+      close(path)
+      return 0
+    }
     /^[[:space:]]*include[[:space:]]+(optional[[:space:]]*=[[:space:]]*true[[:space:]]+)?"dms\/input\.kdl"([[:space:]]|$)/ {
       dms_input_seen = 1
       next
     }
-    /^[[:space:]]*include[[:space:]]+"myunix\/touchpad\.kdl"([[:space:]]|$)/ { next }
-    /^[[:space:]]*include[[:space:]]+optional[[:space:]]*=[[:space:]]*true[[:space:]]+"myunix\/touchpad-bind\.kdl"([[:space:]]|$)/ { next }
+    /^[[:space:]]*include[[:space:]]+(optional[[:space:]]*=[[:space:]]*true[[:space:]]+)?"myunix\/touchpad\.kdl"([[:space:]]|$)/ { next }
+    /^[[:space:]]*include[[:space:]]+(optional[[:space:]]*=[[:space:]]*true[[:space:]]+)?"myunix\/touchpad-bind\.kdl"([[:space:]]|$)/ { next }
+    /^[[:space:]]*include[[:space:]]+(optional[[:space:]]*=[[:space:]]*true[[:space:]]+)?"dms-theme-sync\.kdl"([[:space:]]|$)/ { next }
+    /^[[:space:]]*include[[:space:]]+(optional[[:space:]]*=[[:space:]]*true[[:space:]]+)?"myunix\/plugin-binds\.kdl"([[:space:]]|$)/ { next }
+    /^[[:space:]]*include[[:space:]]+(optional[[:space:]]*=[[:space:]]*true[[:space:]]+)?"myunix\/plasma-menu\.kdl"([[:space:]]|$)/ { next }
     { print }
     END {
       if (dms_input_seen) print "include optional=true \"dms/input.kdl\""
       print "include \"myunix/touchpad.kdl\""
-      if ((getline probe < binding_file) > 0) {
-        close(binding_file)
-        print binding_line
-      }
+      if (file_exists(binding_file)) print binding_line
+      # The DMS theme-sync file is plugin-generated state. It is loaded through
+      # an optional include so that a Niri start before the first plugin apply
+      # cannot make the whole config invalid.
+      if (file_exists(theme_sync_file)) print "include optional=true \"dms-theme-sync.kdl\""
+      if (file_exists(plugin_binds_file)) print "include optional=true \"myunix/plugin-binds.kdl\""
+      if (file_exists(plasma_menu_file)) print "include optional=true \"myunix/plasma-menu.kdl\""
     }
   ' "$config" > "$temporary"
   if cmp -s "$temporary" "$config"; then
@@ -137,10 +155,70 @@ normalize_niri_dms_touchpad_includes() {
 
   backup_dir="${MYUNIX_NIRI_DMS_TOUCHPAD_BACKUP_DIR:-$HOME/.local/state/myunix/backups/niri-dms/$(date +%Y%m%d-%H%M%S)}"
   mkdir -p "$backup_dir"
-  backup_file="$backup_dir/config-before-touchpad-order.kdl"
-  [[ -e "$backup_file" ]] && backup_file="$backup_dir/config-before-touchpad-order-$(date +%N).kdl"
+  backup_file="$backup_dir/config-before-include-order.kdl"
+  [[ -e "$backup_file" ]] && backup_file="$backup_dir/config-before-include-order-$(date +%N).kdl"
   cp -a "$config" "$backup_file"
   mv "$temporary" "$config"
+}
+
+
+install_niri_dms_plugin_bindings() {
+  local module_dir source target
+  module_dir="$(niri_dms_dir)"
+  source="$module_dir/config/niri/myunix/plugin-binds.kdl"
+  target="${MYUNIX_NIRI_CONFIG_DIR:-$HOME/.config/niri}/myunix/plugin-binds.kdl"
+  [[ -f "$source" ]] || die "Missing Niri plugin binding fragment: $source"
+  mkdir -p "$(dirname "$target")"
+  cp -a "$source" "$target"
+  chmod 0644 "$target"
+}
+
+# XDG_MENU_PREFIX is only meaningful while plasma-workspace provides
+# /etc/xdg/menus/plasma-applications.menu. The fragment therefore follows the
+# package instead of being pinned in config.kdl, so a Niri + DMS install
+# without the optional KDE integration never points XDG_MENU_PREFIX at a menu
+# tree that does not exist.
+configure_niri_dms_kde_menu() {
+  local module_dir menu_file menu_source temporary
+  module_dir="$(niri_dms_dir)"
+  menu_file="${MYUNIX_NIRI_CONFIG_DIR:-$HOME/.config/niri}/myunix/plasma-menu.kdl"
+  menu_source="${MYUNIX_NIRI_DMS_KDE_MENU_SOURCE:-/etc/xdg/menus/plasma-applications.menu}"
+
+  case "${MYUNIX_NIRI_DMS_KDE_MENU:-auto}" in
+    0) rm -f "$menu_file"; return 0 ;;
+    1) ;;
+    auto)
+      if [[ ! -f "$menu_source" ]]; then
+        rm -f "$menu_file"
+        return 0
+      fi
+      ;;
+    *) die 'MYUNIX_NIRI_DMS_KDE_MENU must be 0, 1 or auto' ;;
+  esac
+
+  [[ -f "$module_dir/config/niri/myunix/plasma-menu.kdl" ]] \
+    || die "Missing Niri KDE menu fragment: $module_dir/config/niri/myunix/plasma-menu.kdl"
+  mkdir -p "$(dirname "$menu_file")"
+  temporary="$(mktemp "${menu_file}.myunix.XXXXXX")"
+  cp -a "$module_dir/config/niri/myunix/plasma-menu.kdl" "$temporary"
+  mv "$temporary" "$menu_file"
+}
+
+# plasma-workspace resolves to roughly 250 packages and is deliberately kept
+# out of packages.txt. The KDE menu fragment above follows the resulting menu
+# file, so selecting this only decides whether the packages are requested.
+install_niri_dms_kde_integration() {
+  local manifest
+  case "${MYUNIX_NIRI_DMS_KDE:-0}" in
+    0) return 0 ;;
+    1) ;;
+    *) die 'MYUNIX_NIRI_DMS_KDE must be 0 or 1' ;;
+  esac
+  manifest="$(niri_dms_dir)/packages-kde.txt"
+  [[ -r "$manifest" ]] || die "Missing optional KDE manifest: $manifest"
+  info 'Installing the optional KDE/Plasma application-menu integration (about 250 packages).'
+  verify_dnf_manifest_available "$manifest" || return $?
+  install_dnf_manifest "$manifest"
 }
 
 configure_niri_dms_touchpad_toggle_binding() {
@@ -272,6 +350,7 @@ install_niri_dms() {
   install_dnf_sources_for_scope niri-dms || return $?
   verify_dnf_manifest_available "$module_dir/packages.txt" || return $?
   install_dnf_manifest "$module_dir/packages.txt" || return $?
+  install_niri_dms_kde_integration || return $?
   enable_dms_user_service || return $?
   if [[ -f "$(dms_plugin_lock_source)" ]]; then
     restore_niri_dms_plugin_lock || return $?
@@ -283,9 +362,11 @@ install_niri_dms() {
   install_niri_dms_touchpad_toggle || return $?
   install_niri_dms_screenshot_helper || return $?
   install_niri_dms_screenshot_binding || return $?
+  install_niri_dms_plugin_bindings || return $?
   remove_niri_dms_legacy_touchpad_binding || return $?
   configure_niri_dms_touchpad_toggle_binding || return $?
-  normalize_niri_dms_touchpad_includes || return $?
+  configure_niri_dms_kde_menu || return $?
+  normalize_niri_dms_managed_includes || return $?
   configure_niri_fcitx_session || return $?
   import_dms_personalization
   import_dms_plugin_settings

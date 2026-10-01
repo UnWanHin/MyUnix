@@ -1,0 +1,17 @@
+# Optional KDE/Plasma integration, installed only when MYUNIX_NIRI_DMS_KDE=1.
+#
+# This is deliberately NOT part of packages.txt: plasma-workspace resolves to
+# roughly 250 packages and ~550 MiB because it pulls the KDE Plasma desktop,
+# kwin and xdg-desktop-portal-kde, and it *weak-depends* on
+# xwaylandvideobridge, which config.kdl has to neutralize with a window-rule.
+#
+# Install it when you want a complete XDG application menu in the Niri session
+# (the managed myunix/plasma-menu.kdl fragment sets XDG_MENU_PREFIX "plasma-")
+# and a working "Open With" in Dolphin and other KDE applications.
+#
+# kde-cli-tools provides keditfiletype, which KDE applications use for the
+# file-type editor; it is neither a Requires nor a Recommends of
+# plasma-workspace. breeze-icon-theme arrives as a dependency through
+# kf6-breeze-icons and plasma-integration and is therefore not pinned here.
+plasma-workspace
+kde-cli-tools
