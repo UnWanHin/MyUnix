@@ -18,7 +18,7 @@ printf 'git\n# comment\nwget\n' > "$tmp/dnf.txt"
 validate_dnf_manifest "$tmp/dnf.txt"
 validate_rpm_manifest "$PROJECT_ROOT/modules/rpm/apps.tsv"
 
-tabby_record='tabby|Tabby|https://github.com/Eugeny/tabby/releases/download/v1.0.235/tabby-1.0.235-linux-x64.rpm|0dd56a3c2a43547e5ae23cd87a8a205b3b91d3bf6685cd8e380c79cf1154a0c9|optional|rpm|tabby-terminal'
+tabby_record='tabby|Tabby|https://github.com/Eugeny/tabby/releases/download/v1.0.237/tabby-1.0.237-linux-x64.rpm|162a523b85e04c2118570edecc977c34a20c681ad8a34f63496081ddcae76e8d|optional|rpm|tabby-terminal'
 grep -Fqx -- "$tabby_record" "$PROJECT_ROOT/modules/rpm/apps.tsv"
 grep -Fxq obs-studio "$PROJECT_ROOT/modules/dnf/optional.txt"
 grep -Fxq libreoffice "$PROJECT_ROOT/modules/dnf/optional.txt"

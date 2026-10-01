@@ -25,6 +25,7 @@ neovim
 net-tools
 nmap
 nmap-ncat
+nvtop
 ranger
 rsync
 screenfetch

@@ -8,10 +8,10 @@ desktop settings and exported state from overwriting one another.
 | bootstrap | RPM Fusion repositories | [[../modules/bootstrap|bootstrap]] |
 | dnf | Fedora base and portable package profiles, source registry and review snapshots | [[../modules/dnf|dnf]] |
 | time-sync | chrony clock correction and UTC RTC storage | [[../modules/time-sync|system time sync]] |
-| rpm | checksum-pinned downloaded RPMs | [[../modules/rpm|rpm]] |
+| rpm | checksum-pinned downloaded RPMs, including the AMD GPU Top monitor used by the DMS plugin | [[../modules/rpm|rpm]] |
 | gnome | GNOME media-key shortcuts | [[../modules/gnome|gnome]] |
 | input-method | IBus/Fcitx5 and app launch adapters | [[../modules/input-method|input method]] |
-| steam | RPM Fusion Steam plus Niri system-composer launcher | [[../modules/steam|steam]] |
+| steam | RPM Fusion Steam plus Niri system-composer launcher; the XWayland satellite popup fix is a `fix` repair, not an install step | [[../modules/steam|steam]] |
 | niri-dms | default one-click Niri/DMS session, reviewed plugin IDs and runtime packages, KDL hotkeys, `Mod+F8` touchpad shortcut, managed fragment includes, xwaylandvideobridge window rule and categorized public personalization; the heavy KDE/Plasma menu integration is opt-in and custom install can opt out | [[../modules/niri-dms|niri dms]] |
 | shell-config | Bash/Zsh common `.sysrc` fragments | [[../modules/shell-config|shell config]] |
 | zsh-personalization | Pinned Oh My Zsh, Powerlevel10k and public Zsh plugins | [[../modules/zsh-personalization|zsh personalization]] |
