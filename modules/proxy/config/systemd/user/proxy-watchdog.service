@@ -1,0 +1,13 @@
+[Unit]
+Description=Proxy Watchdog - sync GNOME system proxy with the local proxy client
+Documentation=file://%h/.local/bin/proxy-watchdog.sh
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/proxy-watchdog.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

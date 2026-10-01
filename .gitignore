@@ -18,4 +18,6 @@ config/
 !modules/portal-login/config/bin/*
 !modules/codex-super-bullet/config/
 !modules/codex-super-bullet/config/**
+!modules/proxy/config/
+!modules/proxy/config/**
 readme.md

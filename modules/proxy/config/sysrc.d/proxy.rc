@@ -1,0 +1,26 @@
+# Network proxy for CLI tools (codex, curl, git, npm, etc.)
+# Loaded via ~/.config/.sysrc for both bash and zsh.
+#
+# Behavior:
+#   * Proxy env vars are exported ONLY while the local proxy client
+#     (FlClash/mihomo on 127.0.0.1:7890 — the same endpoint as the GNOME
+#     system proxy / browser) is actually running.
+#   * When the proxy client is OFF, the env vars are left unset, so CLI
+#     tools fall back to direct connections and only OpenAI-domain traffic
+#     (which needs the proxy) is affected; everything else works normally.
+#
+# localhost is excluded so local services (e.g. codex login callback on
+# localhost:1455) are never routed through the proxy.
+_proxy_host="127.0.0.1"
+_proxy_port=7890
+if curl -s -m 1 -o /dev/null "http://${_proxy_host}:${_proxy_port}/" 2>/dev/null; then
+  export http_proxy="http://${_proxy_host}:${_proxy_port}"
+  export https_proxy="http://${_proxy_host}:${_proxy_port}"
+  export all_proxy="http://${_proxy_host}:${_proxy_port}"
+  export HTTP_PROXY="http://${_proxy_host}:${_proxy_port}"
+  export HTTPS_PROXY="http://${_proxy_host}:${_proxy_port}"
+  export ALL_PROXY="http://${_proxy_host}:${_proxy_port}"
+fi
+export no_proxy="localhost,127.0.0.1,::1"
+export NO_PROXY="localhost,127.0.0.1,::1"
+unset _proxy_host _proxy_port

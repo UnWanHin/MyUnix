@@ -28,6 +28,7 @@ portable changes into the owning manifest before committing.
 ./scripts/myunix install --module jetbrains-toolbox
 ./scripts/myunix install --module phone-connect
 ./scripts/myunix install --module portal-login
+./scripts/myunix install --module proxy
 ./scripts/myunix install --module time-sync
 ./scripts/myunix install --module development-toolchain
 ./scripts/myunix install --module terminal-tools
@@ -116,6 +117,12 @@ NetworkManager tray applet to Niri/DMS and a generic **Wi-Fi Login** entry in
 DMS Spotlight. It detects the current network's captive-portal page, then
 opens it only after you select **Open sign-in page** in its notification; it
 stores no Wi-Fi credentials or per-network redirect URLs.
+
+The optional [Proxy Watchdog](docs/modules/proxy.md) module keeps the GNOME
+system proxy and the shell proxy environment in sync with a local proxy client
+on `127.0.0.1:7890`, and routes the ChatGPT desktop app through it. It is
+user-level and changes the session-wide system proxy, so it is not part of the
+one-click baseline.
 
 The optional [Distrobox](docs/modules/distrobox.md) module installs only the
 Fedora Distrobox package. It does not create a distribution, pull an image or

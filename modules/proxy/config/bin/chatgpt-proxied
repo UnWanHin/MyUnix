@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# chatgpt-proxied — launch the ChatGPT desktop app through the local proxy.
+#
+# The desktop app (Electron UI + Rust app-server daemon) does NOT follow the
+# GNOME system proxy the way Firefox does, so its login token exchange goes
+# out direct from a blocked region and OpenAI rejects it (403
+# unsupported_country_region). This wrapper forces the proxy two ways,
+# mirroring what the CLI gets from ~/.config/sysrc.d/proxy.rc:
+#   1. env vars  — picked up by the Rust app-server / reqwest
+#   2. --proxy-server / --proxy-bypass-list — forced onto the Chromium stack
+# When the local proxy client is not running the proxy is simply not set
+# (direct mode).
+
+PROXY_HOST="${PROXY_HOST:-127.0.0.1}"
+PROXY_PORT="${PROXY_PORT:-7890}"
+CHATGPT_BIN="${CHATGPT_BIN:-/usr/bin/chatgpt}"
+
+if curl -s -m 1 -o /dev/null "http://${PROXY_HOST}:${PROXY_PORT}/" 2>/dev/null; then
+  export http_proxy="http://${PROXY_HOST}:${PROXY_PORT}"
+  export https_proxy="http://${PROXY_HOST}:${PROXY_PORT}"
+  export all_proxy="http://${PROXY_HOST}:${PROXY_PORT}"
+  export no_proxy="localhost,127.0.0.1,::1"
+  exec "$CHATGPT_BIN" "$@" \
+    --proxy-server="http://${PROXY_HOST}:${PROXY_PORT}" \
+    --proxy-bypass-list="localhost;127.0.0.1;[::1];*.local"
+fi
+exec "$CHATGPT_BIN" "$@"
