@@ -199,7 +199,18 @@ assert_status 0
 run env MYUNIX_CODEX_HOME="$fake_home" XDG_STATE_HOME="$fake_state" MYUNIX_CODEX_BIN="$fake_bin/codex" "$fake_bin/super-bullet" config show
 assert_status 0
 assert_output_contains 'sol_model=gpt-6-astra'
-run env MYUNIX_CODEX_HOME="$fake_home" XDG_STATE_HOME="$fake_state" FAKE_CODEX_LOG="$fake_log" MYUNIX_CODEX_BIN="$fake_bin/codex" "$fake_bin/super-bullet" exec --luna-model gpt-6-sol --sol-model gpt-6-astra 'temporary model override'
+# The Sol validation pass runs only when Luna changed the repository, so this
+# step needs its own repository with an uncommitted change. Running it from the
+# test's own directory would make the assertion depend on the developer's
+# working tree.
+override_repo="$(mktemp -d)"
+git -C "$override_repo" init -q
+printf 'baseline\n' > "$override_repo/tracked.txt"
+git -C "$override_repo" add tracked.txt
+git -C "$override_repo" -c user.name=Test -c user.email=test@example.invalid commit -qm 'before override' >/dev/null
+printf 'changed\n' > "$override_repo/tracked.txt"
+: > "$fake_log"
+run bash -c "cd '$override_repo' && MYUNIX_CODEX_HOME='$fake_home' XDG_STATE_HOME='$fake_state' FAKE_CODEX_LOG='$fake_log' MYUNIX_CODEX_BIN='$fake_bin/codex' '$fake_bin/super-bullet' exec --luna-model gpt-6-sol --sol-model gpt-6-astra 'temporary model override'"
 assert_status 0
 run tail -n 2 "$fake_log"
 assert_status 0
