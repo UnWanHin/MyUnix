@@ -102,11 +102,18 @@ session integration:
   DMS.
 - **Niri touchpad toggle** restores only the managed
   `~/.local/bin/niri-touchpad-toggle` helper, `myunix/touchpad.kdl`, its
-  `Mod+F8` binding, and the two MyUnix include lines. Both original and exact
+  `Mod+F8` binding, and the MyUnix include lines. Both original and exact
   candidate config must validate before replacement; mouse and trackpoint
   settings remain untouched. Verification validates the resulting config,
   not just file presence. When `NIRI_SOCKET` identifies a running session,
   `niri msg action load-config-file` must succeed or the repair reports failure.
+- **XWayland Steam popups (xwayland-satellite 0.8.3)** builds the pinned
+  upstream fix into `/usr/local/bin/xwayland-satellite` because no Fedora 44
+  repository carries it. It is the only repair that builds software: it
+  downloads the `xcb-util` `-devel` packages into a temporary sysroot instead
+  of installing them, keeps the Fedora package installed as the fallback, and
+  never edits Niri configuration. See
+  [Steam](steam.md#x11-context-menus-and-the-xwayland-satellite).
 
 `MYUNIX_NIRI_CONFIG` selects the exact config file and its directory owns the
 managed fragments, even when a different `MYUNIX_NIRI_CONFIG_DIR` is set.

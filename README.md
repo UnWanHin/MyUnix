@@ -105,12 +105,17 @@ not restore FlClash subscriptions, login/account state, or secrets.
 After cancellation or any result (including failure), press Enter to return
 to categories; the result and next steps stay visible until then. Choose
 **Back to categories** in an item menu or **Exit** in the category menu.
+One repair, **XWayland Steam popups**, builds a pinned upstream release into
+`/usr/local/bin` because Fedora 44 does not package it; it unpacks its build
+dependencies into a temporary directory instead of installing them. See
+[Steam](docs/modules/steam.md#x11-context-menus-and-the-xwayland-satellite).
 
 Direct RPM applications are declared in `modules/rpm/apps.tsv`. Add only official HTTPS sources with a pinned SHA-256; packages are downloaded to a temporary directory with `wget`, verified, installed through DNF, and removed. [Feishu](docs/modules/feishu.md) is documented separately because its official page issues short-lived signed RPM URLs that cannot safely live in a reusable manifest. See [module documentation](docs/modules/) for details.
 
 Steam is deliberately separate from direct RPM applications: it is installed
 from RPM Fusion by DNF and receives a user-level Niri compatibility launcher
-with `-system-composer`.
+with `-system-composer`. Steam's X11 popups additionally need the
+`xwayland-satellite` 0.8.3 override that the `fix` menu installs.
 
 The optional [Portal Login](docs/modules/portal-login.md) module adds the
 NetworkManager tray applet to Niri/DMS and a generic **Wi-Fi Login** entry in

@@ -948,6 +948,264 @@ fix_verify_development_toolchain() {
   fix_diagnose_development_toolchain >/dev/null
 }
 
+# --- XWayland satellite override -------------------------------------------
+# Fedora 44 ships xwayland-satellite 0.8.2. Its require_wm_focus() re-asserts
+# the X input focus on override-redirect windows whenever it hands focus back
+# to the compositor, so an X11 application loses its own popup: Steam's context
+# menu closed about 33 ms after it opened. Upstream fixed the focus hand-back
+# in the v0.8.3 release, which no Fedora repository carries, so this repair
+# builds that tag from the pinned upstream source and installs the result as a
+# /usr/local/bin override. The Fedora package stays installed and untouched as
+# the fallback, and no Niri configuration changes.
+#
+# The build needs the xcb-util *-devel headers, which belong to no MyUnix
+# manifest. Rather than installing them system-wide, the repair downloads the
+# RPMs with `dnf download`, unpacks them into a temporary sysroot and points
+# pkg-config, CPATH and LIBRARY_PATH at that directory. `--locked` makes
+# Cargo.lock pin every crate in the pinned tag, which resolves to the upstream
+# commit b83eab900644e4c7c77982ce3d44cb490f0c5e1d.
+#
+# The reference SHA-256 below is the build recorded on this workstation. It is
+# reported, never enforced: the same locked source produces different bytes
+# from a different CARGO_HOME, rustc or Fedora release, because the binary
+# embeds the registry source paths for its panic locations.
+XWAYLAND_SATELLITE_TAG=v0.8.3
+XWAYLAND_SATELLITE_FIX_VERSION=0.8.3
+XWAYLAND_SATELLITE_BUILD_SHA256=3d152b337206c8a9a0a24a2d06d42d8cd93afe5335522a14871b6deb87797972
+XWAYLAND_SATELLITE_BUILD_DEPS=(
+  xcb-util-cursor-devel
+  xcb-util-image-devel
+  xcb-util-keysyms-devel
+  xcb-util-renderutil-devel
+  xcb-util-wm-devel
+)
+
+fix_xwayland_satellite_override_path() {
+  printf '%s\n' "${MYUNIX_XWAYLAND_SATELLITE_OVERRIDE:-/usr/local/bin/xwayland-satellite}"
+}
+
+fix_xwayland_satellite_package_version() {
+  local version
+  command -v rpm >/dev/null 2>&1 || {
+    printf '%s\n' absent
+    return 0
+  }
+  version="$(rpm -q --qf '%{VERSION}-%{RELEASE}' xwayland-satellite 2>/dev/null | head -n1)" || version=
+  [[ -n "$version" && "$version" != *'not installed'* ]] || version=absent
+  printf '%s\n' "$version"
+}
+
+fix_xwayland_satellite_package_path() {
+  local path
+  command -v rpm >/dev/null 2>&1 || {
+    printf '%s\n' /usr/bin/xwayland-satellite
+    return 0
+  }
+  path="$(rpm -ql xwayland-satellite 2>/dev/null | grep -m1 '^/usr/bin/xwayland-satellite$')" || path=
+  printf '%s\n' "${path:-/usr/bin/xwayland-satellite}"
+}
+
+fix_xwayland_satellite_package_is_fixed() {
+  local version
+  version="$(fix_xwayland_satellite_package_version)"
+  [[ "$version" != absent ]] || return 1
+  [[ "$(printf '%s\n%s\n' "${version%%-*}" "$XWAYLAND_SATELLITE_FIX_VERSION" | sort -V | head -n1)" == "$XWAYLAND_SATELLITE_FIX_VERSION" ]]
+}
+
+fix_xwayland_satellite_override_sha256() {
+  local override=$1
+  [[ -f "$override" ]] || return 1
+  sha256sum "$override" | awk '{print $1}'
+}
+
+fix_xwayland_satellite_is_healthy() {
+  local override package_path
+  fix_xwayland_satellite_package_is_fixed && return 0
+  override="$(fix_xwayland_satellite_override_path)"
+  [[ -x "$override" ]] || return 1
+  package_path="$(fix_xwayland_satellite_package_path)"
+  [[ "$override" != "$package_path" ]]
+}
+
+fix_xwayland_satellite_build_dependencies() {
+  local build_dir=$1 sysroot=$1/sysroot system_libdir pc link target stem system_library
+  local -a archives=()
+  mkdir -p "$sysroot" || return 1
+
+  printf '%s\n' 'Downloading the XWayland build dependencies into a temporary sysroot'
+  if ! dnf download --destdir "$build_dir" --arch x86_64 "${XWAYLAND_SATELLITE_BUILD_DEPS[@]}"; then
+    printf '%s\n' 'Downloading the XWayland build dependencies failed.' >&2
+    return 1
+  fi
+
+  while IFS= read -r archive; do
+    archives+=("$archive")
+  done < <(find "$build_dir" -maxdepth 1 -name '*.x86_64.rpm' | sort)
+  ((${#archives[@]} > 0)) || {
+    printf '%s\n' 'No x86_64 build dependency RPM was downloaded.' >&2
+    return 1
+  }
+  for archive in "${archives[@]}"; do
+    if ! rpm2cpio "$archive" | (cd "$sysroot" && cpio -idm --quiet); then
+      printf 'Unable to unpack %s\n' "$archive" >&2
+      return 1
+    fi
+  done
+
+  # The -devel RPMs carry .so symlinks that point at the packaged runtime
+  # library in the system directory; re-point the dangling ones at the copy
+  # that is actually installed.
+  system_libdir="$(rpm --eval '%{_libdir}' 2>/dev/null)" || system_libdir=
+  [[ -n "$system_libdir" && -d "$system_libdir" ]] || system_libdir=/usr/lib64
+  for link in "$sysroot"/usr/lib64/lib*.so; do
+    [[ -L "$link" ]] || continue
+    target="$(readlink "$link")"
+    [[ -e "$(dirname "$link")/$target" ]] && continue
+    stem="$(basename "$target" | sed -E 's/(\.so[.0-9]*)$//')"
+    system_library="$(ls "$system_libdir/$stem".so.* 2>/dev/null | head -n1)" || system_library=
+    [[ -n "$system_library" ]] || continue
+    ln -sf "$system_library" "$(dirname "$link")/$target"
+  done
+
+  # The .pc files hardcode prefix=/usr, so pkg-config would emit the system
+  # include and library directories instead of the temporary sysroot.
+  for pc in "$sysroot"/usr/lib64/pkgconfig/*.pc "$sysroot"/usr/share/pkgconfig/*.pc; do
+    [[ -f "$pc" ]] || continue
+    sed -i "s|^prefix=/usr$|prefix=$sysroot/usr|" "$pc"
+  done
+
+  [[ -f "$sysroot/usr/include/xcb/xcb_cursor.h" ]] || {
+    printf '%s\n' 'The temporary XWayland sysroot is missing xcb/xcb_cursor.h.' >&2
+    return 1
+  }
+}
+
+fix_xwayland_satellite_build() {
+  local override build_dir sysroot built actual tool
+  local -a missing_tools=()
+
+  for tool in dnf rpm2cpio cpio cargo sha256sum; do
+    command -v "$tool" >/dev/null 2>&1 || missing_tools+=("$tool")
+  done
+  ((${#missing_tools[@]} == 0)) || {
+    printf 'Missing build commands: %s\n' "${missing_tools[*]}" >&2
+    return 1
+  }
+  command -v sudo >/dev/null 2>&1 || {
+    printf '%s\n' 'sudo is required to install the built satellite into /usr/local/bin.' >&2
+    return 1
+  }
+
+  override="$(fix_xwayland_satellite_override_path)"
+  build_dir="$(mktemp -d)" || return 1
+  sysroot="$build_dir/sysroot"
+  if ! fix_xwayland_satellite_build_dependencies "$build_dir"; then
+    rm -rf -- "$build_dir"
+    return 1
+  fi
+
+  printf 'Building xwayland-satellite %s from the pinned upstream tag\n' "$XWAYLAND_SATELLITE_TAG"
+  if ! (
+    export PKG_CONFIG_PATH="$sysroot/usr/lib64/pkgconfig"
+    export CPATH="$sysroot/usr/include${CPATH:+:$CPATH}"
+    export LIBRARY_PATH="$sysroot/usr/lib64${LIBRARY_PATH:+:$LIBRARY_PATH}"
+    export CARGO_HOME="$build_dir/cargo"
+    export CARGO_TARGET_DIR="$build_dir/target"
+    cargo install --git https://github.com/Supreeeme/xwayland-satellite \
+      --tag "$XWAYLAND_SATELLITE_TAG" --locked --root "$build_dir/root" xwayland-satellite
+  ); then
+    printf '%s\n' 'Building the pinned xwayland-satellite release failed; the installed satellite is unchanged.' >&2
+    rm -rf -- "$build_dir"
+    return 1
+  fi
+
+  built="$build_dir/root/bin/xwayland-satellite"
+  [[ -x "$built" ]] || {
+    printf 'The build did not produce %s\n' "$built" >&2
+    rm -rf -- "$build_dir"
+    return 1
+  }
+  actual="$(sha256sum "$built" | awk '{print $1}')"
+  printf 'Built %s\n' "$built"
+  if [[ "$actual" == "$XWAYLAND_SATELLITE_BUILD_SHA256" ]]; then
+    printf 'SHA-256 matches the reference %s build recorded on this workstation.\n' "$XWAYLAND_SATELLITE_TAG"
+  else
+    printf 'Note: SHA-256 %s differs from the reference build %s. The same locked source produces different bytes from a different CARGO_HOME, rustc or Fedora release.\n' \
+      "$actual" "$XWAYLAND_SATELLITE_BUILD_SHA256"
+  fi
+  if ! sudo install -m 0755 "$built" "$override"; then
+    printf 'Installing %s failed.\n' "$override" >&2
+    rm -rf -- "$build_dir"
+    return 1
+  fi
+  rm -rf -- "$build_dir"
+}
+
+fix_diagnose_xwayland_satellite() {
+  local override package_path package_version actual tool missing=0
+  local -a absent_tools=()
+  override="$(fix_xwayland_satellite_override_path)"
+  package_path="$(fix_xwayland_satellite_package_path)"
+  package_version="$(fix_xwayland_satellite_package_version)"
+
+  if [[ "$package_version" == absent ]]; then
+    printf '%s\n' '  - Fedora xwayland-satellite package: not installed'
+    missing=1
+  else
+    printf '  - Fedora xwayland-satellite package: %s (%s)\n' "$package_version" "$package_path"
+  fi
+  if fix_xwayland_satellite_package_is_fixed; then
+    printf '  - Fedora package already carries the upstream focus fix (>= %s): no override required\n' "$XWAYLAND_SATELLITE_FIX_VERSION"
+    return 0
+  fi
+  if [[ ! -f "$override" ]]; then
+    printf '  - XWayland override: missing (%s)\n' "$override"
+    missing=1
+  elif [[ ! -x "$override" ]]; then
+    printf '  - XWayland override: present but not executable (%s)\n' "$override"
+    missing=1
+  else
+    actual="$(fix_xwayland_satellite_override_sha256 "$override")" || actual=unknown
+    if [[ "$actual" == "$XWAYLAND_SATELLITE_BUILD_SHA256" ]]; then
+      printf '  - XWayland override: present (%s; SHA-256 %s, matches the pinned %s build)\n' "$override" "$actual" "$XWAYLAND_SATELLITE_TAG"
+    else
+      printf '  - XWayland override: present (%s; SHA-256 %s, differs from the reference %s build)\n' "$override" "$actual" "$XWAYLAND_SATELLITE_TAG"
+    fi
+    [[ "$override" == "$package_path" ]] || printf '  - Effective satellite: %s, searched before %s\n' "$override" "$package_path"
+  fi
+  for tool in dnf rpm2cpio cpio cargo sudo; do
+    command -v "$tool" >/dev/null 2>&1 || absent_tools+=("$tool")
+  done
+  if ((${#absent_tools[@]} > 0)); then
+    printf '  - Missing build commands: %s\n' "${absent_tools[*]}"
+    missing=1
+  fi
+  return "$missing"
+}
+
+fix_plan_xwayland_satellite() {
+  cat <<'EOF'
+Steam and other X11 applications lose their own popup under the Fedora 44 xwayland-satellite 0.8.2 package: require_wm_focus() re-asserts the X input focus on override-redirect windows when it hands focus back to the compositor, and the menu closes immediately.
+Upstream fixed the focus hand-back in the v0.8.3 release, which is in no Fedora 44 repository.
+1. Download the xcb-util *-devel build dependencies with `dnf download` and unpack them into a temporary sysroot; nothing is installed system-wide.
+2. Build the pinned upstream tag with `cargo install --git https://github.com/Supreeeme/xwayland-satellite --tag v0.8.3 --locked`, so Cargo.lock pins every crate.
+3. Install the result to /usr/local/bin, which precedes /usr/bin in the Niri session PATH; the Fedora package stays installed and untouched.
+4. Verify that the override is executable and report its SHA-256 next to the recorded build.
+Restart Steam to replace its XWayland context, and log out and back into Niri to replace the satellite process itself.
+This repair never removes the Fedora package, never edits Niri configuration, and uses sudo only to install the built binary.
+EOF
+}
+
+fix_apply_xwayland_satellite() {
+  fix_xwayland_satellite_build || return $?
+  printf '%s\n' 'The running XWayland server keeps the old satellite until it exits; log out and back into Niri to replace it.'
+  printf '%s\n' 'Restart Steam so its X11 clients reconnect to the new satellite.'
+}
+
+fix_verify_xwayland_satellite() {
+  fix_xwayland_satellite_is_healthy
+}
+
 if [[ -z "${FIX_REPAIR_CATEGORY_MAP[wechat-cangjie]:-}" ]]; then
   fix_register_repair \
     wechat-cangjie \
@@ -969,6 +1227,11 @@ if [[ -z "${FIX_REPAIR_CATEGORY_MAP[wechat-cangjie]:-}" ]]; then
     "${FIX_CATEGORY_LABELS[1]}" \
     'Niri touchpad toggle' \
     'Restore the MyUnix helper, Mod+F8 binding and managed includes; reload Niri when running.'
+  fix_register_repair \
+    xwayland-satellite \
+    "${FIX_CATEGORY_LABELS[1]}" \
+    'XWayland Steam popups (xwayland-satellite 0.8.3)' \
+    'Builds the pinned upstream fix into /usr/local/bin; the Fedora package stays installed. Log out and back in.'
   fix_register_repair \
     jetbrains-toolbox \
     "${FIX_CATEGORY_LABELS[2]}" \

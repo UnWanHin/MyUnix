@@ -58,7 +58,7 @@ flowchart TD
 - [[../modules/gnome|GNOME shortcuts]]
 - [[../modules/input-method|English、Cangjie 5、Pinyin]]
 - [[../modules/niri-dms|Niri + DMS]]，含同步的 DMS hotkeys 與個人化設定；GNOME 保留可登入
-- [[../modules/steam|Steam]]，含 Niri 的 `-system-composer` 相容啟動器
+- [[../modules/steam|Steam]]，含 Niri 的 `-system-composer` 相容啟動器；X11 彈出選單若失效，用 `./scripts/myunix fix` 的 xwayland-satellite 修復項
 
 [[../modules/rpm|Direct RPM registry]] 會一起驗證 manifest，但 WeChat、
 FlClash 等下載型應用維持為明確管理的選用項，不在基線中偷偷下載。

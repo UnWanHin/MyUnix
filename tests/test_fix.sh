@@ -139,7 +139,8 @@ jetbrains-toolbox
 niri-config
 portal-login
 touchpad-toggle
-wechat-cangjie'
+wechat-cangjie
+xwayland-satellite'
   actual=\"\$(fix_repair_ids | sort)\"
   test \"\$actual\" = \"\$expected\"
   while IFS= read -r repair_id; do
