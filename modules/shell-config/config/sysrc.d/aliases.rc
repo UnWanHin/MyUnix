@@ -1,2 +1,5 @@
 # Shared Bash/Zsh aliases belong here.
 alias jetcode=jet
+
+# DeepSeek Harness: full-access web mode (unsandboxed, for GPU training).
+alias dshweb='DSH_PERMISSION_MODE=danger-full-access dsh web'
